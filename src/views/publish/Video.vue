@@ -713,7 +713,7 @@
         </div>
         <!-- Submit -->
         <div class="submit-row">
-          <button v-if="isBatchPublish" class="submit" :disabled="isUpload" @click="onBatchPublish">
+          <button v-if="isBatchPublish" class="submit" :disabled="isUpload || isBatchPublishing" @click="onBatchPublish">
             {{ t("submit.submit") }}
           </button>
           <button v-else class="submit" @click="onSubmit">
@@ -1062,15 +1062,20 @@ const currentLangLabel = computed(() => {
 async function handleCollectionLanguageChange(key: string) {
   langDropdownOpen.value = false;
   if (key === collectionLanguage.value) return;
-  const prevLang = collectionLanguage.value;
-  collectionLanguage.value = key;
-  if (selectedCollection.value) {
-    try {
-      await api.modifyCollection({ book_id: selectedCollection.value.id, language: key });
-    } catch (e) {
-      collectionLanguage.value = prevLang;
-      toast(t('fail'));
+  if (!selectedCollection.value) {
+    collectionLanguage.value = key;
+    return;
+  }
+  // 已选了合集：先改接口，成功了再把下拉切过去；失败 / 业务错误都提示并保持原值
+  try {
+    const res = await api.modifyCollection({ is_bl: 1, book_id: selectedCollection.value.id, language: key }) as any;
+    if (res?.code === 0) {
+      collectionLanguage.value = key;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
     }
+  } catch (e) {
+    toast(t('fail'));
   }
 }
 
@@ -1452,6 +1457,8 @@ function toggleChapterSelection(chapterNum: number) {
   const idx = selectedChapters.value.indexOf(chapterNum);
   if (idx === -1) {
     selectedChapters.value.push(chapterNum);
+    // 合集集数按章节号顺序分配，不按点选顺序
+    selectedChapters.value.sort((a, b) => a - b);
   } else {
     selectedChapters.value.splice(idx, 1);
   }
@@ -1638,6 +1645,15 @@ const batchCollectionChapterList = computed(() => {
   return list;
 });
 
+// 手输的起始集数：只能是列表里的值（1 ~ 本次要发布的最后一集），输 0 / 超出 / 清空都拉回范围内
+watch(batchPartialStartChapter, (v) => {
+  const list = batchCollectionChapterList.value;
+  if (!list.length) return;
+  const n = Number(v);
+  if (!Number.isFinite(n) || list.includes(n)) return;
+  batchPartialStartChapter.value = n < list[0] ? list[0] : list[list.length - 1];
+});
+
 watch(batchCollectionChapterList, (list) => {
   if (list.length > 0) {
     if (!list.includes(batchPartialStartChapter.value)) {
@@ -1748,16 +1764,32 @@ async function onBatchPublish() {
     return;
   }
 
+  if (isBatchPublishing.value) return;
+  // 上一轮已经发成功的章节保留 success，不会再发一遍
+  const done = new Set(batchPublishChapterStatuses.value.filter(c => c.status === 'success').map(c => c.chapter));
   batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
     chapter,
-    status: 'waiting' as const
+    status: done.has(chapter) ? 'success' as const : 'waiting' as const
   }));
   showBatchPublishProgress.value = true;
 
   await runBatchPublishLoop();
 }
 
+// 批量发布防重入：进度 / 失败弹窗关掉后循环还在后台跑，再点「发布」不能再起一轮
+const isBatchPublishing = ref(false);
+
 async function runBatchPublishLoop() {
+  if (isBatchPublishing.value) return;
+  isBatchPublishing.value = true;
+  try {
+    await runBatchPublishLoopInner();
+  } finally {
+    isBatchPublishing.value = false;
+  }
+}
+
+async function runBatchPublishLoopInner() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');
@@ -2099,22 +2131,9 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
 
         // Update episodes array based on collection chapters
         episodes.value = [];
-        // 先添加已有的章节
-        if (response.data.data && response.data.data.length > 0) {
-          response.data.data.forEach((chapter: any, index: number) => {
-            episodes.value.push({
-              value: (index + 1).toString(),
-              label: (index + 1).toString()
-            });
-          });
-        } else if (collection.chapters && collection.chapters.length > 0) {
-          // Fallback to collection.chapters if response.data.data is not available
-          collection.chapters.forEach((chapter: any, index: number) => {
-            episodes.value.push({
-              value: (index + 1).toString(),
-              label: (index + 1).toString()
-            });
-          });
+        // 先添加已有的章节：按 count 生成 1..N，不依赖接口里章节数组叫 chapters 还是 data
+        for (let i = 1; i <= (parseInt(allnum) || 0); i++) {
+          episodes.value.push({ value: i.toString(), label: i.toString() });
         }
         // 添加新的一集
         episodes.value.push({
@@ -2248,8 +2267,11 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       is_nsfw: collection.is_nsfw ?? 0,
       language: collection.language || collectionLanguage.value,
       price: '',
-      plan_id: ''
+      plan_id: '',
+      currency: ''
     };
+    // 新建的合集也是「有合集」，不然「合集中的顺序」选择器不显示
+    isNoCollection.value = false;
 
     if (collection.is_nsfw == 1) {
       form.value.content = 'yes';
@@ -2350,10 +2372,15 @@ function selectChapter(chapter: any) {
 }
 
 // Project list methods
+// 历史作品翻页：重新拉当前页（Pagination 只改 currentPage，不会自己请求）
+watch(currentPage, () => {
+  fetchProjects();
+});
+
 async function fetchProjects() {
   isLoadingProjects.value = true;
   try {
-    const response = await api.getProject(0, 'manju', currentPage.value, 10, 1, { is_merged_video: 1 }) as any;
+    const response = await api.getProject(0, 'manju', currentPage.value, pageSize.value, 1, { is_merged_video: 1 }) as any;
     if (response.code != 200) {
       toast(t('fail'));
       return;
@@ -2587,12 +2614,12 @@ async function handlePublish(publishData?: any) {
       }
 
       const chapterRes = await api.detailChapter(currentSessionId, episode) as any;
+      // 章节详情拿不到就不往下走，不然页面会显示「上传成功」但没有视频地址
+      if (chapterRes.code != 200) {
+        toast(chapterRes.message || t('fail'));
+        return;
+      }
       if (chapterRes.code == 200) {
-        if (chapterRes.code != 200) {
-          toast(chapterRes.message || t('fail'));
-          return;
-        }
-
         if (chapterRes.data && chapterRes.data.is_publish == 1) {
           toast(t('submit.video.episodeAlreadyPublished'));
           setTimeout(() => { location.reload(); }, 1000);
@@ -2771,6 +2798,8 @@ function goBack() {
   const isVideoFromUrl = !!route.query.url;
 
   if (videoFile.value || form.value.title || captionLength.value > 0 || isVideoFromUrl) {
+    // 「返回」不是切 Tab，别沿用上次切 Tab 留下的目标路径
+    pendingRoute.value = null;
     isShowConfirm.value = true;
     return;
   }
@@ -2803,6 +2832,7 @@ function confirmLeave() {
 
 function cancelLeave() {
   isShowConfirm.value = false;
+  pendingRoute.value = null;
 }
 
 function handleUserInfoLoaded(userInfo: any) {
@@ -2814,6 +2844,7 @@ function handleUserInfoLoaded(userInfo: any) {
 }
 
 async function startFakeUpload(file: File) {
+  uploadError.value = '';
   videoFile.value = file;
   uploadProgress.value = 0;
   videoUploadPercent.value = 0;
@@ -2827,36 +2858,51 @@ async function startFakeUpload(file: File) {
     // 它是 ref，会留着上一个文件的值，换个坏文件进来会误报成「时长超过 1 小时」；
     // 15 秒超时那条路径 duration 是 NaN，也会被当成「文件损坏」。
     const metadataResult = await new Promise<'ok' | 'duration' | 'timeout' | 'corrupted'>((resolve) => {
+      // 三条路径只认第一个到的：超时后把回调摘掉并清定时器，元数据晚到也不会再往 videoDuration 写
+      let settled = false;
+      const finish = (r: 'ok' | 'duration' | 'timeout' | 'corrupted') => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        video.onloadedmetadata = null;
+        video.onerror = null;
+        resolve(r);
+      };
+      const timer = setTimeout(() => finish('timeout'), 15000);
       video.onloadedmetadata = () => {
+        if (settled) return;
         videoSize.value = parseFloat((file.size / (1024 * 1024)).toFixed(1));
         videoDuration.value = Math.round(video.duration);
         if (video.duration > 3600) {
-          resolve('duration');
+          finish('duration');
           return;
         }
         const fileName = file.name;
         const extension = fileName.split('.').pop()?.toLowerCase() || '';
         videoType.value = extension;
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
-          resolve('corrupted');
+          finish('corrupted');
         } else {
-          resolve('ok');
+          finish('ok');
         }
       };
-      video.onerror = () => resolve('corrupted');
-      setTimeout(() => resolve('timeout'), 15000);
+      video.onerror = () => finish('corrupted');
     });
 
     if (metadataResult !== 'ok') {
       URL.revokeObjectURL(video.src);
       isUpload.value = false;
-      toast(t(
+      const msg = t(
         metadataResult === 'duration'
           ? 'submit.video.durationLimit'
           : metadataResult === 'timeout'
             ? 'submit.video.readTimeoutError'
             : 'submit.video.corruptedError',
-      ));
+      );
+      // 记下失败：状态栏显示错误，编辑态提交时会被拦住，不会拿旧视频顶上
+      uploadError.value = msg;
+      uploadSuccess.value = false;
+      toast(msg);
       return false;
     }
 
@@ -2873,7 +2919,10 @@ async function startFakeUpload(file: File) {
   } catch (error: any) {
     isUpload.value = false;
     videoUploadPercent.value = 0;
-    toast(error instanceof PartUploadError ? getI18nMsg(error.payload) : t('fail'));
+    const msg = error instanceof PartUploadError ? getI18nMsg(error.payload) : t('fail');
+    uploadError.value = msg;
+    uploadSuccess.value = false;
+    toast(msg);
     return false;
   }
 }
@@ -2935,7 +2984,7 @@ async function mockUploadCover(dataUrl: string) {
       body: formData,
     };
 
-    const res = await fetch(baseUrl + "/user/uploadImage", parma);
+    const res = await fetch(baseUrl + "user/uploadImage", parma);
     const data = await res.json();
     if (data.code === 0 || data.code === 200) {
       const url = (data?.data && (data.data.url || data.data)) || data?.url;
@@ -4181,7 +4230,9 @@ async function onSubmit() {
         const spanText = span.textContent || '';
         if (spanText.startsWith('@')) {
           const username = spanText.substring(1);
-          const regex = new RegExp(`(^|[^\s])@${username}`, 'g');
+          // 模板字符串里 \s 会被转义掉，要写成 \\s；昵称里可能有 . + ( 等正则字符，先转义
+          const escaped = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`(^|[^\\s])@${escaped}`, 'g');
           processedContent = processedContent.replace(regex, (match, prefix) => {
             return `${prefix} @${username}`;
           });
@@ -4397,67 +4448,9 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
           if (chapterData.chapter_description) {
             form.value.description = chapterData.chapter_description;
             captionLength.value = chapterData.chapter_description.length;
-
+            // 和其他入口一样用 renderCaptionContent 渲染（#话题 / @提及 的 class 要和编辑时一致）
             await nextTick();
-            if (captionRef.value) {
-              const content = chapterData.chapter_description;
-              captionRef.value.innerHTML = '';
-
-              let currentIndex = 0;
-              let pos = 0;
-              const contentLength = content.length;
-
-              while (pos < contentLength) {
-                const tagIndex = content.indexOf('#', pos);
-                const mentionIndex = content.indexOf('@', pos);
-
-                let nextMatchIndex = -1;
-                let isTag = false;
-
-                if (tagIndex === -1 && mentionIndex === -1) {
-                  break;
-                } else if (tagIndex === -1) {
-                  nextMatchIndex = mentionIndex;
-                  isTag = false;
-                } else if (mentionIndex === -1) {
-                  nextMatchIndex = tagIndex;
-                  isTag = true;
-                } else {
-                  nextMatchIndex = Math.min(tagIndex, mentionIndex);
-                  isTag = nextMatchIndex === tagIndex;
-                }
-
-                if (nextMatchIndex > currentIndex) {
-                  const textBefore = content.substring(currentIndex, nextMatchIndex);
-                  const textNode = document.createTextNode(textBefore);
-                  captionRef.value?.appendChild(textNode);
-                }
-
-                let endIndex = nextMatchIndex + 1;
-                while (endIndex < contentLength) {
-                  const char = content[endIndex];
-                  if (char === '\u0020' || char === '\n' || char === '\t') {
-                    break;
-                  }
-                  endIndex++;
-                }
-
-                const matchText = content.substring(nextMatchIndex, endIndex);
-                const span = document.createElement('span');
-                span.className = isTag ? 'topic-tag' : 'mention-tag';
-                span.innerText = matchText;
-                captionRef.value?.appendChild(span);
-
-                currentIndex = endIndex;
-                pos = endIndex;
-              }
-
-              if (currentIndex < contentLength) {
-                const remainingText = content.substring(currentIndex);
-                const textNode = document.createTextNode(remainingText);
-                captionRef.value?.appendChild(textNode);
-              }
-            }
+            renderCaptionContent();
           }
         }
       } catch (error) {
@@ -4473,7 +4466,8 @@ async function initBatchPublish(session_id: string) {
   const batchName = route.query.name as string || '';
   if (!batchIndexesRaw) {
     isLoadingBatchPublish.value = false;
-    router.push({ path: '/novel-generate', query: { session_id } });
+    // 批量发布缺章节参数：回漫剧生成页（canvas 端的 /tools/video，/novel-generate 是旧地址）
+    window.location.href = `/tools/video/${session_id}`;
     return;
   }
 

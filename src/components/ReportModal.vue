@@ -188,7 +188,7 @@ async function onFileChange(e: Event) {
       body: formData,
     };
 
-    const response = await fetch(baseUrl + "/user/uploadImage", parma);
+    const response = await fetch(baseUrl + "user/uploadImage", parma);
 
     const data = await response.json();
     if (data.code === 0 || data.code === 200) {

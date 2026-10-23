@@ -693,7 +693,7 @@
         </div>
 
         <div class="submit-row">
-          <button v-if="isBatchPublish" class="submit" :disabled="uploading" @click="onBatchPublish">
+          <button v-if="isBatchPublish" class="submit" :disabled="uploading || isBatchPublishing" @click="onBatchPublish">
             {{ t("submit.submit") }}
           </button>
           <button v-else class="submit" :class="!canSubmit ? 'dis' : ''" :disabled="!canSubmit || uploading" @click="onSubmit">
@@ -763,7 +763,7 @@
       :collection-id="editingCollectionId || ''"
       :collection-name="isCreateFromCollectionList ? projectNameForNewCollection : ''"
       :cover-url="isCreateFromCollectionList ? projectCoverForNewCollection : ''"
-      :is-nsfw="0"
+      :is-nsfw="sourceIsNsfw"
       :type="1"
       :session-id="selectedProject?.session_id || route.query.session_id || ''"
       :story-summary="selectedProject?.result_async?.generate_manhua_outline?.synopsis || ''"
@@ -953,15 +953,20 @@ const currentLangLabel = computed(() => {
 async function handleCollectionLanguageChange(key: string) {
   langDropdownOpen.value = false;
   if (key === collectionLanguage.value) return;
-  const prevLang = collectionLanguage.value;
-  collectionLanguage.value = key;
-  if (selectedCollection.value) {
-    try {
-      await api.modifyCollection({ book_id: selectedCollection.value.id, language: key });
-    } catch (e) {
-      collectionLanguage.value = prevLang;
-      toast(t('fail'));
+  if (!selectedCollection.value) {
+    collectionLanguage.value = key;
+    return;
+  }
+  // 已选了合集：先改接口，成功了再把下拉切过去；失败 / 业务错误都提示并保持原值
+  try {
+    const res = await api.modifyCollection({ is_bl: 1, book_id: selectedCollection.value.id, language: key }) as any;
+    if (res?.code === 0) {
+      collectionLanguage.value = key;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
     }
+  } catch (e) {
+    toast(t('fail'));
   }
 }
 
@@ -1115,6 +1120,8 @@ function toggleChapterSelection(chapterNum: number) {
   const idx = selectedChapters.value.indexOf(chapterNum);
   if (idx === -1) {
     selectedChapters.value.push(chapterNum);
+    // 合集集数按章节号顺序分配，不按点选顺序
+    selectedChapters.value.sort((a, b) => a - b);
   } else {
     selectedChapters.value.splice(idx, 1);
   }
@@ -1291,6 +1298,15 @@ const batchCollectionChapterList = computed(() => {
   return list;
 });
 
+// 手输的起始集数：只能是列表里的值（1 ~ 本次要发布的最后一集），输 0 / 超出 / 清空都拉回范围内
+watch(batchPartialStartChapter, (v) => {
+  const list = batchCollectionChapterList.value;
+  if (!list.length) return;
+  const n = Number(v);
+  if (!Number.isFinite(n) || list.includes(n)) return;
+  batchPartialStartChapter.value = n < list[0] ? list[0] : list[list.length - 1];
+});
+
 watch(batchCollectionChapterList, (list) => {
   if (list.length > 0) {
     if (!list.includes(batchPartialStartChapter.value)) {
@@ -1399,16 +1415,32 @@ async function onBatchPublish() {
     return;
   }
 
+  if (isBatchPublishing.value) return;
+  // 上一轮已经发成功的章节保留 success，不会再发一遍
+  const done = new Set(batchPublishChapterStatuses.value.filter(c => c.status === 'success').map(c => c.chapter));
   batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
     chapter,
-    status: 'waiting' as const
+    status: done.has(chapter) ? 'success' as const : 'waiting' as const
   }));
   showBatchPublishProgress.value = true;
 
   await runBatchPublishLoop();
 }
 
+// 批量发布防重入：进度 / 失败弹窗关掉后循环还在后台跑，再点「发布」不能再起一轮
+const isBatchPublishing = ref(false);
+
 async function runBatchPublishLoop() {
+  if (isBatchPublishing.value) return;
+  isBatchPublishing.value = true;
+  try {
+    await runBatchPublishLoopInner();
+  } finally {
+    isBatchPublishing.value = false;
+  }
+}
+
+async function runBatchPublishLoopInner() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');
@@ -1458,6 +1490,13 @@ async function runBatchPublishLoop() {
         if (images.length > 0) {
           payload.image_urls = images;
         }
+      }
+      // 这一章的图片没拿到（接口失败 / 没有图）：不能发一篇没图的漫画，按失败处理并停下来
+      if (!payload.image_urls || payload.image_urls.length === 0) {
+        toast(t('novel.batchPublish.chapterLoadError'));
+        throw new Error(`chapter ${chapterNum} images missing`);
+      }
+      if (chapterRes.code === 200 && chapterRes.data) {
         if (chapterRes.data.chapter_description) {
           payload.content = chapterRes.data.chapter_description;
         }
@@ -1775,20 +1814,15 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
       const response = await api.singleCollectionIndex(id) as any;
       if (response.code == 0 && response.data) {
         const allnums = response.data.count || 0;
-        const defaultEpisode = allnums + 1;
+        const defaultEpisode = (parseInt(String(allnums)) || 0) + 1;
 
         selectedEpisodeNumber.value = defaultEpisode.toString();
 
         // Update episodes array based on collection chapters
         episodes.value = [];
-        // 先添加已有的集
-        if (response.data.chapters && response.data.chapters.length > 0) {
-          response.data.chapters.forEach((chapter: any, index: number) => {
-            episodes.value.push({
-              value: (index + 1).toString(),
-              label: (index + 1).toString()
-            });
-          });
+        // 先添加已有的集：按 count 生成 1..N，不依赖接口里章节数组叫 chapters 还是 data
+        for (let i = 1; i <= (parseInt(String(allnums)) || 0); i++) {
+          episodes.value.push({ value: i.toString(), label: i.toString() });
         }
         // 添加新的一集
         episodes.value.push({
@@ -1857,8 +1891,7 @@ async function handleConfirmSwitchCollection() {
 
 function selectEpisode(value: string) {
   selectedEpisodeNumber.value = value;
-  // Also update selectedEpisode to match the selected episode number
-  selectedEpisode.value = parseInt(value);
+  // 合集里的序号和 AI 作品的章节号不是一回事，这里不改 selectedEpisode
   showEpisodeDropdown.value = false;
 }
 
@@ -3677,7 +3710,7 @@ async function onSubmit() {
     cover_title: '',
     ...(session_id ? { session_id } : {}),
     ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
-    ...(isEditMode && { post_id: postId.value })
+    ...(isEditMode.value && { post_id: postId.value })
   };
 
   try {
@@ -3890,6 +3923,8 @@ async function handleCollectionFromProjectName(projectName: string, sessionId?: 
             is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
             language: collectionLanguage.value,
           };
+          selectedEpisodeNumber.value = '1';
+          episodes.value = [{ value: '1', label: '1' }];
           isNoCollection.value = false;
         }
       } else {
@@ -4194,6 +4229,8 @@ async function handlePublish(publishData?: any) {
               is_nsfw: contentSwitch.mode === 2 ? 1 : 0,
               language: collectionLanguage.value,
             };
+            selectedEpisodeNumber.value = '1';
+            episodes.value = [{ value: '1', label: '1' }];
             isNoCollection.value = false;
           }
         } else {
@@ -4517,16 +4554,21 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
     const chapterResponse = await api.detailChapter(session_id, parseInt(index)) as any;
     if (chapterResponse.code === 200 && chapterResponse.data) {
       const chapterData = chapterResponse.data;
+      // result_async 有时是 JSON 字符串，先解析，不然下面取不到图
+      let chapterRA: any = chapterData.result_async;
+      if (typeof chapterRA === 'string') {
+        try { chapterRA = JSON.parse(chapterRA); } catch (e) { chapterRA = null; }
+      }
 
       let episodeImages: string[] = [];
       if (chapterData.final_images) {
         episodeImages = chapterData.final_images;
       } else if (chapterData.images) {
         episodeImages = chapterData.images;
-      } else if (chapterData.result_async?.final_images) {
-        episodeImages = chapterData.result_async.final_images;
-      } else if (chapterData.result_async?.images) {
-        episodeImages = chapterData.result_async.images;
+      } else if (chapterRA?.final_images) {
+        episodeImages = chapterRA.final_images;
+      } else if (chapterRA?.images) {
+        episodeImages = chapterRA.images;
       }
 
       let chapterCover = '';
@@ -4655,6 +4697,11 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
           console.error('Error handling collection from route:', error);
         }
       }
+    } else {
+      // 章节详情拿不到：提示并回到普通发布页（带着 session_id 的地址会把上传区藏起来，整页会空白）
+      toast(apiErrorMessage(chapterResponse) || t('fail'));
+      router.replace('/publish/comic');
+      await fetchProjects();
     }
   } catch (error) {
     console.error('Error handling session_id and index:', error);
@@ -4668,7 +4715,8 @@ async function initBatchPublish(session_id: string) {
   const batchName = route.query.name as string || '';
   if (!batchIndexesRaw) {
     isLoadingBatchPublish.value = false;
-    router.push({ path: '/novel-generate', query: { session_id } });
+    // 批量发布缺章节参数：回漫画生成页（canvas 端的 /tools/comic，/novel-generate 是旧地址）
+    window.location.href = `/tools/comic/${session_id}`;
     return;
   }
 
@@ -4852,7 +4900,8 @@ onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
   // Clean up object URLs to prevent memory leaks
   imageFiles.value.forEach((file) => {
-    if (file._preview && !file._url) {
+    // 只有本地生成的 blob 地址才需要释放
+    if (file._preview?.startsWith('blob:')) {
       URL.revokeObjectURL(file._preview);
     }
   });

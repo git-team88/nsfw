@@ -378,7 +378,7 @@
               <img v-else src="@/assets/images/register/check.png" alt="" />
             </div>
             <span class="agreement-text"
-              >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+              >{{ t("submit.agree") }}<span class="terms-text" @click="openConvention">{{ t("submit.terms") }}</span></span
             >
           </div>
         </div>
@@ -745,6 +745,10 @@ function onSubscriptionSaved(planId: string) {
     hasActiveSubscription.value = true;
     action?.();
   }
+}
+
+function openConvention() {
+  window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
 function closeConventionModal() {
@@ -1721,6 +1725,9 @@ async function confirmSelectedProject() {
         }
         if (chapterRes.data.chapter_description) {
           form.value.description = chapterRes.data.chapter_description;
+          // 渲染进编辑框，不然提交时会被编辑框里的空文本覆盖掉
+          await nextTick();
+          renderCaptionContent();
         }
       }
     } catch (error) {
@@ -1846,20 +1853,31 @@ async function handleVideoFile(file: File) {
     // 读元数据的三种失败分开报：时长超限 / 读取超时 / 文件本身坏了。
     // 15 秒超时那条路径 duration 是 NaN，以前会被当成「文件损坏」报给用户。
     const metadataResult = await new Promise<'ok' | 'duration' | 'timeout' | 'corrupted'>((resolve) => {
+      // 三条路径只认第一个到的：超时后把回调摘掉并清定时器，元数据晚到也不会再往 videoDuration 写
+      let settled = false;
+      const finish = (r: 'ok' | 'duration' | 'timeout' | 'corrupted') => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        video.onloadedmetadata = null;
+        video.onerror = null;
+        resolve(r);
+      };
+      const timer = setTimeout(() => finish('timeout'), 15000);
       video.onloadedmetadata = () => {
+        if (settled) return;
         if (video.duration > MAX_VIDEO_DURATION) {
-          resolve('duration');
+          finish('duration');
           return;
         }
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
-          resolve('corrupted');
+          finish('corrupted');
         } else {
           videoDuration.value = Math.round(video.duration * 100) / 100;
-          resolve('ok');
+          finish('ok');
         }
       };
-      video.onerror = () => resolve('corrupted');
-      setTimeout(() => resolve('timeout'), 15000);
+      video.onerror = () => finish('corrupted');
     });
 
     if (metadataResult !== 'ok') {

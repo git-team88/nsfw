@@ -425,9 +425,8 @@ import CaptionEditor from "@/components/CaptionEditor.vue";
 import BatchPublishFailDialog from "@/components/BatchPublishFailDialog.vue";
 import api from "@/api/index";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
 import { toast } from "@/util/toast";
 import {
   fetchBookRechargePlans,
@@ -443,14 +442,10 @@ import { processImageUrl, apiErrorMessage } from '@/util/utils';
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
-import checkboxActive from "@/assets/images/register/check_active.png";
-import checkboxInactive from "@/assets/images/register/check.png";
 import requireSwitchOn from "@/assets/images/home/open.png";
 import requireSwitchOff from "@/assets/images/publish/close.png";
 import { baseUrl } from "@/util/config";
 import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
-
-const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -461,9 +456,6 @@ function getI18nMsg(res: any) {
   const key = msgMap[lang];
   return (key && res?.[key]) || res?.msg || t('fail');
 }
-
-// State
-const isUpload = ref(false);
 
 function adjustTooltipPosition(event: MouseEvent) {
   const infoIcon = event.currentTarget as HTMLElement;
@@ -516,40 +508,16 @@ function adjustTooltipPosition(event: MouseEvent) {
   }
 }
 
-const uploadSuccess = ref(false);
-
-const isBatchRoute = computed(() => route.query.batch === 'true');
-const uploadError = ref("");
-const uploadProgress = ref(0);
-// 仅用于分片上传期间的遮罩文案；uploadProgress 需在上传完成后保持 100 以撑满进度条
-const videoUploadPercent = ref(0);
-const videoSize = ref(0);
-const videoDuration = ref(0);
-const videoType = ref("");
-const videoFile = ref<File | null>(null);
 const videoUrl = ref("");
 const coverPreview = ref("");
-const showCoverModal = ref(false);
 const agreeTerms = ref(true);
-const sessionId = ref("");
-
-const videoInputRef = ref<HTMLInputElement | null>(null);
-const reuploadInputRef = ref<HTMLInputElement | null>(null);
 const captionRef = ref<HTMLDivElement | null>(null);
-
-// Check if in edit mode
-const route = useRoute();
-const postId = ref(route.query.post_id as string);
-const chapterIdForPublish = ref<number | null>(null);
 
 const showPreviewModal = ref(false);
 const videoPreviewUrl = ref("");
 
 const isShowConfirm = ref(false);
 const pendingRoute = ref<{ path: string } | null>(null);
-const tabIndex = ref(-1);
-
-const TITLE_MAX = 60;
 const DESC_MAX = 4000;
 
 const uid = localStorage.getItem("uid") || '';
@@ -599,24 +567,22 @@ const currentLangLabel = computed(() => {
 async function handleCollectionLanguageChange(key: string) {
   langDropdownOpen.value = false;
   if (key === collectionLanguage.value) return;
-  const prevLang = collectionLanguage.value;
-  collectionLanguage.value = key;
-  if (selectedCollection.value) {
-    try {
-      await api.modifyCollection({ book_id: selectedCollection.value.id, language: key });
-    } catch (e) {
-      collectionLanguage.value = prevLang;
-      toast(t('fail'));
+  if (!selectedCollection.value) {
+    collectionLanguage.value = key;
+    return;
+  }
+  // 已选了合集：先改接口，成功了再把下拉切过去；失败 / 业务错误都提示并保持原值
+  try {
+    const res = await api.modifyCollection({ is_bl: 1, book_id: selectedCollection.value.id, language: key }) as any;
+    if (res?.code === 0) {
+      collectionLanguage.value = key;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
     }
+  } catch (e) {
+    toast(t('fail'));
   }
 }
-
-const permOptions = [
-  { key: "public", labelKey: "submit.permPublic" },
-  // 漫剧的「订阅用户可见」对外叫「付费用户可见」（值还是 partial / access_rights 2，只是文案）
-  { key: "partial", labelKey: "submit.permPaid" },
-  // 漫剧不提供「仅自己可见」
-];
 
 interface DropdownItem {
   label: string;
@@ -628,12 +594,6 @@ interface DropdownItem {
 
 // Dropdown state
 const showDropdown = ref(false);
-const isComposingText = ref(false);
-const dropdownType = ref<"#" | "@" | "">("");
-const dropdownItems = ref<DropdownItem[]>([]);
-const dropdownPosition = ref<{ top?: number; left?: number; right?: number; position?: 'above'; bottom?: number }>({ top: 0, left: 0 });
-const lastRange = ref<Range | null>(null);
-const isDropdownLoading = ref(false);
 const isOpeningDropdown = ref(false);
 
 const showSensitiveConfirm = ref(false);
@@ -643,9 +603,6 @@ const toastShow = ref(false);
 const toastMsg = ref("");
 const toastIcon = ref("");
 const toastTheme = ref("pink");
-let toastTimer: ReturnType<typeof setTimeout> | null = null;
-const titleError = ref(false);
-
 const userRegion = ref(false);
 const hasActiveSubscription = ref(false);
 const isAdult = ref(false);
@@ -653,69 +610,9 @@ const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const uploadOption = ref('local'); // 这页只有本地上传
 
-const uploadOptions = [
-  {
-    id: 'history',
-    value: 'history',
-    label: 'submit.image.uploadFromHistory'
-  },
-  {
-    id: 'local',
-    value: 'local',
-    label: 'submit.video.localUpload'
-  }
-];
-
-// Tab list
-const tabList = [
-  {
-    name: t("submit.tabs.video"),
-    path: "/publish/clip",
-  },
-  {
-    name: t("submit.tabs.photo"),
-    path: "/publish/image",
-  },
-  // 和 Header 一样，nsfw 站不开放漫画 / 小说发布
-  // {
-  //   name: t("submit.tabs.manhua"),
-  //   path: "/publish/comic",
-  // },
-  // {
-  //   name: t("submit.tabs.novel"),
-  //   path: "/publish/novel",
-  // }
-];
-
-
-// Project list
-const projects = ref<any[]>([]);
-const selectedProjectId = ref('');
 const selectedProject = ref<any>(null);
-const isLoadingProjects = ref(true);
-
-// Pagination
-const currentPage = ref(1);
-const totalProjects = ref(1000);
-const pageSize = ref(8);
-
-// Episode selection
-const selectedEpisode = ref<number | null>(null);
-
-// View modal
-const showViewModal = ref(false);
-const selectedModalEpisode = ref(null);
-
 // Chapter dropdown
 const showChapterDropdown = ref(false);
-const chapterDropdownPosition = ref<'top' | 'bottom'>('bottom');
-
-// Project details cache
-const projectDetailsCache = ref<Record<string, any>>({});
-
-// Preview modal project (separate from selected project)
-const previewProject = ref<any>(null);
-
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string; plan_id?: string } | null>(null);
 
@@ -775,14 +672,6 @@ async function syncCollectionPlan(permission: string) {
     console.error('sync collection plan failed', e);
   }
 }
-const collectionPriceText = computed(() => {
-  const price = selectedCollection.value?.price;
-  if (price === undefined || price === null || price === '') return '';
-  // currency 缺省按日元，原值展示
-  const currency = selectedCollection.value?.currency || 'jpy';
-  return planPriceText({ id: '', price: String(price), currency }, t('aiRecharge.unit'));
-});
-
 // 来源作品生成时用的是不是无限制模式。
 // switch_no = 0 时发布页不显示「敏感内容」勾选，is_nsfw 只能由这里推导。
 const sourceIsNsfw = computed(() => {
@@ -801,13 +690,10 @@ const computedIsNsfw = computed(() => {
 });
 const editingCollectionId = ref<string | number | null>(null);
 const showEditCollectionModal = ref(false);
-const isCollectionHovered = ref(false);
-const selectedCollectionId = ref<number | ''>(''); // Keep for backward compatibility
+ // Keep for backward compatibility
 const selectedEpisodeNumber = ref('1');
 const showCollectionDropdown = ref(false);
 const showEpisodeDropdown = ref(false);
-const collectionDropdownPosition = ref<'top' | 'bottom'>('bottom');
-const episodeDropdownPosition = ref<'top' | 'bottom'>('bottom');
 const showCollectionListModal = ref(false);
 const collectionListSelectedId = ref<string | number | null>(null);
 const isCreateFromCollectionList = ref(false);
@@ -824,8 +710,6 @@ const episodes = ref([
   { value: '1', label: '1' },
 ]);
 
-// Collection pagination
-const collectionDropdownRef = ref<HTMLDivElement | null>(null);
 const currentCollectionPage = ref(1);
 const collectionPageSize = ref(20);
 const hasMoreCollections = ref(true);
@@ -882,28 +766,6 @@ function onSubscribePromptSaved() {
   pendingPaidAction = null;
   action?.();
 }
-
-// Computed
-const captionLength = ref(0);
-const canSubmit = computed(() => {
-  return uploadSuccess.value && selectedCollection.value && coverPreview.value;
-});
-
-
-
-// Check if selected chapter is already published
-const isChapterPublished = computed(() => {
-  if (!selectedProject.value?.chapters || !selectedEpisode.value) return false;
-  const chapter = selectedProject.value.chapters.find((c: any) => c.chapter === selectedEpisode.value);
-  return chapter?.is_publish == 1;
-});
-
-const isLoadingBatchPublish = ref(false);
-const isSelectionLoading = ref(false);
-let isSelectionCancelled = false;
-
-const batchChapterTitles = ref<Record<number, string>>({});
-const batchChapterContents = ref<Record<number, string>>({});
 
 const batchPermission = ref<'public' | 'partial' | 'private'>('public');
 const batchPartialStartChapter = ref<number>(1);
@@ -983,7 +845,6 @@ function updateBatchChapterTitle(chapterNum: number, event: Event) {
 function getBatchChapterDesc(chapterNum: number): string {
   return localItems.value[chapterNum - 1]?.desc || '';
 }
-
 
 function localItemStatusText(item: LocalItem): string {
   switch (item.status) {
@@ -1109,6 +970,8 @@ async function uploadLocalItem(item: LocalItem) {
     item.url = await uploadVideoFile(item.file, (percent) => {
       item.progress = percent;
     });
+    // 合并接口没给出地址就当失败，不然后面会用空 video_url 发帖
+    if (!item.url) throw new Error('empty video url');
     item.progress = 100;
     item.status = 'success';
   } catch (error: any) {
@@ -1305,6 +1168,7 @@ async function runBatchPublishLoop() {
       headers.append("sign", sign);
       headers.append("Content-Type", "application/json");
       headers.append("Platform", "web");
+      headers.append("siteid", "1");
 
       const response = await fetch(`${baseUrl}post/addPost`, {
         method: "POST",
@@ -1353,6 +1217,15 @@ const batchCollectionChapterList = computed(() => {
     list.push(start + i);
   }
   return list;
+});
+
+// 手输的起始集数：只能是列表里的值（1 ~ 本次要发布的最后一集），输 0 / 超出 / 清空都拉回范围内
+watch(batchPartialStartChapter, (v) => {
+  const list = batchCollectionChapterList.value;
+  if (!list.length) return;
+  const n = Number(v);
+  if (!Number.isFinite(n) || list.includes(n)) return;
+  batchPartialStartChapter.value = n < list[0] ? list[0] : list[list.length - 1];
 });
 
 watch(batchCollectionChapterList, (list) => {
@@ -1438,88 +1311,6 @@ function handleBatchPublishRetry() {
   runBatchPublishLoop();
 }
 
-// Check if a project is selected
-const isProjectSelected = computed(() => {
-  return !!selectedProject.value && !!selectedEpisode.value;
-});
-
-// Collection methods
-function toggleCollectionDropdown(event: Event) {
-  event.stopPropagation();
-
-  if (!showCollectionDropdown.value) {
-    // Calculate dropdown position based on element position
-    const target = event.currentTarget as HTMLElement;
-    if (target) {
-      const rect = target.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const dropdownHeight = 350; // Estimated dropdown height
-
-      // Check if there's enough space below
-      if (rect.bottom + dropdownHeight > windowHeight) {
-        // Not enough space below, check if there's enough space above
-        if (rect.top > dropdownHeight) {
-          // Show above
-          collectionDropdownPosition.value = 'top';
-        } else {
-          // Not enough space above either, show below but limit height
-          collectionDropdownPosition.value = 'bottom';
-        }
-      } else {
-        // Enough space below, show normally
-        collectionDropdownPosition.value = 'bottom';
-      }
-    } else {
-      // Default to bottom if target is not available
-      collectionDropdownPosition.value = 'bottom';
-    }
-  }
-
-  showCollectionDropdown.value = !showCollectionDropdown.value;
-  showEpisodeDropdown.value = false;
-
-  if (showCollectionDropdown.value) {
-    // Reset pagination and clear collections first
-    hasMoreCollections.value = true;
-    collections.value = [];
-    currentCollectionPage.value = 1;
-    fetchCollections(false);
-  }
-}
-
-function toggleEpisodeDropdown(event: Event) {
-  event.stopPropagation();
-
-  if (!showEpisodeDropdown.value) {
-    // Calculate dropdown position based on element position
-    const target = event.currentTarget as HTMLElement;
-    if (target) {
-      const rect = target.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const dropdownHeight = 300; // Estimated dropdown height
-
-      // Check if there's enough space below
-      if (rect.bottom + dropdownHeight > windowHeight) {
-        // Not enough space below, show above
-        episodeDropdownPosition.value = 'top';
-      } else {
-        // Enough space below, show normally
-        episodeDropdownPosition.value = 'bottom';
-      }
-    }
-  }
-
-  showEpisodeDropdown.value = !showEpisodeDropdown.value;
-  showCollectionDropdown.value = false;
-}
-
-function createNewCollection() {
-  editingCollectionId.value = null;
-  isCreateFromCollectionList.value = false;
-  showEditCollectionModal.value = true;
-  showCollectionDropdown.value = false;
-}
-
 function openCollectionListModal() {
   collectionListSelectedId.value = selectedCollection.value?.id || null;
   showCollectionListModal.value = true;
@@ -1583,21 +1374,6 @@ function handleEditCollection() {
 
 function handleCloseEditCollectionModal() {
   showEditCollectionModal.value = false;
-}
-
-async function selectCollection(id: number) {
-  if (!route.query.session_id && !selectedProject.value?.session_id && !sessionId.value && !postId.value) {
-    await doSelectCollection(id);
-    return;
-  }
-  if (uploadOption.value !== 'local' && isEditingWork.value && !switchCollectionWarningShown.value && selectedCollection.value && selectedCollection.value.id !== id) {
-    pendingCollectionId.value = id;
-    showSwitchCollectionModal.value = true;
-    showCollectionDropdown.value = false;
-    return;
-  }
-
-  await doSelectCollection(id);
 }
 
 async function doSelectCollection(id: number, skipSensitiveCheck = false, collectionData?: any) {
@@ -1692,13 +1468,6 @@ async function doSelectCollection(id: number, skipSensitiveCheck = false, collec
   isNoCollection.value = false;
 }
 
-function clearCollection() {
-  selectedCollection.value = null;
-  showCollectionDropdown.value = false;
-  showEpisodeDropdown.value = false;
-  isNoCollection.value = true;
-}
-
 function handleCloseSwitchCollectionModal() {
   showSwitchCollectionModal.value = false;
   collectionListSelectedId.value = selectedCollection.value?.id || null;
@@ -1720,16 +1489,6 @@ async function handleConfirmSwitchCollection() {
     isCreateFromCollectionList.value = true;
     showEditCollectionModal.value = true;
   }
-}
-
-function selectEpisode(value: string) {
-  selectedEpisodeNumber.value = value;
-  showEpisodeDropdown.value = false;
-}
-
-function getEpisodeLabel(value: string) {
-  const episode = episodes.value.find(ep => ep.value === value);
-  return episode ? episode.label : '1';
 }
 
 // Fetch collections
@@ -1759,18 +1518,6 @@ async function fetchCollections(loadMore = false) {
     console.error('Error fetching collections:', error);
   } finally {
     isLoadingCollections.value = false;
-  }
-}
-
-// Handle collection dropdown scroll
-function handleCollectionDropdownScroll(event: Event) {
-  const target = event.target as HTMLElement;
-  if (!target) return;
-
-  const { scrollTop, scrollHeight, clientHeight } = target;
-
-  if (scrollHeight - scrollTop - clientHeight < 100 && hasMoreCollections.value && !isLoadingCollections.value) {
-    fetchCollections(true);
   }
 }
 
@@ -1986,23 +1733,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('drop', blockUnhandledFileDrop);
 });
 
-/** 关预览。blob 地址不释放会一直把整个文件钉在内存里，5GB 的视频尤其要命 */
-function toggleSensitive(val: string) {
-  if (form.value.content === val) return;
-
-  const dontAsk = localStorage.getItem('sensitiveDontAsk');
-
-  if (val == 'yes') {
-    if (dontAsk == '1') {
-      form.value.content = val;
-    } else {
-      showSensitiveConfirm.value = true;
-    }
-  } else {
-    form.value.content = val;
-  }
-}
-
 async function handlePermissionChange(permission: string, _index: number) {
   if (await maybePromptSubscription(permission)) {
     // 先弹订阅设置弹窗，不选中；设置成功后再回来选
@@ -2064,21 +1794,6 @@ function handleClickOutside(event: MouseEvent) {
   if (langDropdownOpen.value && !langDropdownRef.value?.contains(target)) {
     langDropdownOpen.value = false;
   }
-}
-
-function showToast(msg: string, icon: string) {
-  toastMsg.value = msg;
-  toastIcon.value = icon;
-  toastShow.value = true;
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toastShow.value = false;
-  }, 3000);
-}
-
-function openCommunityConvention() {
-  localStorage.setItem("isBack", "1");
-  window.open("/community-convention", "_blank", 'noopener,noreferrer');
 }
 
 onMounted(async () => {

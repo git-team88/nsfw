@@ -32,6 +32,7 @@
             <button
               v-if="unpublishedChaptersCount > 2"
               class="batch-publish-btn"
+              :class="{ 'published': isBatchPublishing }"
               :disabled="isBatchPublishing"
               @click="handleBatchPublish"
             >
@@ -41,7 +42,7 @@
               class="publish-btn"
               :class="{ 'published': isChapterPublished }"
               @click="handlePublish"
-              :disabled="isChapterPublished"
+              :disabled="isChapterPublished || loading || !chapterContentLoaded"
             >
               {{ isChapterPublished ? t('submit.image.published') : t('submit.image.projectView.publishChapter') }}
             </button>
@@ -81,6 +82,9 @@ const unpublishedChaptersCount = computed(() =>
 const selectedChapter = ref('1');
 const loading = ref(false);
 const isBatchPublishing = ref(false);
+const chapterResultAsync = ref<any>(null);
+// 正文是否真的拿到了：没拿到时页面显示的是「暂无章节内容」提示，不能当正文发出去
+const chapterContentLoaded = ref(false);
 const chapterContent = ref('');
 
 // Get chapters from project
@@ -128,11 +132,13 @@ async function fetchChapterDetails(chapterNumber: string) {
   if (!props.project) return;
 
   loading.value = true;
+  chapterContentLoaded.value = false;
   try {
     // Get session_id from project data
     const sessionId = props.project.session_id;
     if (!sessionId) {
       chapterContent.value = t('submit.image.noChapterContent');
+      chapterContentLoaded.value = false;
       return;
     }
 
@@ -142,15 +148,21 @@ async function fetchChapterDetails(chapterNumber: string) {
       const result = res.data;
       if (result && result.content) {
         chapterContent.value = result.content;
+        chapterContentLoaded.value = true;
+        // 插图列表（[[img_placeholder]] 对应的图）跟正文一起交给发布页
+        chapterResultAsync.value = result.result_async ?? null;
       } else {
         chapterContent.value = t('submit.image.noChapterContent');
+        chapterContentLoaded.value = false;
       }
     } else {
       chapterContent.value = t('submit.image.noChapterContent');
+      chapterContentLoaded.value = false;
     }
   } catch (error) {
     console.error('Error fetching chapter details:', error);
     chapterContent.value = t('submit.image.noChapterContent');
+    chapterContentLoaded.value = false;
   } finally {
     loading.value = false;
   }
@@ -212,7 +224,8 @@ async function handlePublish() {
     project: props.project,
     episode: chapter.chapter,
     title: formattedTitle,
-    content: chapterContent.value,
+    content: chapterContentLoaded.value ? chapterContent.value : '',
+    result_async: chapterResultAsync.value,
     cover: cover,
     chapterIndex: chapter.chapter,
     session_id: props.project.session_id
@@ -258,6 +271,8 @@ watch(() => props.project, (newProject) => {
   border: 1px solid #3d3d3d;
   box-shadow: 0 15px 35px rgba(0,0,0,0.5);
   width: 980px;
+  // 窗口比 980 窄时跟着缩，不要被裁掉
+  max-width: calc(100vw - 32px);
   height: calc(100vh - 260px);
   max-height: 640px;
   display: flex;
@@ -295,7 +310,10 @@ watch(() => props.project, (newProject) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 0 0 280px;
   width: 280px;
+  max-width: 36%;
+  min-width: 0;
   height: 100%;
   padding: 20px;
   border-radius: 14px 0 0 14px;
@@ -350,6 +368,7 @@ watch(() => props.project, (newProject) => {
 }
 
 .modal-right{
+  min-width: 0;
   flex: 1;
   height: 100%;
   display: flex;
@@ -386,28 +405,18 @@ watch(() => props.project, (newProject) => {
   padding: 20px;
   display: flex;
   justify-content: center;
-  gap: 1.6rem;
+  gap: 16px;
 }
 
-.batch-publish-btn {
-  min-width: 30rem;
-  height: 5.6rem;
-  border: none;
-  border-radius: 0.8rem;
-  font-size: 1.6rem;
-  background: rgba(255,255,255,0.06);
-  color: #aaa;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    color: #ff4f9a;
-  }
-}
-
-.publish-btn {
-  min-width: 300px;
-  height: 56px;
+// 「批量发布全部待发」和「发布本章」同一套样式。
+// 发布页 Novel.scss 里有不带 scoped 的 `.publish-btn { height: 48px }` 会漏进弹窗，这里用 .modal-footer 加权压过它
+.modal-footer .batch-publish-btn,
+.modal-footer .publish-btn {
+  // 两个按钮等宽平分，最宽 300；窗口窄时一起缩，不会把弹窗撑出去
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 300px;
+  height: 48px;
   border: 1px solid #3d3d3d;
   border-radius: 14px;
   font-size: 16px;

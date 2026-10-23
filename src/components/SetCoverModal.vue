@@ -505,7 +505,7 @@ async function mockUpload(dataUrl: string): Promise<string> {
       body: formData,
     };
 
-    const res = await fetch(baseUrl + "/user/uploadImage", parma);
+    const res = await fetch(baseUrl + "user/uploadImage", parma);
     const data = await res.json();
     if (data.code === 0 || data.code === 200) {
       return data.data.url || dataUrl;

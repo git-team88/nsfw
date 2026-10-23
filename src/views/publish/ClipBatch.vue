@@ -363,6 +363,8 @@ function confirmConvention() {
 // 每个视频一张封面，按 uid 存；上传成功后自动抽第一帧并传到图床当默认封面，用户可以在弹窗里改。
 const covers = ref<Record<number, string>>({});
 const coverGenerating = ref<Record<number, boolean>>({});
+// 每张封面对应的是哪个文件：「重新上传」换了视频但 uid 不变，靠这个识别出封面已经过期
+const coverFiles = new Map<number, File>();
 // 正在抽帧 / 上传的默认封面任务，按 uid 存；点发布时如果还有没完成的，先等它们
 const coverTasks = new Map<number, Promise<void>>();
 const isWaitingCovers = ref(false);
@@ -384,6 +386,7 @@ function openCoverModal(item: LocalItem) {
 function onCoverConfirmed(url: string) {
   if (coverEditingItem.value && url) {
     covers.value[coverEditingItem.value.uid] = url;
+    coverFiles.set(coverEditingItem.value.uid, coverEditingItem.value.file);
   }
 }
 
@@ -393,9 +396,14 @@ watch(
   () => {
     const alive = new Set(localItems.value.map(i => i.uid));
     for (const key of Object.keys(covers.value)) {
-      if (!alive.has(Number(key))) delete covers.value[Number(key)];
+      if (!alive.has(Number(key))) { delete covers.value[Number(key)]; coverFiles.delete(Number(key)); }
     }
     for (const item of localItems.value) {
+      // 「重新上传」换了视频：旧封面是上一个视频的，丢掉，等新视频传成功再抽帧
+      if (covers.value[item.uid] && coverFiles.get(item.uid) !== item.file) {
+        delete covers.value[item.uid];
+        coverFiles.delete(item.uid);
+      }
       if (item.status === "success" && !covers.value[item.uid] && !coverGenerating.value[item.uid]) {
         coverTasks.set(item.uid, generateDefaultCover(item).finally(() => coverTasks.delete(item.uid)));
       }
@@ -409,9 +417,11 @@ async function generateDefaultCover(item: LocalItem) {
     const dataUrl = await extractFirstFrame(item.file);
     if (!dataUrl) return;
     const url = await uploadCoverDataUrl(dataUrl);
-    // 抽帧期间用户可能已经手动设了封面或删了文件
-    if (url && !covers.value[item.uid] && localItems.value.some(i => i.uid === item.uid)) {
+    // 抽帧期间用户可能已经手动设了封面、删了文件或换了视频（uid 不变但 file 变了）
+    const current = localItems.value.find(i => i.uid === item.uid);
+    if (url && !covers.value[item.uid] && current && current.file === item.file) {
       covers.value[item.uid] = url;
+      coverFiles.set(item.uid, item.file);
     }
   } catch (e) {
     console.warn("[clip-batch] 默认封面生成失败", e);
@@ -481,9 +491,9 @@ async function uploadCoverDataUrl(dataUrl: string): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
   const authHeaders = window.AntiCrawler.generateAuthParams(token);
-  const res = await fetch(baseUrl + "/user/uploadImage", {
+  const res = await fetch(baseUrl + "user/uploadImage", {
     method: "POST",
-    headers: { token, Platform: "web", ...authHeaders },
+    headers: { token, Platform: "web", siteid: "1", ...authHeaders },
     body: formData,
   });
   const data = await res.json();
@@ -494,7 +504,17 @@ async function uploadCoverDataUrl(dataUrl: string): Promise<string> {
 // ============================== 发布 ==============================
 const showBatchPublishProgress = ref(false);
 const showBatchPublishFail = ref(false);
-const batchPublishChapterStatuses = ref<{ chapter: number; status: "success" | "publishing" | "waiting" | "fail" | "unpublished" }[]>([]);
+const batchPublishChapterStatuses = ref<{ uid: number; chapter: number; status: "success" | "publishing" | "waiting" | "fail" | "unpublished" }[]>([]);
+
+// 按当前列表重建进度：同一个文件（uid）上一轮已发成功的保留 success，关掉弹窗后增删 / 排序也不会错位
+function rebuildBatchStatuses() {
+  const done = new Set(batchPublishChapterStatuses.value.filter(c => c.status === "success").map(c => c.uid));
+  batchPublishChapterStatuses.value = localItems.value.map((item, i) => ({
+    uid: item.uid,
+    chapter: i + 1,
+    status: done.has(item.uid) ? "success" as const : "waiting" as const
+  }));
+}
 const batchPublishFailChapters = ref<{ chapter: number; status: "success" | "fail" | "unpublished" }[]>([]);
 const batchPublishFailedChapter = ref<number | undefined>(undefined);
 
@@ -535,7 +555,8 @@ async function onBatchPublish() {
     return;
   }
 
-  batchPublishChapterStatuses.value = localItems.value.map((_, i) => ({ chapter: i + 1, status: "waiting" as const }));
+  if (isPublishing.value) return;
+  rebuildBatchStatuses();
   showBatchPublishProgress.value = true;
 
   await runBatchPublishLoop();
@@ -581,6 +602,7 @@ async function runBatchPublishLoop() {
       headers.append("sign", sign);
       headers.append("Content-Type", "application/json");
       headers.append("Platform", "web");
+      headers.append("siteid", "1");
 
       const response = await fetch(`${baseUrl}post/addPostFive`, {
         method: "POST",
@@ -639,9 +661,9 @@ function handleBatchPublishExit() {
 }
 
 function handleBatchPublishRetry() {
-  batchPublishChapterStatuses.value.forEach(item => {
-    if (item.status !== "success") item.status = "waiting";
-  });
+  if (isPublishing.value) return;
+  // 按当前列表重建：失败 / 未发布的回到等待，已成功的保留
+  rebuildBatchStatuses();
   showBatchPublishFail.value = false;
   showBatchPublishProgress.value = true;
   runBatchPublishLoop();

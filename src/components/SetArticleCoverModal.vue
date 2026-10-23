@@ -866,7 +866,7 @@ async function confirm() {
             body: formData,
           };
 
-          const res = await fetch(baseUrl + "/user/uploadImage", parma);
+          const res = await fetch(baseUrl + "user/uploadImage", parma);
           const data = await res.json();
           if (data.code == 0 || data.code == 200) {
             const url = (data?.data && (data.data.url || data.data)) || data?.url;
@@ -912,7 +912,7 @@ async function confirm() {
             body: formData,
           };
 
-          const res = await fetch(baseUrl + "/user/uploadImage", parma);
+          const res = await fetch(baseUrl + "user/uploadImage", parma);
           const data = await res.json();
           if (data.code == 0 || data.code == 200) {
             const url = (data?.data && (data.data.url || data.data)) || data?.url;

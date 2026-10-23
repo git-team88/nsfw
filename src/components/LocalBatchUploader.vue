@@ -210,6 +210,7 @@ function readVideoMetadata(file: File): Promise<{ ok: true; duration: number } |
 }
 
 function pickLocalFiles() {
+  if (props.locked) return;
   localInputRef.value?.click();
 }
 
@@ -225,7 +226,8 @@ async function onDropLocalFiles(e: DragEvent) {
 }
 
 async function addLocalFiles(files: File[]) {
-  if (!files.length) return;
+  // 发布中（locked）不收新文件：拖进来也不加，不然发布循环已经按旧列表跑了，新文件会被静默漏掉
+  if (props.locked || !files.length) return;
   const room = props.maxFiles - items.value.length;
   if (room <= 0) {
     toast(t('submit.video.batchLimit', { max: props.maxFiles }));

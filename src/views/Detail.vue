@@ -5250,7 +5250,7 @@ async function uploadImage(file: File) {
       body: formData,
     };
 
-    const res = await fetch(baseUrl + "/user/uploadImage", parma);
+    const res = await fetch(baseUrl + "user/uploadImage", parma);
     const data = await res.json();
     if (data.code === 0 || data.code === 200) {
       const imageUrl = data.data.url || '';

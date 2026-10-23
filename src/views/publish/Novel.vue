@@ -160,8 +160,6 @@
                 type="text"
                 :maxlength="TITLE_MAX"
                 :placeholder="t('submit.titlePlaceholder')"
-                @input="handleTitleInput"
-                @blur="handleTitleBlur"
               />
               <span class="char-count-local">{{ form.title.length }}/{{ TITLE_MAX }}</span>
             </div>
@@ -576,7 +574,6 @@
                     </div>
                   </div>
 
-
                 </div>
                 <div class="collection-group" v-if="!isNoCollection && selectedCollection">
                   <label class="form-label">{{ t("collection.orderInCollection") }}</label>
@@ -652,7 +649,7 @@
 
         <!-- Batch mode: submit -->
         <div v-if="isBatchPublish" class="submit-row">
-          <button class="submit" :disabled="uploading" @click="onBatchPublish">
+          <button class="submit" :disabled="uploading || isBatchPublishing" @click="onBatchPublish">
             {{ t("submit.submit") }}
           </button>
         </div>
@@ -920,15 +917,20 @@ const currentLangLabel = computed(() => {
 async function handleCollectionLanguageChange(key: string) {
   langDropdownOpen.value = false;
   if (key === collectionLanguage.value) return;
-  const prevLang = collectionLanguage.value;
-  collectionLanguage.value = key;
-  if (selectedCollection.value) {
-    try {
-      await api.modifyCollection({ book_id: selectedCollection.value.id, language: key });
-    } catch (e) {
-      collectionLanguage.value = prevLang;
-      toast(t('fail'));
+  if (!selectedCollection.value) {
+    collectionLanguage.value = key;
+    return;
+  }
+  // 已选了合集：先改接口，成功了再把下拉切过去；失败 / 业务错误都提示并保持原值
+  try {
+    const res = await api.modifyCollection({ is_bl: 1, book_id: selectedCollection.value.id, language: key }) as any;
+    if (res?.code === 0) {
+      collectionLanguage.value = key;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
     }
+  } catch (e) {
+    toast(t('fail'));
   }
 }
 
@@ -1050,7 +1052,6 @@ const headerRef = ref<InstanceType<typeof Header> | null>(null);
 
 const userRegion = ref(false);
 const isAdult = ref(false);
-
 
 function selectDropdownItem(item: { label: string; value: string }) {
   if (!lastRange.value || !captionRef.value) return;
@@ -1350,14 +1351,6 @@ watch(uploadOption, (newOption) => {
   hasHistoryCover.value = false;
 });
 
-// Handle title input and auto-generate cover
-function handleTitleInput() {
-  if (uploadOption.value === 'local') return;
-  if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
-    generateCoverFromTitle();
-  }
-}
-
 function onTitleInput() {
   if (titleError.value && form.value.title.trim()) {
     titleError.value = false;
@@ -1382,63 +1375,6 @@ function getCountry() {
   }).catch(err => {
     console.log(err);
   })
-}
-
-// Handle title blur and upload cover
-async function handleTitleBlur() {
-  if (uploadOption.value === 'local') return;
-
-  if (form.value.title.trim() && !selectedProject.value?.cover && !hasUrlCover.value && !hasAICover.value && !hasHistoryCover.value) {
-    generateCoverFromTitle();
-
-    if (coverPreview.value) {
-      isUpload.value = true;
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        isUpload.value = false;
-        return false;
-      }
-
-      try {
-        const response = await fetch(coverPreview.value);
-        const blob = await response.blob();
-        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const authHeaders = window.AntiCrawler.generateAuthParams(token);
-
-        const parma = {
-          method: "POST",
-          headers: {
-            token: token,
-            'Platform': 'web',
-            'siteid': '1',
-            ...authHeaders,
-          },
-          body: formData,
-        };
-
-        const res = await fetch(baseUrl + "user/uploadImage", parma);
-        const data = await res.json();
-        if (data.code === 0 || data.code === 200) {
-          const url = (data?.data && (data.data.url || data.data)) || data?.url;
-          if (typeof url === "string") {
-            coverPreview.value = url;
-          }
-        } else {
-          toast(apiErrorMessage(data))
-        }
-      } catch (error) {
-        console.error("Cover upload error:", error);
-        toast(t('fail'));
-      } finally {
-        isUpload.value = false;
-      }
-
-    }
-  }
 }
 
 async function goToNextStep() {
@@ -1572,6 +1508,15 @@ const batchCollectionChapterList = computed(() => {
   return list;
 });
 
+// 手输的起始集数：只能是列表里的值（1 ~ 本次要发布的最后一集），输 0 / 超出 / 清空都拉回范围内
+watch(batchPartialStartChapter, (v) => {
+  const list = batchCollectionChapterList.value;
+  if (!list.length) return;
+  const n = Number(v);
+  if (!Number.isFinite(n) || list.includes(n)) return;
+  batchPartialStartChapter.value = n < list[0] ? list[0] : list[list.length - 1];
+});
+
 watch(batchCollectionChapterList, (list) => {
   if (list.length > 0) {
     if (!list.includes(batchPartialStartChapter.value)) {
@@ -1691,6 +1636,8 @@ function toggleChapterSelection(chapterNum: number) {
   const idx = selectedChapters.value.indexOf(chapterNum);
   if (idx === -1) {
     selectedChapters.value.push(chapterNum);
+    // 合集集数按章节号顺序分配，不按点选顺序
+    selectedChapters.value.sort((a, b) => a - b);
   } else {
     selectedChapters.value.splice(idx, 1);
   }
@@ -1898,7 +1845,7 @@ async function getPostDetails() {
 
       // Auto-generate cover if no cover provided
       if (!coverPreview.value && form.value.title.trim()) {
-        generateCoverFromTitle();
+        await generateAndUploadCover();
       }
 
       // Set selected collection from book_title
@@ -2116,7 +2063,7 @@ async function onSubmit() {
       cover_title: coverTitle,
       ...(session_id ? { session_id } : {}),
       ...(chapterIdForPublish.value ? { ai_chapter_index: chapterIdForPublish.value } : (index ? { ai_chapter_index: parseInt(index) } : {})),
-      ...(isEditMode && { post_id: postId.value })
+      ...(isEditMode.value && { post_id: postId.value })
     };
 
     const headers = new Headers();
@@ -2157,7 +2104,7 @@ async function onSubmit() {
     }
   } catch (error) {
     console.error("Publish error:", error);
-    toast(t("submit.article.publishFailed"));
+    toast(t("fail"));
   } finally {
     isUpload.value = false;
   }
@@ -2907,6 +2854,14 @@ function buildCaptionImage(url: string): HTMLImageElement {
 // Merge a chapter's [[img_placeholder]] markers with its illustrations
 // (result_async.insert_images) so batch-published content carries the same
 // <img src="url" /> tags that single publish produces via serializeCaptionContent.
+function parseInsertImages(resultAsync: any): string[] {
+  let ra = resultAsync;
+  if (typeof ra === 'string') {
+    try { ra = JSON.parse(ra); } catch (e) { ra = null; }
+  }
+  return Array.isArray(ra?.insert_images) ? ra.insert_images : [];
+}
+
 function mergeInsertImagesIntoContent(content: string, resultAsync: any): string {
   if (!content) return content || '';
   let ra = resultAsync;
@@ -4137,16 +4092,18 @@ function closeViewModal() {
 }
 
 async function handleBatchPublishFromModal() {
-  if (!selectedProject.value) return;
+  // 用正在预览的那个作品（预览按钮不会改 selectedProject，选中 A 预览 B 时不能把 A 发出去）
+  const targetProject = previewProject.value || selectedProject.value;
+  if (!targetProject) return;
   if (isSelectionLoading.value) return;
   isSelectionLoading.value = true;
   isSelectionCancelled = false;
 
-  const targetProject = selectedProject.value;
   const sessionId = targetProject.session_id;
   if (!sessionId) { isSelectionLoading.value = false; return; }
 
-  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish !== 1);
+  // 和「章节标题编辑」列表一致：只发 is_publish == 2（未发布）的，生成中的不算
+  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish == 2);
   selectedChapters.value = unpublished.map((c: any) => c.chapter);
 
   if (selectedChapters.value.length === 0 || isSelectionCancelled) {
@@ -4227,16 +4184,32 @@ async function onBatchPublish() {
     return;
   }
 
+  if (isBatchPublishing.value) return;
+  // 上一轮已经发成功的章节保留 success，不会再发一遍
+  const done = new Set(batchPublishChapterStatuses.value.filter(c => c.status === 'success').map(c => c.chapter));
   batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
     chapter,
-    status: 'waiting' as const
+    status: done.has(chapter) ? 'success' as const : 'waiting' as const
   }));
   showBatchPublishProgress.value = true;
 
   await runBatchPublishLoop();
 }
 
+// 批量发布防重入：进度 / 失败弹窗关掉后循环还在后台跑，再点「发布」不能再起一轮
+const isBatchPublishing = ref(false);
+
 async function runBatchPublishLoop() {
+  if (isBatchPublishing.value) return;
+  isBatchPublishing.value = true;
+  try {
+    await runBatchPublishLoopInner();
+  } finally {
+    isBatchPublishing.value = false;
+  }
+}
+
+async function runBatchPublishLoopInner() {
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');
@@ -4259,6 +4232,11 @@ async function runBatchPublishLoop() {
 
     try {
       let content = batchChapterContents.value[chapterNum] || batchChapterDetails.value[chapterNum]?.content || '';
+      // 这一章的正文没拉到（接口失败 / 返回空）：不能用空正文发出去，按失败处理并停下来
+      if (!String(content).trim()) {
+        toast(t('novel.batchPublish.chapterLoadError'));
+        throw new Error(`chapter ${chapterNum} content missing`);
+      }
       let title = batchChapterTitles.value[chapterNum] || getBatchChapterTitle(chapterNum);
 
       const accessRights = batchPermission.value === 'partial'
@@ -4363,7 +4341,7 @@ async function handlePublish(publishData?: any) {
   // Check if publishData is provided (from modal) or if we're handling a direct click
   if (publishData && typeof publishData == 'object' && publishData.project) {
     // From modal: use the provided data
-    const { project: targetProject, episode: targetEpisode, title, content, chapterIndex, session_id, cover } = publishData;
+    const { project: targetProject, episode: targetEpisode, title, content, chapterIndex, session_id, cover, result_async } = publishData;
 
     if (!targetProject) {
       toast(t('submit.image.selectNovelFirst'));
@@ -4375,7 +4353,14 @@ async function handlePublish(publishData?: any) {
 
     // Use the provided title and content
     form.value.title = title.substring(0, TITLE_MAX);
-    form.value.description = content || `This is the content for episode ${targetEpisode} of ${targetProject.name}.`;
+    if (!String(content || '').trim()) {
+      // 弹窗没拿到正文（接口失败）：不能拿提示文案 / 占位句当正文发
+      toast(t('novel.batchPublish.chapterLoadError'));
+      return;
+    }
+    form.value.description = content;
+    // 插图列表从 result_async 取，渲染时把 [[img_placeholder]] 换成图
+    captionInsertImages.value = parseInsertImages(result_async);
 
     // Set cover from modal (使用合集封面)
     if (cover) {
@@ -4402,7 +4387,7 @@ async function handlePublish(publishData?: any) {
     }
 
     // Fetch episode content from API and check publish status
-    let episodeContent = `This is the content for episode ${targetEpisode} of ${targetProject.name}.`;
+    let episodeContent = '';
     if (targetProject.session_id) {
       try {
         const res = await api.detailChapter(targetProject.session_id, targetEpisode) as any;
@@ -4415,10 +4400,17 @@ async function handlePublish(publishData?: any) {
           if (res.data.content) {
             episodeContent = res.data.content;
           }
+          captionInsertImages.value = parseInsertImages(res.data.result_async);
         }
       } catch (error) {
         console.error('Error fetching chapter content:', error);
       }
+    }
+
+    if (!episodeContent.trim()) {
+      // 正文没拉到（接口失败 / 返回空）：不发
+      toast(t('novel.batchPublish.chapterLoadError'));
+      return;
     }
 
     // Store chapterId for publish
@@ -4448,7 +4440,7 @@ async function handlePublish(publishData?: any) {
     projectCover.value = selectedProject.value.result_async?.generate_novel_cover;
     hasHistoryCover.value = true;
   } else {
-    generateCoverFromTitle();
+    await generateAndUploadCover();
   }
 
   // Handle collection logic based on the project name
@@ -4547,12 +4539,8 @@ async function handlePublish(publishData?: any) {
 
   // Update the contenteditable div after switching to full content view
   setTimeout(() => {
-    if (captionRef.value) {
-      // Convert literal \n to actual newlines
-      const processedContent = form.value.description.replace(/\\n/g, '\n');
-      captionRef.value.textContent = processedContent;
-      captionLength.value = processedContent.length;
-    }
+    // 正文里的 [[img_placeholder]] 要换成插图，不能当纯文本塞进去（提交时会原样发出去）
+    renderCaptionContent(form.value.description, captionInsertImages.value);
   }, 0);
 
   // Close modal
@@ -4644,6 +4632,55 @@ async function handlePermissionChange(permission: string, index: number) {
 }
 
 // Lifecycle
+// 没有现成封面时：按标题画一张（canvas → base64），先传到图床拿 URL，再给 coverPreview。
+// 不能把 base64 直接当 cover 提交。
+async function generateAndUploadCover() {
+  generateCoverFromTitle();
+
+  const token = localStorage.getItem("token");
+  if (token) {
+    isUpload.value = true;
+    try {
+      if (coverPreview.value.startsWith('data:image/')) {
+        const response = await fetch(coverPreview.value);
+        const blob = await response.blob();
+        const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const authHeaders = window.AntiCrawler.generateAuthParams(token);
+
+        const parma = {
+          method: "POST",
+          headers: {
+            token: token,
+            'Platform': 'web',
+            'siteid': '1',
+            ...authHeaders,
+          },
+          body: formData,
+        };
+
+        const res = await fetch(baseUrl + "user/uploadImage", parma);
+        const data = await res.json();
+        if (data.code == 0 || data.code == 200) {
+          const url = (data?.data && (data.data.url || data.data)) || data?.url;
+          if (typeof url == "string") {
+            coverPreview.value = url;
+          }
+        } else {
+          toast(apiErrorMessage(data))
+        }
+      }
+    } catch (error) {
+      console.error("Cover upload error:", error);
+      toast(t('fail'));
+    } finally {
+      isUpload.value = false;
+    }
+  }
+}
+
 async function initSingleChapter(session_id: string, index: string, cover: string, title: string) {
   let projectDetailData: any = null;
   try {
@@ -4675,53 +4712,6 @@ async function initSingleChapter(session_id: string, index: string, cover: strin
         hasUrlCover.value = true;
       } else {
         await generateAndUploadCover();
-      }
-
-      async function generateAndUploadCover() {
-        generateCoverFromTitle();
-
-        const token = localStorage.getItem("token");
-        if (token) {
-          isUpload.value = true;
-          try {
-            if (coverPreview.value.startsWith('data:image/')) {
-              const response = await fetch(coverPreview.value);
-              const blob = await response.blob();
-              const file = new File([blob], "cover.jpg", { type: "image/jpeg" });
-              const formData = new FormData();
-              formData.append("file", file);
-
-              const authHeaders = window.AntiCrawler.generateAuthParams(token);
-
-              const parma = {
-                method: "POST",
-                headers: {
-                  token: token,
-                  'Platform': 'web',
-                  'siteid': '1',
-                  ...authHeaders,
-                },
-                body: formData,
-              };
-
-              const res = await fetch(baseUrl + "user/uploadImage", parma);
-              const data = await res.json();
-              if (data.code == 0 || data.code == 200) {
-                const url = (data?.data && (data.data.url || data.data)) || data?.url;
-                if (typeof url == "string") {
-                  coverPreview.value = url;
-                }
-              } else {
-                toast(apiErrorMessage(data))
-              }
-            }
-          } catch (error) {
-            console.error("Cover upload error:", error);
-            toast(t('fail'));
-          } finally {
-            isUpload.value = false;
-          }
-        }
       }
 
       showFullContent.value = true;
@@ -4832,7 +4822,8 @@ async function initBatchPublish(session_id: string) {
   const batchName = route.query.name as string;
   if (!batchIndexesRaw) {
     isLoadingBatchPublish.value = false;
-    router.push({ path: '/novel-generate', query: { session_id } });
+    // 批量发布缺章节参数：回小说生成页（/novel-generate 是旧地址，路由表里早没有了）
+    router.push(`/novel/${session_id}`);
     return;
   }
 

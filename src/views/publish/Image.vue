@@ -98,7 +98,7 @@
             <!-- Confirm Button -->
             <div class="confirm-section">
               <button class="confirm-btn" :disabled="selectedProjectIds.length === 0" @click="confirmSelectedProjects">
-                {{ t('submit.cover.confirm') }}{{ selectedProjectIds.length > 0 ? ` (${selectedProjectIds.length}/12)` : '' }}
+                {{ t('submit.cover.confirm') }}{{ selectedProjectIds.length > 0 ? ` (${selectedProjectIds.length}/${IMAGE_MAX})` : '' }}
               </button>
             </div>
           </div>
@@ -110,7 +110,7 @@
           <div class="upload-area">
             <div class="upload-info">
               <p>{{ t("submit.image.uploadCta") }}</p>
-              <button class="btn" @click="pickImages" :disabled="imageFiles.length >= 12">
+              <button class="btn" @click="pickImages" :disabled="imageFiles.length >= IMAGE_MAX">
                 {{ t("submit.image.uploadBtn") }}
               </button>
             </div>
@@ -148,7 +148,7 @@
       <div class="preview-section" v-if="showFullContent && imageUrls.length > 0">
         <div class="form-label-box">
           <span><b>*</b>{{ t('submit.image.imageLabel') }}</span>
-          <button v-if="imageUrls.length < 15" class="add-more-btn" @click="addMoreImages">{{ t('submit.image.add') }}</button>
+          <button v-if="imageUrls.length < IMAGE_MAX" class="add-more-btn" @click="addMoreImages">{{ t('submit.image.add') }}</button>
           <input
             ref="addImagesInputRef"
             type="file"
@@ -374,7 +374,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
+            >{{ t("submit.agree") }}<span class="terms-text" @click="openConvention">{{ t("submit.terms") }}</span></span
           >
         </div>
       </div>
@@ -407,7 +407,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, nextTick } from "vue";
+import { ref, reactive, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import { pickNewPostId, submitPostWatermark } from "@/util/watermark";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -595,6 +595,8 @@ function openPriceSetting() {
   showSubscriptionModal.value = true;
 }
 const agreeTerms = ref(true);
+// 一次发布最多几张图：本地上传 / 从作品选 / 添加 都用这一个数
+const IMAGE_MAX = 12;
 const showConventionModal = ref(false);
 
 const isLoadingDetail = ref(false);
@@ -647,7 +649,7 @@ async function onAddImagesPicked(e: Event) {
   const files = Array.from(input.files ?? []);
   input.value = "";
 
-  const maxCount = 12;
+  const maxCount = IMAGE_MAX;
   if (imageUrls.value.length + files.length > maxCount) {
     toast(t("submit.image.maxSelectTip"));
     return;
@@ -695,9 +697,12 @@ async function uploadImageForAdd(file: File) {
         imageUrls.value.push(url);
         imageSessionMap.value.set(url, "");
       }
+    } else {
+      toast(apiErrorMessage(data) || t("fail"));
     }
   } catch (error) {
     console.error("Upload error:", error);
+    toast(t("fail"));
   }
 }
 
@@ -1040,9 +1045,12 @@ async function onReuploadPicked(e: Event) {
         imageSessionMap.value.delete(oldUrl);
         imageSessionMap.value.set(url, "");
       }
+    } else {
+      toast(apiErrorMessage(data) || t("fail"));
     }
   } catch (error) {
     console.error("Reupload error:", error);
+    toast(t("fail"));
   } finally {
     isUploadingImages.value = false;
     reuploadIndex.value = null;
@@ -1060,7 +1068,11 @@ function buildTabList(): TabItem[] {
 }
 
 function getProjectCover(project: any): string {
-  const ra = typeof project.result_async === 'string' ? JSON.parse(project.result_async || '{}') : (project.result_async || {});
+  let ra: any = project.result_async || {};
+  if (typeof ra === 'string') {
+    // 列表里一条脏数据不能把整页渲染炸掉
+    try { ra = JSON.parse(ra || '{}'); } catch { ra = {}; }
+  }
   return (ra.final_images && ra.final_images[0]) || project.cover || "";
 }
 
@@ -1124,7 +1136,7 @@ function toggleProjectSelection(project: any) {
     selectedProjectIds.value.splice(idx, 1);
     selectedProjectsMap.value.delete(project.id);
   } else {
-    if (selectedProjectIds.value.length >= 12) {
+    if (selectedProjectIds.value.length >= IMAGE_MAX) {
       toast(t("submit.image.maxSelectTip"));
       return;
     }
@@ -1276,6 +1288,10 @@ function onSubscriptionSaved(planId: string) {
   }
 }
 
+function openConvention() {
+  window.open("/community-convention", "_blank", 'noopener,noreferrer');
+}
+
 function closeConventionModal() {
   showConventionModal.value = false;
 }
@@ -1293,7 +1309,7 @@ function openCommunityConvention() {
 
 // --- Local upload helpers ---
 function pickImages() {
-  if (imageFiles.value.length >= 12) {
+  if (imageFiles.value.length >= IMAGE_MAX) {
     toast(t("submit.image.maxSelectTip"));
     return;
   }
@@ -1344,7 +1360,7 @@ function isImageCorrupted(file: File): Promise<boolean> {
 }
 
 async function appendFiles(files: File[]) {
-  const maxCount = 12;
+  const maxCount = IMAGE_MAX;
   const maxSize = 10 * 1024 * 1024;
   const validImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
@@ -2132,7 +2148,24 @@ function renderCaptionContent() {
 }
 
 // --- URL jump entry ---
+// #话题 / @提及 下拉：点下拉和输入框以外的地方就收起（和 Clip.vue 一致）
+function handleClickOutside(event: MouseEvent) {
+  const target = event.target as Node;
+  if (isOpeningDropdown.value) return;
+
+  if (showDropdown.value &&
+      !document.querySelector(".mention-dropdown")?.contains(target) &&
+      !captionRef.value?.contains(target)) {
+    showDropdown.value = false;
+  }
+}
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
+
 onMounted(async () => {
+  document.addEventListener("click", handleClickOutside);
   await contentSwitch.ensureLoaded();
   tabList.value = buildTabList();
   checkSubscriptionStatus();

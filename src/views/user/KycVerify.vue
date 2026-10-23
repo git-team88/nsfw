@@ -869,7 +869,7 @@ async function uploadImageToServer(file: File, fieldKey: string): Promise<string
   const authHeaders = (window as any).AntiCrawler?.generateAuthParams(token) || {};
 
   try {
-    const response = await fetch(baseUrl + "/user/uploadImage", {
+    const response = await fetch(baseUrl + "user/uploadImage", {
       method: "POST",
       headers: {
         token: token,
