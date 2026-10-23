@@ -456,7 +456,7 @@ import { useRouter, useRoute } from "vue-router";
 import {toast} from "@/util/toast";
 import api from "@/api/index";
 import { baseUrl, siteKey } from "@/util/config";
-import { getLocalizedCountries } from "@/data/countries";
+import { getLocalizedCountries, countries } from "@/data/countries";
 import zh from "@/lang/zh";
 import jp from "@/lang/jp";
 import en from "@/lang/en";
@@ -530,7 +530,6 @@ const hasFormContent = computed(() => {
     f.first_name ||
     f.last_name_kana ||
     f.first_name_kana ||
-    f.country ||
     f.postal_code ||
     f.prefecture ||
     f.state_province ||
@@ -1304,7 +1303,9 @@ onMounted(async () => {
         kycForm.value.contact_email = kycData.email || "";
 
         // 处理国家和地址信息
-        const isJapanCountry = kycData.nation === '日本' || kycData.nation === 'Japan';
+        // nation 存的是提交时那个语言的国家名，回填按三种语言的名字都匹配一遍
+        const matchedCountry = countries.find((c) => c.nameEn === kycData.nation || c.nameZh === kycData.nation || c.nameJa === kycData.nation || c.code === kycData.nation);
+        const isJapanCountry = matchedCountry?.code === 'JP';
         if (isJapanCountry) {
           kycForm.value.country = 'JP';
           kycForm.value.prefecture = kycData.prefecture || "";
@@ -1312,7 +1313,6 @@ onMounted(async () => {
           kycForm.value.address_line2 = kycData.address_line2 || kycData.building_name || "";
         } else {
           // 查找国家代码匹配
-          const matchedCountry = countryList.value.find((c: any) => c.name === kycData.nation);
           kycForm.value.country = matchedCountry?.code || "";
           kycForm.value.state_province = kycData.state_province || kycData.prefecture || "";
           kycForm.value.city = kycData.city || kycData.address_line1 || "";
@@ -1327,6 +1327,8 @@ onMounted(async () => {
           '3': 'mynumber'
         };
         kycForm.value.id_document_type = idTypeMap[kycData.id_type] || kycData.id_type || "";
+        // 同步给切换证件类型时用的「上一个类型」，否则回填后第一次切换不会把已有照片存起来
+        currentIdType = kycForm.value.id_document_type;
 
         // 回填证件图片URL
         kycForm.value.id_document_front_url = kycData.front_image_url || "";

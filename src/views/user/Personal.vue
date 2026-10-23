@@ -58,7 +58,7 @@
                 <div class="kyc-row rejection-reason" v-if="kycStatus == '2' && sampleKycData.rejection_reason">
                   <div class="kyc-status">
                     <span class="rejection-label">{{ t("user.personal.rejectionReason") }}</span>
-                    <span class="rejection-text">{{ sampleKycData.rejection_reason }}123</span>
+                    <span class="rejection-text">{{ sampleKycData.rejection_reason }}</span>
                   </div>
                 </div>
               </div>
@@ -193,7 +193,7 @@
     <!-- Email Edit Modal Component -->
     <EmailEditModal
       :visible="showEmailModal"
-      :current-email="userInfo.info?.email || ''"
+      :current-email="sampleKycData.email || ''"
       :kyc-id="sampleKycData.id"
       @close="showEmailModal = false"
       @update:email="updateEmail"
@@ -448,6 +448,8 @@ function onToggleSensitive() {
 
 // Update email
 function updateEmail(email: string) {
+  // 弹窗改的是 KYC 联系邮箱（user/modifyKycEmail），页面显示的也是 sampleKycData.email，要一起更新
+  sampleKycData.value.email = email;
   if (userInfo.value.info) {
     userInfo.value.info.email = email;
   }

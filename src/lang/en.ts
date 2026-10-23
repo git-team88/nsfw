@@ -1090,6 +1090,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       logout: "Logout",
     },
     materialProvider: {
+      uploadFailed: "Upload failed, please try again",
       title: "Material Provider Dashboard",
       howItWorks: "How Material Provider Works",
       introTitle: "Material Provider Registration Form",

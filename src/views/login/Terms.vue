@@ -44,21 +44,28 @@ function setSeoMeta() {
   setMetaKeywords(t('seo.terms.keywords'));
 }
 
+// index.html 自带一条 robots（index, follow…）：这里只改它的 content，离开时还原，
+// 不能整条删掉，否则后面的页面都没有 robots 了
+let prevRobots: string | null | undefined;
 function setNoIndexMeta() {
   let metaRobots = document.querySelector('meta[name="robots"]');
   if (!metaRobots) {
     metaRobots = document.createElement('meta');
     metaRobots.setAttribute('name', 'robots');
     document.head.appendChild(metaRobots);
+    prevRobots = null;
+  } else if (prevRobots === undefined) {
+    prevRobots = metaRobots.getAttribute('content');
   }
   metaRobots.setAttribute('content', 'noindex, nofollow');
 }
 
 function removeNoIndexMeta() {
   const metaRobots = document.querySelector('meta[name="robots"]');
-  if (metaRobots && metaRobots.getAttribute('content') === 'noindex, nofollow') {
-    metaRobots.parentNode?.removeChild(metaRobots);
-  }
+  if (!metaRobots || prevRobots === undefined) return;
+  if (prevRobots === null) metaRobots.parentNode?.removeChild(metaRobots);
+  else metaRobots.setAttribute('content', prevRobots);
+  prevRobots = undefined;
 }
 
 onMounted(async () => {

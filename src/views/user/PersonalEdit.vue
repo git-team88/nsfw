@@ -275,6 +275,11 @@ function onCancel() {
   router.push("/user-personal");
 }
 function onSave() {
+  nickname.value = nickname.value.trim();
+  if (!nickname.value) {
+    toast(t('user.personal.usernameText'));
+    return;
+  }
   if (nickname.value.includes('#') || nickname.value.includes('@') || nickname.value.includes(' ')) {
     toast(t('user.personal.usernameWarning'));
     return;
@@ -287,11 +292,6 @@ function onSave() {
   // 是否满18岁始终有默认值（否），保存时提交
   const hasAdultChanged = isAdult.value !== null;
 
-  // 同步首页敏感内容开关的缓存字段（allowSensitiveContent），不请求 modifyShowNsfw
-  if (isAdult.value === true) {
-    localStorage.setItem('allowSensitiveContent', '1');
-  }
-
   const operations: Array<() => Promise<void>> = [];
 
   if (hasNicknameChanged) {
@@ -299,7 +299,7 @@ function onSave() {
       return api.modifyUsername({ nickname: nickname.value })
         .then((res: any) => {
           if (res.code !== 200 && res.code !== 0) {
-            throw new Error(res.msg);
+            throw new Error(apiErrorMessage(res));
           }
         });
     });
@@ -310,7 +310,7 @@ function onSave() {
       return api.modifyAvatar({ avatar: avatarUrl.value })
         .then((res: any) => {
           if (res.code !== 200 && res.code !== 0) {
-            throw new Error(res.msg);
+            throw new Error(apiErrorMessage(res));
           }
         });
     });
@@ -321,7 +321,11 @@ function onSave() {
       return api.setAdult({ is_adult: isAdult.value ? 1 : 0 })
         .then((res: any) => {
           if (res.code !== 200 && res.code !== 0) {
-            throw new Error(res.msg);
+            throw new Error(apiErrorMessage(res));
+          }
+          // 接口成功后再同步首页敏感内容开关的缓存字段（allowSensitiveContent），不请求 modifyShowNsfw
+          if (isAdult.value === true) {
+            localStorage.setItem('allowSensitiveContent', '1');
           }
         });
     });
@@ -340,7 +344,7 @@ function onSave() {
     operation()
       .catch((error: any) => {
         hasError = true;
-        toast(error.message);
+        toast(error.message || t('fail'));
       })
       .finally(() => {
         completedOperations++;

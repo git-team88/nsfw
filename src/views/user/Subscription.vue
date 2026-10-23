@@ -12,7 +12,7 @@
           <div class="tip">{{ t("user.subscription.tip") }}</div>
 
           <div class="sections-wrap">
-            <div class="section" v-if="!plan">
+            <div class="section" v-if="planLoaded && !plan">
               <div class="disabled-box">
                 <span>{{ t("user.subscription.disabled") }}</span>
                 <button class="edit-link" @click="handleEditClick">
@@ -20,7 +20,7 @@
                 </button>
               </div>
             </div>
-            <div class="section-info" v-else>
+            <div class="section-info" v-else-if="plan">
               <div class="section">
                 <div class="label-row">
                   <div class="label">
@@ -151,6 +151,8 @@ const price = ref("");
 const web3Price = ref("");
 const description = ref("");
 const plan = ref<any>(null);
+// 订阅档位接口是否已返回：没返回前两块都不渲染，否则会先闪一下「已关闭订阅功能」
+const planLoaded = ref(false);
 const loading = ref(false);
 const isLoading = ref(false);
 const accountStatus = ref<'success' | 'failed' | 'none'>('none');
@@ -221,6 +223,8 @@ async function fetchSubscription() {
     }
   } catch (error) {
     toast(t("fail"));
+  } finally {
+    planLoaded.value = true;
   }
 }
 
@@ -250,7 +254,9 @@ async function handleCountrySelected(country: string) {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -269,7 +275,9 @@ async function handleChangeAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -288,7 +296,9 @@ async function handleViewAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }

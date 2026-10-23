@@ -656,6 +656,7 @@ export default {
       logout: "ออกจากระบบ"
     },
     materialProvider: {
+      uploadFailed: "อัปโหลดไม่สำเร็จ กรุณาลองอีกครั้ง",
       title: "แดชบอร์ดผู้ให้วัสดุ",
       howItWorks: "กลไกการให้วัสดุ",
       introTitle: "แบบฟอร์มสมัครลงทะเบียนผู้ให้วัสดุ",

@@ -221,9 +221,11 @@ function getDefaultDateRange() {
   const oneMonthBefore = new Date(yesterday);
   oneMonthBefore.setMonth(oneMonthBefore.getMonth() - 1);
 
+  // 按本地时区取 YYYY-MM-DD；toISOString 是 UTC，东八区早上 8 点前会少算一天
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   return {
-    start: oneMonthBefore.toISOString().split("T")[0],
-    end: yesterday.toISOString().split("T")[0],
+    start: fmt(oneMonthBefore),
+    end: fmt(yesterday),
   };
 }
 
@@ -412,16 +414,18 @@ watch(pageWork, (p) => {
 });
 
 // Watch for tab changes
+// 页码不是 1 时改成 1 会触发对应的 watch(page) 请求；已经是 1 才手动请求，避免同一请求发两次
+function resetFan() { if (pageFan.value !== 1) pageFan.value = 1; else fetchFan(1); }
+function resetOverall() { if (pageOverall.value !== 1) pageOverall.value = 1; else fetchOverall(1); }
+function resetWork() { if (pageWork.value !== 1) pageWork.value = 1; else fetchWork(1); }
+
 watch(tab, (newTab) => {
   // Reset pages and fetch data when tab changes
   if (newTab === 'fan') {
-    pageFan.value = 1;
-    fetchFan(pageFan.value);
+    resetFan();
   } else if (newTab === 'work') {
-    pageOverall.value = 1;
-    pageWork.value = 1;
-    fetchOverall(pageOverall.value);
-    fetchWork(pageWork.value);
+    resetOverall();
+    resetWork();
   }
 });
 
@@ -431,11 +435,9 @@ watch(
   () => {
     // Reset to first page when date range changes
     if (tab.value === 'fan') {
-      pageFan.value = 1;
-      fetchFan(pageFan.value);
+      resetFan();
     } else if (tab.value === 'work') {
-      pageOverall.value = 1;
-      fetchOverall(pageOverall.value);
+      resetOverall();
     }
   },
 );
@@ -445,8 +447,7 @@ watch(
   () => {
     // Only fetch work data when range2 changes and we're on work tab
     if (tab.value === 'work') {
-      pageWork.value = 1;
-      fetchWork(pageWork.value);
+      resetWork();
     }
   },
 );
@@ -480,6 +481,41 @@ function generateFileName(): string {
   return `${timestamp}_${random}.csv`;
 }
 
+/** 下载接口是 responseType=text：成功是 CSV 文本，失败是 JSON 文本，先分清再存文件 */
+function saveCsvResponse(res: any, fileName: string, label: string) {
+  let csv: string | null = null;
+  if (typeof res === 'string') {
+    const head = res.trimStart();
+    if (head.startsWith('{') || head.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(res);
+        if (parsed && typeof parsed === 'object' && 'code' in parsed) {
+          if (parsed.code === 200 || parsed.code === 0) csv = typeof parsed.data === 'string' ? parsed.data : null;
+          else { toast(apiErrorMessage(parsed) || t('user.interactive.downloadFailed')); return; }
+        }
+      } catch { /* 不是 JSON，按 CSV 处理 */ }
+    }
+    if (csv === null) csv = res;
+  } else if (res && (res.code === 200 || res.code === 0)) {
+    csv = typeof res.data === 'string' ? res.data : null;
+  } else {
+    toast(apiErrorMessage(res) || t('user.interactive.downloadFailed'));
+    return;
+  }
+  if (csv === null || csv === '') {
+    console.error(`Download ${label} data error: empty response`);
+    toast(t('user.interactive.downloadFailed'));
+    return;
+  }
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function downloadFanData() {
   const startDate = range1.value.start;
   const endDate = range1.value.end;
@@ -488,27 +524,7 @@ async function downloadFanData() {
     const res = await api.downloadUserFansList(startDate, endDate) as any;
     const fileName = generateFileName();
 
-    if (typeof res === 'string') {
-      const csvContent = res;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else if (res.code === 200) {
-      const csvContent = res.data;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
-    }
+    saveCsvResponse(res, fileName, 'fan');
   } catch (error) {
     console.error('Download fan data error:', error);
     toast(t('user.interactive.downloadFailed'));
@@ -523,27 +539,7 @@ async function downloadOverallData() {
     const res = await api.downloadUserWorkList(startDate, endDate) as any;
     const fileName = generateFileName();
 
-    if (typeof res === 'string') {
-      const csvContent = res;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else if (res.code === 200) {
-      const csvContent = res.data;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
-    }
+    saveCsvResponse(res, fileName, 'overall');
   } catch (error) {
     console.error('Download overall data error:', error);
     toast(t('user.interactive.downloadFailed'));
@@ -558,27 +554,7 @@ async function downloadSingleWorkData() {
     const res = await api.downloadUuserSingleWorkList(startDate, endDate) as any;
     const fileName = generateFileName();
 
-    if (typeof res === 'string') {
-      const csvContent = res;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else if (res.code === 200) {
-      const csvContent = res.data;
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-    } else {
-      toast(locale.value === 'jp' ? res.msg_jp : res.msg || t('user.interactive.downloadFailed'));
-    }
+    saveCsvResponse(res, fileName, 'single work');
   } catch (error) {
     console.error('Download single work data error:', error);
     toast(t('user.interactive.downloadFailed'));

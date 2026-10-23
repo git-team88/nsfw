@@ -273,11 +273,13 @@ async function getUserInfo() {
   }
 }
 
+let grecaptchaTimer: ReturnType<typeof setTimeout> | null = null;
 function checkGrecaptcha() {
+  grecaptchaTimer = null;
   if (typeof grecaptcha !== "undefined" && grecaptcha.ready && typeof grecaptcha.execute === "function") {
     isGrecaptchaReady.value = true;
   } else {
-    setTimeout(checkGrecaptcha, 3000);
+    grecaptchaTimer = setTimeout(checkGrecaptcha, 3000);
   }
 }
 
@@ -420,18 +422,39 @@ onUnmounted(() => {
     clearInterval(timer.value);
     timer.value = null;
   }
+  if (grecaptchaTimer) {
+    clearTimeout(grecaptchaTimer);
+    grecaptchaTimer = null;
+  }
 });
 
-function confirmEmailBind() {
-  api.bindEmail({ email: email.value, password: password.value, code: code.value, "g-recaptcha-response": emailToken.value }).then((res: any) => {
+const emailBinding = ref(false);
+async function confirmEmailBind() {
+  if (emailBinding.value) return;
+  emailBinding.value = true;
+  // reCAPTCHA token 是一次性的：发验证码时那个已经用过，绑定前重新取一个；取不到才退回旧值
+  let recaptchaToken = emailToken.value;
+  try {
+    if (typeof grecaptcha !== "undefined" && typeof grecaptcha.execute === "function") {
+      recaptchaToken = (await grecaptcha.execute(siteKey, { action: "submit" })) || recaptchaToken;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  api.bindEmail({ email: email.value, password: password.value, code: code.value, "g-recaptcha-response": recaptchaToken }).then((res: any) => {
     const r = res as { code: number; msg: string };
     if (r.code === 0 || r.code === 200) {
       toast(t('success'));
       closeEmailModal();
       getUserInfo();
     } else {
-      toast(r.msg);
+      toast(apiErrorMessage(r) || t('fail'));
     }
+  }).catch((err: unknown) => {
+    console.error(err);
+    toast(t('fail'));
+  }).finally(() => {
+    emailBinding.value = false;
   });
 }
 
@@ -519,7 +542,7 @@ function confirmUnbind() {
     })
     .catch((err: unknown) => {
       console.error(err);
-      toast("fail");
+      toast(t("fail"));
     })
     .finally(() => {
       isShowLoad.value = false;

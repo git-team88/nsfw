@@ -440,18 +440,6 @@
       </div>
     </div>
 
-    <!-- Edit Collection Modal -->
-    <EditCollectionModal
-      v-if="showEditCollectionModal"
-      :visible="showEditCollectionModal"
-      :is-edit="!!editingCollectionId"
-      :collection-id="editingCollectionId"
-      :collection-name="editingCollectionName"
-      :cover-url="editingCollectionCover"
-      :description="editingCollectionDescription"
-      @close="showEditCollectionModal = false"
-      @save="handleEditCollectionSave"
-    />
     <UploadMask :visible="isMakeSimilarLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeSimilarVideoLoading" :text="t('home.loading')" />
     <UploadMask :visible="isMakeSequelLoading" :text="t('home.loading')" />
@@ -482,7 +470,6 @@ import EmptyState from "@/components/EmptyState.vue";
 import ReportModal from "@/components/ReportModal.vue";
 import CustomToast from "@/components/CustomToast.vue";
 import DateRangePicker from "@/components/DateRangePicker.vue";
-import EditCollectionModal from "@/components/EditCollectionModal.vue";
 import MakeSequelSubscribeModal from "@/components/MakeSequelSubscribeModal.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import defaultHeaderImg from "@/assets/images/user/pic.jpg";
@@ -502,7 +489,7 @@ import {
 import { useMasonry } from "@/util/masonry";
 import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
-import { safeJoin, clamp, setMetaKeywords, TITLE_SEP } from "@/utils/seoMeta";
+import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta } from "@/utils/seoMeta";
 import { siteName } from "@/utils/pageTitle";
 import { trackSubscribeToCreator } from "@/utils/analytics";
 import { useRouter } from "vue-router";
@@ -684,9 +671,9 @@ const hasActiveSubscriptionPlans = computed(() => {
   if (!plans) return false;
 
   if (Array.isArray(plans)) {
-    return plans.length > 0 && plans.some((plan: SubscriptionPlan) => plan.price !== '0');
+    return plans.length > 0 && plans.some((plan: SubscriptionPlan) => Number(plan.price) > 0);
   } else {
-    return plans.price !== '0';
+    return Number(plans.price) > 0;
   }
 });
 
@@ -876,11 +863,6 @@ const currentCollectionPage = ref(1);
 const collectionPageSize = 6;
 
 // Edit collection modal
-const showEditCollectionModal = ref(false);
-const editingCollectionId = ref('');
-const editingCollectionName = ref('');
-const editingCollectionCover = ref('');
-const editingCollectionDescription = ref('');
 
 // Collections data
 const collections = ref<any[]>([]);
@@ -914,8 +896,15 @@ const currentPageCollectionTabs = computed(() => {
 });
 
 // Fetch collections - show all types
+// 作品列表的请求序号：快速切子 tab / 翻页时，旧请求回来直接丢掉（照 fetchLikedBooks 的做法）
+let collectionsRequestId = 0;
+let likedBooksRequestId = 0;
+
 async function fetchCollections(reset = false) {
   if (collectionsLoading.value && !reset) return;
+  const requestId = ++collectionsRequestId;
+  // 作品和收藏写的是同一个 collections 列表，切过去后让在途的收藏请求也作废
+  likedBooksRequestId++;
 
   try {
     if (reset) {
@@ -958,6 +947,8 @@ async function fetchCollections(reset = false) {
         response = await api.authorCollection(type, currentPage, 20, authorId, showNsfw) as any;
       }
     }
+    // 回来时已经切了别的 tab / 换了人：这份数据不要了
+    if (requestId !== collectionsRequestId) return;
     if (response.code == 0 || response.code == 200) {
       // 没有数据时部分接口返回的是 data: false，不是空数组
       let collectionData = Array.isArray(response.data?.data) ? response.data.data : [];
@@ -1006,6 +997,7 @@ async function fetchCollections(reset = false) {
     collectionsLoading.value = false;
     loading.value = false;
   } catch (error) {
+    if (requestId !== collectionsRequestId) return;
     console.error('Error fetching collections:', error);
     collectionsInitialized.value = true;
     collectionsLoading.value = false;
@@ -1016,11 +1008,11 @@ async function fetchCollections(reset = false) {
 const likedBooksPage = ref(1);
 const hasMoreLikedBooks = ref(true);
 // 快速切换收藏类型时，丢弃前一个类型还没回来的请求结果
-let likedBooksRequestId = 0;
-
 async function fetchLikedBooks(reset = false) {
   if (collectionsLoading.value && !reset) return;
   const requestId = ++likedBooksRequestId;
+  // 同上：切到收藏后，在途的作品请求作废
+  collectionsRequestId++;
 
   try {
     if (reset) {
@@ -1286,19 +1278,14 @@ function setSeoMeta() {
   const site = siteName();
   // 昵称还没回来时先显示「用户社区 | 站点名」，拿到后补上昵称
   const community = t('seo.parts.community');
-  document.title = community
+  const pageTitle = community
     ? safeJoin([author, community, site], TITLE_SEP)
     : author ? t('seo.userHome.titleFallback').replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site) : site;
   setMetaKeywords(author ? [author, t('seo.parts.community'), site] : '');
   const fill = (tpl: string) => tpl.replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
   const pageDescription = clamp(userInfo.value?.description, 110) || (author ? fill(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', pageDescription);
+  // 走 applySeoMeta 记录原值，离开页面时 restoreSeoMeta() 还原，不把博主简介带到下一个页面
+  applySeoMeta({ title: pageTitle, description: pageDescription, type: 'profile' });
 }
 
 // Get user region
@@ -1393,10 +1380,11 @@ onMounted(() => {
   );
 });
 
-watch(loadMoreRef, (el) => {
-  if (observer && el) {
-    observer.observe(el);
-  }
+watch(loadMoreRef, (el, oldEl) => {
+  if (!observer) return;
+  // 哨兵节点 v-if 重建时先取消监听旧节点，别让 observer 里攒着脱离 DOM 的节点
+  if (oldEl) observer.unobserve(oldEl);
+  if (el) observer.observe(el);
 });
 
 onBeforeUnmount(() => {
@@ -1405,6 +1393,11 @@ onBeforeUnmount(() => {
   if (observer) {
     observer.disconnect();
   }
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
+  restoreSeoMeta();
 });
 
 watch(viewMode, (newVal) => {
@@ -1424,6 +1417,8 @@ let lastTab = ref(route.query.tab);
 let lastType = ref(route.query.type);
 
 watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav], async ([newId, newTab, newType, newFav], [oldId, oldTab, oldType, oldFav]) => {
+  // 离开本页（跳到别的带 :id 的路由）时 watcher 也可能跑一次，不要拿别的路由的 id 当用户 id 去请求
+  if (route.name !== 'UserHome') return;
 
   const idChanged = newId !== oldId;
   const tabChanged = newTab !== oldTab;
@@ -1458,17 +1453,20 @@ watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav
 
     // Fetch new user info and data
     await fetchUserInfo();
+    // 换了人：标题 / 描述要换成这个人的，主页浏览也要再上报一次
+    setSeoMeta();
+    trackHomeView(String(newId));
 
     if (String(newFav ?? '') === '1') {
       topTab.value = 'favorites';
       activeContentType.value = 'favorites';
       favoriteContentType.value = resolveFavoriteTypeFromQuery();
-    } else if (newType) {
-      const typeNum = parseInt(newType as string);
-      if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
-        topTab.value = 'works';
-        activeContentType.value = typeNum;
-      }
+    } else {
+      // 新地址没带 type（比如从粉丝列表点进别人主页）：回默认 tab，
+      // 别把上一个人的「收藏」状态带过来，否则在别人主页会显示自己的收藏
+      const typeNum = parseInt(String(newType ?? ''));
+      topTab.value = 'works';
+      activeContentType.value = !isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum) ? typeNum : DEFAULT_CONTENT_TYPE;
     }
 
     const tabParam = newTab;
@@ -1791,7 +1789,8 @@ async function toggleListFollow(user: FollowUser) {
       const response = res as any;
       if (response.code === 200 || response.code === 0) {
         await fetchFollowList(true);
-        userInfo.value.following = Math.max(0, userInfo.value.following - 1);
+        // userInfo 是当前被浏览的博主，只有看自己主页时这个数才是自己的
+        if (isSelf.value) userInfo.value.following = Math.max(0, userInfo.value.following - 1);
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
@@ -1804,7 +1803,7 @@ async function toggleListFollow(user: FollowUser) {
       const response = res as any;
       if (response.code === 200 || response.code === 0) {
         user.isFollowed = true;
-        userInfo.value.following = userInfo.value.following + 1;
+        if (isSelf.value) userInfo.value.following = userInfo.value.following + 1;
         if (headerRef.value) {
           headerRef.value.getUserInfo();
         }
@@ -2221,9 +2220,10 @@ function goMakeSequelSubscribe() {
 }
 
 function goDetail(id: number | string, authorId?: number | string) {
-  const type = Number(activeContentType.value);
+  // 收藏 tab 下 activeContentType 是 'favorites'，实际列表类型在 listContentType
+  const type = Number(listContentType.value);
   const queryParams: any = {
-    tab: activeContentType.value,
+    tab: listContentType.value,
   };
 
   if (type !== 4 && type !== 5) {
@@ -2273,40 +2273,6 @@ function handleClickOutside(e: MouseEvent) {
   }
 }
 
-// Edit collection name
-function editCollectionName() {
-  if (currentCollection.value) {
-    showCollectionMenu.value = false;
-
-    editingCollectionId.value = currentCollection.value.id;
-    editingCollectionName.value = currentCollection.value.title;
-    editingCollectionCover.value = currentCollection.value.cover || '';
-    editingCollectionDescription.value = currentCollection.value.description || '';
-    showEditCollectionModal.value = true;
-  }
-}
-
-// Handle edit collection save
-function handleEditCollectionSave(collection: { id: string | number; name: string }) {
-  showEditCollectionModal.value = false;
-
-  // Update collection in collections array
-  const index = collections.value.findIndex(col => col.id === collection.id);
-  if (index !== -1) {
-    collections.value[index].title = collection.name;
-  }
-
-  // Update collection tabs
-  const tabIndex = collectionTabs.value.findIndex(tab => tab.id === collection.id);
-  if (tabIndex !== -1) {
-    const collectionData = collections.value.find(col => col.id === collection.id);
-    if (collectionData) {
-      collectionTabs.value[tabIndex].title = collection.name;
-      collectionTabs.value[tabIndex].count = collectionData.chapters?.length || 0;
-    }
-  }
-}
-
 async function confirmReplacePin() {
   if (!selectedReplaceId.value || !pendingPinCollection.value) return;
 
@@ -2314,7 +2280,12 @@ async function confirmReplacePin() {
     const newCollection = pendingPinCollection.value;
     const replaceId = selectedReplaceId.value;
 
-    const res = await api.postCollection({ book_id: newCollection.id, alter_id: replaceId?.toString() || '' }) as any;
+    const type = Number(activeContentType.value);
+    const alterId = replaceId?.toString() || '';
+    // 图片 / 视频是单篇作品，走 post/pin；合集才走 book/setBookTop（和 pinCollection 一致）
+    const res = (type === 4 || type === 5
+      ? await api.postPin({ post_id: newCollection.id, alter_id: alterId })
+      : await api.postCollection({ book_id: newCollection.id, alter_id: alterId })) as any;
 
     if (res.code == 0) {
       showPinLimitModal.value = false;

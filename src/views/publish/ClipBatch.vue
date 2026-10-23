@@ -146,7 +146,7 @@
               <img v-else src="@/assets/images/register/check.png" alt="" />
             </div>
             <span class="agreement-text"
-              >{{ t("submit.agree") }}<span class="terms-text" @click="showConventionModal = true">{{ t("submit.terms") }}</span></span
+              >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
             >
           </div>
         </div>

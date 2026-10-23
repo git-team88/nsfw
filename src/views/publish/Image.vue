@@ -374,7 +374,7 @@
             <img v-else src="@/assets/images/register/check.png" alt="" />
           </div>
           <span class="agreement-text"
-            >{{ t("submit.agree") }}<span class="terms-text" @click="openConvention">{{ t("submit.terms") }}</span></span
+            >{{ t("submit.agree") }}<span class="terms-text">{{ t("submit.terms") }}</span></span
           >
         </div>
       </div>
@@ -1288,9 +1288,6 @@ function onSubscriptionSaved(planId: string) {
   }
 }
 
-function openConvention() {
-  window.open("/community-convention", "_blank", 'noopener,noreferrer');
-}
 
 function closeConventionModal() {
   showConventionModal.value = false;

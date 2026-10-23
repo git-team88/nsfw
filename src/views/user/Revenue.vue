@@ -248,7 +248,9 @@ async function openWithdrawRecord() {
       const data = res as any;
 
       if (data.code === 200 || data.code === 0) {
-        window.location.href = data.data?.url;
+        const jumpUrl = data.data?.url;
+        if (jumpUrl) window.location.href = jumpUrl;
+        else toast(t("fail"));
       } else {
         toast(apiErrorMessage(data));
       }
@@ -281,7 +283,9 @@ async function handleCountrySelected(country: string) {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -299,7 +303,9 @@ async function handleViewAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -331,7 +337,8 @@ function formatSci(n: number | string | null) {
   if (n == null) return "";
   const num = Number(n);
   if (!Number.isInteger(num)) {
-    return parseFloat(num.toFixed(8)).toLocaleString();
+    // toLocaleString 默认最多 3 位小数，会把 0.00012345 显示成 0；按 8 位保留
+    return parseFloat(num.toFixed(8)).toLocaleString(undefined, { maximumFractionDigits: 8 });
   }
   return num.toLocaleString();
 }

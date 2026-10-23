@@ -33,7 +33,7 @@
                   </div>
                 </div>
                 <div class="right">
-                  <button class="follow-btn following">
+                  <button class="follow-btn following" :disabled="unfollowingId === item.userId" @click="unfollow(item)">
                     <span class="text">{{ t("user.myFollowsSubs.following") }}</span>
                     <span class="hover-text">{{ t("user.myFollowsSubs.unfollow") }}</span>
                   </button>
@@ -53,7 +53,7 @@
                 </div>
                 <div class="right">
                   <div class="price-info">
-                    <div class="price">${{ item.isWeb3 ? trimZeros(item.web3Price) : item.price }}{{ item.isWeb3 ? ' USDT' : '' }}/Month</div>
+                    <div class="price">{{ item.isWeb3 ? '' : fiatPrefix(item.fiatCurrency) }}{{ item.isWeb3 ? trimZeros(item.web3Price) : scaleFiatPrice(item.price, item.fiatCurrency) }}{{ item.isWeb3 ? ' USDT' : ' ' + fiatSuffix(item.fiatCurrency, t('aiRecharge.unit')) }}{{ t('user.paymentHistory.month') }}</div>
                     <div class="date">
                       {{
                         t("user.myFollowsSubs.validDate", {
@@ -110,6 +110,7 @@ import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import api from "@/api/index";
 import { formatTimestamp, apiErrorMessage } from '@/util/utils';
+import { fiatPrefix, fiatSuffix, scaleFiatPrice } from '@/util/currency';
 
 const { t } = useI18n();
 
@@ -164,8 +165,30 @@ const total = ref(0);
 function switchTab(tab: number) {
   if (activeTab.value === tab) return;
   activeTab.value = tab;
-  page.value = 1;
-  fetchData();
+  // page 不是 1 时改成 1 会触发 watch(page) 请求，这里不再手动请求一次
+  if (page.value !== 1) page.value = 1;
+  else fetchData();
+}
+
+// 取消关注：成功后重新拉当前页
+const unfollowingId = ref<string | number | null>(null);
+async function unfollow(item: any) {
+  if (!item?.userId || unfollowingId.value) return;
+  unfollowingId.value = item.userId;
+  try {
+    const res = await api.unfollow({ followed_id: item.userId }) as any;
+    if (res.code === 0 || res.code === 200) {
+      toast(t('success'));
+      await fetchData();
+    } else {
+      toast(apiErrorMessage(res));
+    }
+  } catch (e) {
+    console.error(e);
+    toast(t('fail'));
+  } finally {
+    unfollowingId.value = null;
+  }
 }
 
 async function fetchData() {
@@ -204,6 +227,8 @@ async function fetchData() {
             name: item.author?.nickname || '',
             avatar: item.author?.avatar || '',
             price: item.plan?.price || 0,
+            // 法币单位没下发就按日元（原值）；只有 usd 才除以 100，和 PaymentHistory 一致
+            fiatCurrency: item.currency || item.plan?.currency || 'jpy',
             web3Price: item.plan?.web3?.price || '',
             startTime: formatTimestamp(item.created_at) || '',
             endTime: formatTimestamp(item.expire_at) || '',

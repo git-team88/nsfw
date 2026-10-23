@@ -295,7 +295,9 @@ async function handleCountrySelected(country: string) {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -314,7 +316,9 @@ async function handleChangeAccount() {
     const data = res as any;
 
     if (data.code === 200 || data.code === 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }
@@ -333,7 +337,9 @@ async function handleViewAccount() {
     const data = res as any;
 
     if (data.code == 200 || data.code == 0) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data));
     }

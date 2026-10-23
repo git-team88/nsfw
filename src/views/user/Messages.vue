@@ -115,10 +115,16 @@ function handleMessageInfoUpdated(updatedCounts: any) {
   emit('messageInfoUpdated', updatedCounts);
 }
 
+// 地址栏 ?tab= 可能是乱填的，不在范围内就回到第一个 tab
+const TAB_COUNT = 6;
+function normalizeTab(v: unknown): number {
+  const n = parseInt(String(v ?? ''), 10);
+  return Number.isInteger(n) && n >= 0 && n < TAB_COUNT ? n : 0;
+}
+
 function switchTab(idx: number) {
   if (activeTab.value === idx) return;
   activeTab.value = idx;
-  page.value = 1;
 
   // Update URL with the new tab value
   router.replace({
@@ -126,7 +132,9 @@ function switchTab(idx: number) {
     query: { tab: idx.toString() }
   });
 
-  fetchData();
+  // page 不是 1 时改成 1 会触发 watch(page) 请求，这里不再手动请求一次
+  if (page.value !== 1) page.value = 1;
+  else fetchData();
 }
 
 watch(page, () => {
@@ -136,7 +144,7 @@ watch(page, () => {
 onMounted(() => {
   window.scrollTo(0, 0);
   if (route.query.tab !== undefined) {
-    activeTab.value = parseInt(route.query.tab as string);
+    activeTab.value = normalizeTab(route.query.tab);
   }
   fetchData();
 });
@@ -145,11 +153,11 @@ watch(
   () => route.query.tab,
   (newTab) => {
     if (newTab !== undefined) {
-      const tabIndex = parseInt(newTab as string);
+      const tabIndex = normalizeTab(newTab);
       if (activeTab.value !== tabIndex) {
         activeTab.value = tabIndex;
-        page.value = 1;
-        fetchData();
+        if (page.value !== 1) page.value = 1;
+        else fetchData();
       }
     }
   }

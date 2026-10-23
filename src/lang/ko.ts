@@ -656,6 +656,7 @@ export default {
       logout: "로그아웃"
     },
     materialProvider: {
+      uploadFailed: "업로드에 실패했습니다. 다시 시도해 주세요",
       title: "소재 제공 대시보드",
       howItWorks: "소재 제공 메커니즘",
       introTitle: "소재 제공 등록 신청서",

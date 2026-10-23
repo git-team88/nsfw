@@ -201,7 +201,7 @@
                 <EmptyState v-if="!topupProcessingList.length" />
               </div>
 
-              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && (activeSubTab === 'recharge' || activeSubTab === 'topup' || activeSubTab === 'unlocked') && total > pageSize">
+              <div class="pagination-wrap" v-if="activeMainTab === 'processing' && total > pageSize">
                 <Pagination :total="total" :pageSize="pageSize" v-model="page" theme="pink" />
               </div>
             </div>
@@ -438,6 +438,9 @@ const hasData = computed(() => {
     if (activeSubTab.value === 'topup') {
       return topupProcessingList.value.length > 0;
     }
+    if (activeSubTab.value === 'unlocked') {
+      return dramaUnlockList.value.length > 0;
+    }
     return processingList.value.length > 0;
   } else {
     return listData.value.length > 0;
@@ -451,12 +454,9 @@ function switchMainTab(tab: "processing" | "orderHistory") {
   router.replace({
     path: '/user-payment-history'
   });
-  if (tab === 'processing') {
-    fetchProcessingData();
-  } else {
-    page.value = 1;
-    fetchData();
-  }
+  if (page.value !== 1) page.value = 1;
+  else if (tab === 'processing') fetchProcessingData();
+  else fetchData();
 }
 
 function switchTab(tab: "subscribe" | "recharge" | "topup" | "unlocked") {
@@ -464,16 +464,12 @@ function switchTab(tab: "subscribe" | "recharge" | "topup" | "unlocked") {
     path: '/user-payment-history'
   });
 
-  if (activeMainTab.value === 'processing') {
-    if (activeSubTab.value === tab) return;
-    activeSubTab.value = tab;
-    fetchProcessingData();
-  } else {
-    if (activeSubTab.value === tab) return;
-    activeSubTab.value = tab;
-    page.value = 1;
-    fetchData();
-  }
+  if (activeSubTab.value === tab) return;
+  activeSubTab.value = tab;
+  // 回到第 1 页；page 不是 1 时由 watch(page) 发请求，已经是 1 才手动发，避免同一请求发两次
+  if (page.value !== 1) page.value = 1;
+  else if (activeMainTab.value === 'processing') fetchProcessingData();
+  else fetchData();
 }
 
 async function fetchData() {
@@ -530,9 +526,10 @@ async function fetchProcessingData() {
 
   try {
     if (activeSubTab.value === 'subscribe') {
-      const res = await api.userSubscribeList(1, 10) as any;
+      const res = await api.userSubscribeList(page.value, pageSize.value) as any;
       if (res.code === 0 || res.code === 200) {
         const data = res.data?.data || [];
+        total.value = Number(res.data?.total ?? res.data?.allnums ?? 0) || 0;
 
         processingList.value = data.map((item: any) => ({
           id: item.id,
@@ -636,7 +633,7 @@ function getTimeUnit(billingPeriod: string) {
 }
 
 watch(page, () => {
-  if (activeMainTab.value === 'processing' && (activeSubTab.value === 'recharge' || activeSubTab.value === 'topup')) {
+  if (activeMainTab.value === 'processing') {
     fetchProcessingData();
   } else {
     fetchData();
@@ -672,6 +669,22 @@ async function confirmInvoice() {
   }
 }
 
+/** 发票接口是 blob 返回：是 PDF 才返回 Blob，JSON 错误体解析后提示并返回 null */
+async function invoiceBlobOrToast(res: any): Promise<Blob | null> {
+  if (res instanceof Blob) {
+    if (!/json/i.test(res.type || '')) return res;
+    try {
+      const parsed = JSON.parse(await res.text());
+      toast(apiErrorMessage(parsed) || t('fail'));
+    } catch {
+      toast(t('fail'));
+    }
+    return null;
+  }
+  toast(apiErrorMessage(res) || t('fail'));
+  return null;
+}
+
 async function viewInvoice(item: any) {
   try {
     const id = item.order_id;
@@ -681,13 +694,12 @@ async function viewInvoice(item: any) {
     }
 
     const res = await api.downInvoice(id) as any;
-
-    if (res instanceof Blob) {
-      const url = window.URL.createObjectURL(res);
-      window.location.href = url;
-    } else {
-      toast(apiErrorMessage(res))
-    }
+    const blob = await invoiceBlobOrToast(res);
+    if (!blob) return;
+    const url = window.URL.createObjectURL(blob);
+    // 新窗口打开，别用 location.href 把整个单页应用替换成 blob 地址
+    const win = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!win) window.location.href = url;
   } catch (error) {
     toast(t('fail'));
   }
@@ -702,19 +714,17 @@ async function downloadInvoice(item: any) {
     }
 
     const res = await api.downInvoice(id) as any;
-
-    if (res instanceof Blob) {
-      const url = window.URL.createObjectURL(res);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice_${id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      toast(apiErrorMessage(res))
-    }
+    const blob = await invoiceBlobOrToast(res);
+    if (!blob) return;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoice_${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // 下载触发后再释放，立刻 revoke 在部分浏览器会下载失败
+    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
   } catch (error) {
     toast(t('fail'));
   }

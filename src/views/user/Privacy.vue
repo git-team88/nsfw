@@ -79,6 +79,8 @@ onMounted(async () => {
 });
 
 function toggle(key: string) {
+  // 整个 info 一起提交：上一个开关还没返回就点下一个，会把上一个改回旧值，所以请求中不接受点击
+  if (saving.value) return;
   saving.value = true;
 
   // Create a copy of current info
@@ -99,7 +101,7 @@ function toggle(key: string) {
         info.value[key] = newValue;
         toast(t('success'));
       } else {
-        toast(r.msg || t('fail'));
+        toast(apiErrorMessage(r) || t('fail'));
       }
     })
     .catch((e: unknown) => {

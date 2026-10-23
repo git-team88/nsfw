@@ -1194,6 +1194,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       logout: "退出登錄",
     },
     materialProvider: {
+      uploadFailed: "上傳失敗，請重試",
       title: "素材提供儀表板",
       howItWorks: "素材提供機制",
       introTitle: "素材提供註冊申請表單",

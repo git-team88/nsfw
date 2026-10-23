@@ -75,7 +75,7 @@ function fetchInviteInfo() {
   api.userInviteInfo().then((res: any) => {
     if (res.code == 0) {
       firstPurchaseStars.value = res.data?.user_num || res.data?.userNum || '--';
-      totalRevenue.value = res.data?.credit.toString() || '--';
+      totalRevenue.value = res.data?.credit != null && res.data.credit !== '' ? String(res.data.credit) : '--';
     } else {
       toast(apiErrorMessage(res))
     }

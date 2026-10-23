@@ -807,6 +807,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       logout: "ログアウト（推奨）",
     },
     materialProvider: {
+      uploadFailed: "アップロードに失敗しました。もう一度お試しください",
       title: "素材提供ダッシュボード",
       howItWorks: "素材提供の仕組み",
       introTitle: "素材提供申請フォーム",

@@ -267,7 +267,9 @@ async function handlePay() {
     const res = await api.subscribe({ creator_id: userId, client_id: await getGaClientId() });
     const data = res as any;
     if (data.code === 0 || data.code === 200) {
-      window.location.href = data.data?.url;
+      const jumpUrl = data.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t("fail"));
     } else {
       toast(apiErrorMessage(data))
     }

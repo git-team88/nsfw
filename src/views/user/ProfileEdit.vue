@@ -72,10 +72,10 @@ import api from "@/api/index";
 const sidebarKey = ref("profile");
 const bio = ref("");
 const headerInputRef = ref<HTMLInputElement | null>(null);
+const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4ea89113891e84ff21c06461a8a5d2da64d5.png'
 const headerUrl = ref("");
 const saving = ref(false);
 const isUploading = ref(false);
-const defaultImg = 'https://ddu2v98cehw9k.cloudfront.net/images/2026-02-02/14_4ea89113891e84ff21c06461a8a5d2da64d5.png'
 
 onMounted(async () => {
   try {
@@ -156,7 +156,7 @@ function onSave() {
         toast(t('success'));
         router.push("/user-profile");
       } else {
-        toast(r.msg);
+        toast(apiErrorMessage(r));
       }
     })
     .catch((e: unknown) => {

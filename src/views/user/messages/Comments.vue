@@ -9,7 +9,7 @@
             {{ t("user.messages.commentedText") }} <span class="content">{{ item.comment.content }}</span>
           </div>
           <div class="desc" v-else-if="item.comment.parent_id > 0">
-            {{ t("user.messages.replyComment").replace("[Comment]", ("[" + item.comment.reply_to_nickname + "]") ) }}
+            {{ replyCommentText(item.comment.reply_to_nickname) }}
             <span class="content">{{ item.comment.content }}</span>
           </div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
@@ -36,6 +36,11 @@ import { toast } from "@/util/toast";
 import defaultAvatar from "@/assets/images/base/avatar.png";
 
 const { t, locale } = useI18n();
+
+// 「回复了[评论]：」→ 把各语言里的 [xx] 占位换成被回复人昵称（原来只替换英文的 [Comment]）
+function replyCommentText(nickname: string) {
+  return t("user.messages.replyComment").replace(/\[[^\]]*\]/, "[" + (nickname || "") + "]");
+}
 const router = useRouter();
 defineProps<{ list: any[] }>();
 

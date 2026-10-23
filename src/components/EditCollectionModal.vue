@@ -440,16 +440,15 @@ function handleCoverConfirm(url: string) {
 async function handleSave() {
   errorMessage.value = '';
 
-  if (!props.isEdit) {
-    if (!coverUrl.value) {
-      toast(t('collection.emptyCover'));
-      return;
-    }
+  if (!props.isEdit && !coverUrl.value) {
+    toast(t('collection.emptyCover'));
+    return;
+  }
 
-    if (!collectionName.value.trim()) {
-      toast(t('collection.placeholder'));
-      return;
-    }
+  // 新建、编辑都不允许空标题
+  if (!collectionName.value.trim()) {
+    toast(t('collection.placeholder'));
+    return;
   }
 
   isLoading.value = true;

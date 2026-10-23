@@ -303,6 +303,8 @@ import SensitiveContentConfirmModal from '@/components/SensitiveContentConfirmMo
 import { toast } from '@/util/toast';
 import { formatTimestamp, apiErrorMessage, apiLang } from '@/util/utils';
 import { baseUrl } from '@/util/config';
+import { safeJoin, clamp, setMetaKeywords, TITLE_SEP } from '@/utils/seoMeta';
+import { siteName } from '@/utils/pageTitle';
 
 // Import images
 import likeIcon from '@/assets/images/detail/like.png';
@@ -701,12 +703,14 @@ async function fetchDetail() {
       const data = res.data.post;
 
       let bookIsNsfw = 0;
+      seoBookStatus = '';
       let bookSessionId = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
           if (bookRes.code === 0) {
             const bookData = bookRes.data?.book_info || bookRes.data;
+            seoBookStatus = bookData?.status ? String(bookData.status) : '';
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
               bookIsNsfw = 1;
             }
@@ -750,6 +754,8 @@ async function fetchDetail() {
 
       // 埋点：小说章节曝光（同一会话同一章只记一次）
       trackChapterView({ post_id: detail.value.id, book_id: detail.value.book_id, content_type: 'novel', user_id: detail.value.author?.id, chapter_index: detail.value.chapter_index || undefined });
+
+      setSeoMeta();
 
       likes.value = detail.value.likes;
       liked.value = detail.value.liked;
@@ -2060,6 +2066,44 @@ function handleContextMenu(e: MouseEvent) {
   if (isOwnPost.value) return;
   e.preventDefault();
 }
+
+// —— SEO：小说详情由本组件自己拉数据，父组件 Detail.vue 不会设标题，这里按 UGC 规则设 ——
+// 标题：合集名 | 本集标题 | 作者 | 本集免费/本集收费 | 连载/完结 | 品牌（小说没有分类标签，不拼）
+// description：优先章节内容（去标签），没有用兜底文案；keywords：合集名 + 本集名
+let seoBookStatus = '';
+function setSeoMeta() {
+  const site = siteName();
+  const d: any = detail.value;
+  if (!d?.id) return;
+  const author = clamp(d.author?.nickname, 40);
+  const freeRange = t(d.permission === 'public' ? 'seo.parts.freeEpisode' : 'seo.parts.paidEpisode');
+  const status = seoBookStatus ? t(seoBookStatus === '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
+  const bookName = clamp(d.book_title, 30);
+  const workName = clamp(d.title, 40);
+  const extras = [author, freeRange, status];
+  const pageTitle = extras.some(Boolean)
+    ? safeJoin([bookName, workName, ...extras, site], TITLE_SEP)
+    : (workName || bookName)
+      ? t('seo.detail.titleFallback').replace(/\[\[title\]\]/g, workName || bookName).replace(/\[\[site\]\]/g, site)
+      : site;
+  setMetaKeywords([bookName, workName]);
+
+  const plain = String(d.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const trimmedDesc = clamp(plain, 110);
+  const pageDescription = trimmedDesc || t('seo.detail.descriptionFallback')
+    .replace(/\[\[title\]\]/g, d.title || '').replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
+
+  document.title = pageTitle;
+  let meta = document.querySelector('meta[name="description" i]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.setAttribute('name', 'description');
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute('content', pageDescription);
+}
+// 切语言后标题里的「本集免费 / 连载中」等文案要跟着换
+watch(locale, () => setSeoMeta());
 
 onMounted(async () => {
   getCountry();

@@ -1196,6 +1196,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       logout: "退出登录",
     },
     materialProvider: {
+      uploadFailed: "上传失败，请重试",
       title: "素材提供仪表板",
       howItWorks: "素材提供机制",
       introTitle: "素材提供注册申请表单",
