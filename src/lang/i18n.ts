@@ -103,6 +103,11 @@ export function loadLocaleMessages(lang: string): Promise<void> {
   return p;
 }
 
+/** 这个语言包是不是已经装好了 */
+export function isLocaleLoaded(lang: string): boolean {
+  return loaded.has(String(lang || "").toLowerCase());
+}
+
 /** 切换语言：先确保语言包已加载，再改 locale（否则切换瞬间页面会露出 key） */
 export async function setLocale(lang: string): Promise<void> {
   const key = String(lang || "").toLowerCase();

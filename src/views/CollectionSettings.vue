@@ -132,7 +132,9 @@
 </template>
 
 <script setup lang="ts" name="CollectionSettings">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { setPageTitle } from '@/utils/pageTitle';
+import { TITLE_SEP } from '@/utils/seoMeta';
 import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -148,7 +150,7 @@ import BatchPermissionModal from '@/components/BatchPermissionModal.vue';
 import DramaPriceModal from '@/components/DramaPriceModal.vue';
 import defaultCover from '@/assets/images/base/cover.png';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -223,6 +225,14 @@ const chapterAccessText = computed(() => {
   const paid = t('collection.paidCount', { count: groupCount('2'), unit });
   return `${pub}${t('collectionSettings.listSep')}${paid}`;
 });
+
+// 标签标题：合集名 | 合集设置 | 站点名（合集名没拿到时就是路由默认的「合集设置 | 站点名」）。
+// 切换语言时 App.vue 会先按路由重设成默认标题，这里 flush: 'post' 排在它后面再补上合集名。
+watch([() => collection.value.title, locale], () => {
+  const name = String(collection.value.title || '').trim();
+  const pageName = t('pageTitle.collectionSettings');
+  setPageTitle(name ? `${name}${TITLE_SEP}${pageName}` : pageName);
+}, { flush: 'post' });
 
 const collectionInfo = computed(() => ({
   cover: processImageUrl(collection.value.cover) || defaultCover,

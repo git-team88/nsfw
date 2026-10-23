@@ -887,9 +887,13 @@ const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
 
-// AI 生成的漫剧：大纲（result_async.generate_manju_outline）里带了分类 tag_id 就用它建合集；
-// 没有就不传，api.addCollection 会自动取分类列表的第一个
+// AI 生成的漫剧自动建合集时带上分类 tag_id，按顺序取：
+//   1. 地址栏 ?tag=（canvas 的 Video.tsx 跳到发布页时，把大纲里的 tag_id 放在这里）
+//   2. 项目大纲 result_async.generate_manju_outline.tag_id
+// 都没有就不传，api.addCollection 会自动取分类列表的第一个
 function outlineTagPayload(...projects: any[]): { tag_id?: string | number } {
+  const urlTag = String(route.query.tag ?? '').trim();
+  if (urlTag) return { tag_id: urlTag };
   for (const p of projects) {
     const tagId = p?.result_async?.generate_manju_outline?.tag_id;
     if (tagId !== undefined && tagId !== null && tagId !== '') return { tag_id: tagId };

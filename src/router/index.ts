@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
 import { trackPageView } from "@/utils/track";
-import { applyRouteTitle } from "@/utils/pageTitle";
+import { applyRouteTitle, refreshRouteTexts } from "@/utils/pageTitle";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";
 import Register from "@/views/login/Register.vue";
 import ResetSend from "@/views/login/ResetSend.vue";
 import ResetPassword from "@/views/login/ResetPassword.vue";
-import i18n, { setLocale } from "@/lang/i18n";
+import i18n, { setLocale, loadLocaleMessages, isLocaleLoaded } from "@/lang/i18n";
 
 const LANG_URL_TO_I18N: Record<string, string> = {
   ja: 'jp',
@@ -475,6 +475,13 @@ router.beforeEach(async (to, from, next) => {
 router.afterEach((to, from) => {
   // 浏览器标签标题：配了 meta.titleKey 的路由统一设成「页面名 - 站点名」
   applyRouteTitle(to, from);
+  // 首次打开时语言包可能还没装好（标题会是 key）：装好后再补一次文案
+  const lang = String(i18n.global.locale.value || '');
+  if (!isLocaleLoaded(lang)) {
+    loadLocaleMessages(lang).then(() => {
+      if (router.currentRoute.value.fullPath == to.fullPath) refreshRouteTexts(to);
+    }).catch(() => {});
+  }
   trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any });
 });
 

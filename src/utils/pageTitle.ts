@@ -48,6 +48,25 @@ function setRouteRobots(noindex: boolean) {
   document.head.appendChild(m);
 }
 
+/**
+ * 语言包装好后补设一次标题（以及 seoKey 的 description / keywords）。
+ * 首次打开页面时，路由的 afterEach 可能比当前语言包先到，那时 t() 还是 key；
+ * 语言没变，watch(locale) 也不会再触发，标题就一直是「pageTitle.xxx | pageTitle.siteName」。
+ * 这里只补文案，不动 robots，也不还原 description（页面自己可能已经写过了）。
+ */
+export function refreshRouteTexts(route: RouteLocationNormalized | RouteLocationNormalizedLoaded) {
+  if (typeof document === "undefined") return;
+  const key = route.meta?.titleKey as string | undefined;
+  const seoKey = route.meta?.seoKey as string | undefined;
+  if (seoKey && te(`${seoKey}.title`)) {
+    document.title = t(`${seoKey}.title`);
+    if (te(`${seoKey}.description`)) setDescription(t(`${seoKey}.description`));
+    if (te(`${seoKey}.keywords`)) setMetaKeywords(t(`${seoKey}.keywords`));
+    return;
+  }
+  if (key) setPageTitle(t(key));
+}
+
 /** 按路由的 meta.titleKey / seoKey / noindex 设标题等；没配的路由只还原 description（换页面时） */
 export function applyRouteTitle(route: RouteLocationNormalized | RouteLocationNormalizedLoaded, from?: RouteLocationNormalized | RouteLocationNormalizedLoaded) {
   if (typeof document === "undefined") return;
