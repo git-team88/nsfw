@@ -42,7 +42,7 @@
                     </div>
                   </div>
                 </span>
-                <span class="partial-end-text">{{ t(collectionType === '3' ? 'novel.batchPublish.partialEndDrama' : 'novel.batchPublish.partialEnd') }}</span>
+                <span class="partial-end-text">{{ t(collectionType == '3' ? 'novel.batchPublish.partialEndDrama' : 'novel.batchPublish.partialEnd') }}</span>
               </div>
               <span v-else>{{ t(opt.labelKey) }}</span>
             </div>
@@ -108,7 +108,7 @@ const emit = defineEmits<{
 }>();
 
 // 合集设置页一进来就渲染这个弹窗，那时合集类型还没回来，所以必须是 computed 而不是只算一次
-const isEpisode = computed(() => props.collectionType === '1' || props.collectionType === '3');
+const isEpisode = computed(() => props.collectionType == '1' || props.collectionType == '3');
 
 const permOptions = [
   { key: 'public', labelKey: 'novel.batchPublish.allPublic' },
@@ -124,7 +124,7 @@ const showPartialDropdown = ref(false);
 const plans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref('');
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
-const showPlanList = computed(() => props.collectionType === '3' && selectedPerm.value === 'partial' && plans.value.length > 0);
+const showPlanList = computed(() => props.collectionType == '3' && selectedPerm.value === 'partial' && plans.value.length > 0);
 const selectedPlan = computed(() => plans.value.find((pl) => planKey(pl) === selectedPlanId.value));
 
 // 默认选中：合集已设的档位（按价格匹配），没有就第一档
@@ -193,7 +193,7 @@ function getAccessRightsPerm(chapter: any): string {
 function getAccessRightsText(chapter: any): string {
   const perm = getAccessRightsPerm(chapter);
   if (perm == 'private') return t('submit.permPrivate');
-  if (perm == 'partial') return t(props.collectionType === '3' ? 'submit.permPaid' : 'submit.permPartial');
+  if (perm == 'partial') return t(props.collectionType == '3' ? 'submit.permPaid' : 'submit.permPartial');
   return t('submit.permPublic');
 }
 

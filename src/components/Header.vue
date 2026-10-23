@@ -601,7 +601,7 @@ function getMessageInfo() {
     .messageInfo()
     .then((res) => {
       const data = res as any;
-      if (data.code === 0) {
+      if (data.code == 0) {
         unTotal.value = data.data.total;
 
         newsCounts.value = {
@@ -628,7 +628,7 @@ function getUserInfo() {
     .userInfo()
     .then((res) => {
       const data = res as any;
-      if (data.code === 0) {
+      if (data.code == 0) {
         // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
         localStorage.removeItem('is_adult');
         if (data.data.is_adult != 1) {
@@ -652,7 +652,7 @@ function getUserInfo() {
 
 function getBalance() {
   api.userBalance().then((res: any) => {
-    if (res.code === 200) {
+    if (res.code == 200) {
       // Use total_balance if available, fallback to balance
       bean.value = res.data.balance;
 
@@ -671,7 +671,7 @@ function getLoginUserInfo() {
     .userInfo()
     .then((res) => {
       const data = res as any;
-      if (data.code === 0) {
+      if (data.code == 0) {
         // 已登录：清除未登录时的本地成年声明，年龄状态以后端 is_adult 为准
         localStorage.removeItem('is_adult');
         if (data.data.is_adult != 1) {

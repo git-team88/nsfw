@@ -346,7 +346,7 @@ watch(() => props.visible, async (newVal) => {
       isLoading.value = true;
       try {
         const response = await api.getSelfCollectionDetail(props.collectionId) as any;
-        if (response.code === 0) {
+        if (response.code == 0) {
           const data = response.data;
           const bookInfo = data.book_info || data;
           collectionName.value = bookInfo.title || '';
@@ -358,6 +358,11 @@ watch(() => props.visible, async (newVal) => {
           initialCoverUrl.value = coverUrl.value;
           initialDescription.value = description.value;
           initialIsNsfw.value = isNsfw.value;
+          // 回显合集自己的语言（以前显示的是发布页作品的语言，想改成同一个语言时会因为「没变」而不提交）
+          if (bookInfo.language) {
+            selectedLanguage.value = bookInfo.language;
+            initialLanguage.value = bookInfo.language;
+          }
           await initBookTags(bookInfo.tag_id);
         } else {
           toast(apiErrorMessage(response) || t('fail'));
@@ -434,6 +439,7 @@ function openCoverModal() {
 }
 
 function handleCoverConfirm(url: string) {
+  if (!url || url.startsWith('data:')) return;
   coverUrl.value = url;
 }
 
@@ -479,7 +485,7 @@ async function handleSave() {
       }
 
       const response = await api.modifyCollection(params) as any;
-      if (response.code === 0) {
+      if (response.code == 0) {
         if (props.isEdit && props.collectionId) warmSeo(`/collection/${props.collectionId}`); // 预热预渲染缓存（T05）
         emit('save', {
           id: props.collectionId,
@@ -509,7 +515,7 @@ async function handleSave() {
       if (isDramaCollection.value && selectedTagId.value !== '') params.tag_id = selectedTagId.value;
 
       const response = await api.addCollection(params) as any;
-      if (response.code === 0) {
+      if (response.code == 0) {
         emit('save', {
           id: response.data.book_id,
           name: collectionName.value.trim(),
@@ -520,7 +526,7 @@ async function handleSave() {
         });
         handleCancel();
       } else {
-        if (response.code === 22004) {
+        if (response.code == 22004) {
           showDuplicateError();
         } else {
           toast(apiErrorMessage(response) || t('fail'));

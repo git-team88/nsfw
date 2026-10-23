@@ -58,7 +58,7 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
-import { processImageUrl } from '@/util/utils';
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 import { toast } from '@/util/toast';
 
 const { t } = useI18n();
@@ -86,14 +86,22 @@ const pageSize = ref(20);
 const localSelectedId = ref<string | number | null>(null);
 const initialSelectedId = ref<string | number | null>(null);
 
+// 每次打开弹窗 +1：上一次打开时还没回来的请求（比如翻到第 N 页的）回来后直接丢掉，
+// 不然快速关掉再打开，列表会从第 N 页开始、或者新一次的首页请求被 isLoading 挡掉
+let fetchSeq = 0;
+// 加载失败后不再随滚动自动重试（以前失败了 hasMore 还是 true，一滚动就反复请求）
+const loadFailed = ref(false);
+
 async function fetchCollections(loadMore = false) {
-  if (isLoading.value || (!loadMore && !hasMore.value)) return;
+  if (isLoading.value || loadFailed.value || (!loadMore && !hasMore.value)) return;
 
   isLoading.value = true;
+  const seq = fetchSeq;
 
   try {
     const page = loadMore ? currentPage.value + 1 : 1;
     const response = await api.getCollection(props.type || 2, page, pageSize.value, props.uid) as any;
+    if (seq != fetchSeq) return;
 
     if (response.code == 0) {
       const newCollections = response.data?.data || [];
@@ -106,12 +114,18 @@ async function fetchCollections(loadMore = false) {
         currentPage.value = 1;
       }
 
-      hasMore.value = newCollections.length === pageSize.value;
+      hasMore.value = newCollections.length == pageSize.value;
+    } else {
+      loadFailed.value = true;
+      toast(apiErrorMessage(response) || t('fail'));
     }
   } catch (error) {
+    if (seq != fetchSeq) return;
     console.error('Error fetching collections:', error);
+    loadFailed.value = true;
+    toast(t('fail'));
   } finally {
-    isLoading.value = false;
+    if (seq == fetchSeq) isLoading.value = false;
   }
 }
 
@@ -121,7 +135,7 @@ function handleScroll(event: Event) {
 
   const { scrollTop, scrollHeight, clientHeight } = target;
 
-  if (scrollHeight - scrollTop - clientHeight < 100 && hasMore.value && !isLoading.value) {
+  if (scrollHeight - scrollTop - clientHeight < 100 && hasMore.value && !isLoading.value && !loadFailed.value) {
     fetchCollections(true);
   }
 }
@@ -138,6 +152,11 @@ function handleConfirm() {
   const selected = collections.value.find(c => c.id == localSelectedId.value);
   if (selected) {
     emit('confirm', selected);
+  } else if (localSelectedId.value == initialSelectedId.value) {
+    // 选中的还是打开时那个合集，只是它不在已加载的几页里：等于没换，直接关掉
+    emit('close');
+  } else {
+    toast(t('collection.selectCollectionTip'));
   }
 }
 
@@ -151,6 +170,9 @@ function handleClose() {
 
 watch(() => props.visible, (newVal) => {
   if (newVal) {
+    fetchSeq++;
+    isLoading.value = false;
+    loadFailed.value = false;
     hasMore.value = true;
     currentPage.value = 1;
     collections.value = [];

@@ -2518,6 +2518,7 @@ export default {
     queue: "대기열"
   },
   collection: {
+    noCover: "표지 없음",
     publicCount: "{count}{unit} 후 공개",
     paidCount: "{count}{unit} 후 유료",
     collectionNotFound: "컬렉션이 존재하지 않습니다",
@@ -2850,6 +2851,9 @@ export default {
     }
   },
   collectionSettings: {
+    // 标签后的冒号、两段文字之间的分隔符（按语言用全角 / 半角）
+    labelColon: ": ",
+    listSep: ", ",
     category: "카테고리",
     paidSetting: "유료 설정",
     modifyPrice: "가격 변경",

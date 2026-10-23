@@ -144,7 +144,7 @@
           <button
             class="btn btn-save"
             @click="handleSave"
-            :disabled="isLoading"
+            :disabled="isLoading || saved || loadFailed"
           >
             <span v-if="isLoading" class="btn-spinner"></span>
             {{ isLoading ? t('collection.saving') : t('collection.save') }}
@@ -263,7 +263,15 @@ function closeTagDropdownOnOutside(e: MouseEvent) {
   if (tagDropdownOpen.value && tagDropdownRef.value && !tagDropdownRef.value.contains(e.target as Node)) tagDropdownOpen.value = false;
 }
 onMounted(() => document.addEventListener('click', closeTagDropdownOnOutside));
-onBeforeUnmount(() => document.removeEventListener('click', closeTagDropdownOnOutside));
+// 保存成功后标记，按钮一直禁用到跳走；跳转定时器离开页面时清掉
+const saved = ref(false);
+// 编辑模式下合集详情没拉到：提示失败，并且不让保存（否则会拿空表单覆盖掉原合集）
+const loadFailed = ref(false);
+let navTimer: ReturnType<typeof setTimeout> | null = null;
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeTagDropdownOnOutside);
+  if (navTimer) clearTimeout(navTimer);
+});
 const selectedLanguage = ref(defaultLang);
 
 // --- 收费档 ---------------------------------------------------------------
@@ -370,11 +378,13 @@ onMounted(async () => {
 async function loadCollection(id: string) {
   try {
     const response = await api.getSelfCollectionDetail(id) as any;
-    if (response.code === 0) {
+    if (response.code == 0 && response.data) {
+      loadFailed.value = false;
       const data = response.data;
       const bookInfo = data.book_info || data;
       collectionName.value = bookInfo.title || '';
-      description.value = bookInfo.description || t('collection.defaultDescription');
+      // 编辑时原样回显；默认描述只在新建时预填（以前预填了默认文案，只改封面保存也会把它写进后端）
+      description.value = bookInfo.description || '';
       coverUrl.value = bookInfo.cover || '';
       isNsfw.value = bookInfo.is_nsfw == 1 ? 1 : 0;
       isNsfwSelected.value = true;
@@ -388,25 +398,36 @@ async function loadCollection(id: string) {
         selectedLanguage.value = bookInfo.language;
         originalLanguage.value = bookInfo.language;
       }
+    } else {
+      loadFailed.value = true;
+      toast(apiErrorMessage(response) || t('fail'));
     }
   } catch (error) {
     console.error('Failed to load collection:', error);
+    loadFailed.value = true;
+    toast(t('fail'));
   }
 }
 
 async function handleSave() {
   errorMessage.value = '';
 
-  if (!editId.value) {
-    if (!coverUrl.value) {
-      toast(t('collection.emptyCover'));
-      return;
-    }
+  // 保存成功、等跳转的这 500ms 里不再接受点击（以前按钮马上恢复，新建模式下会建出重复合集）
+  if (saved.value) return;
+  if (loadFailed.value) {
+    toast(t('fail'));
+    return;
+  }
 
-    if (!collectionName.value.trim()) {
-      toast(t('collection.placeholder'));
-      return;
-    }
+  if (!editId.value && !coverUrl.value) {
+    toast(t('collection.emptyCover'));
+    return;
+  }
+
+  // 新建、编辑都不允许空标题（和 EditCollectionModal 一致）
+  if (!collectionName.value.trim()) {
+    toast(t('collection.placeholder'));
+    return;
   }
 
   isLoading.value = true;
@@ -461,7 +482,8 @@ async function handleSave() {
 
     if (response.code == 0) {
       toast(editId.value ? t('collection.modifySuccess') : t('collection.createSuccess'));
-      setTimeout(() => {
+      saved.value = true;
+      navTimer = setTimeout(() => {
         const type = route.query.type || '2';
         const id = route.query.id;
         if (id) {
@@ -490,6 +512,8 @@ function openCoverModal() {
 }
 
 function handleCoverConfirm(url: string) {
+  // 防御：空串 / base64 不当封面
+  if (!url || url.startsWith('data:')) return;
   coverUrl.value = url;
   coverModified.value = true;
 }

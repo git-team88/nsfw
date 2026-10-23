@@ -2738,6 +2738,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     queue: "キュー",
   },
   collection: {
+    noCover: "表紙なし",
     publicCount: "公開{count}{unit}",
     paidCount: "有料{count}{unit}",
     collectionNotFound: "コレクションが見つかりません",
@@ -3440,6 +3441,9 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     },
   },
   collectionSettings: {
+    // 标签后的冒号、两段文字之间的分隔符（按语言用全角 / 半角）
+    labelColon: "：",
+    listSep: "、",
     category: "カテゴリ",
     paidSetting: "有料設定",
     modifyPrice: "価格を変更",

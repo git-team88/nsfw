@@ -51,7 +51,7 @@ function handleOverlayClick() {
 function getUpdatedText(): string {
   const type = props.collection.type;
   const count = props.collection.chapterCount;
-  if (type === '2') {
+  if (type == '2') {
     return t('collectionSettings.confirmFinish.updatedChapter', { count });
   } else {
     return t('collectionSettings.confirmFinish.updatedEpisode', { count });

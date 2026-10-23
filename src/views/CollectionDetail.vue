@@ -245,6 +245,8 @@ interface Chapter {
   subtitle?: string;
   status: 'published' | 'draft' | 'subscribed' | 'private';
   accessRights?: '1' | '2' | '3';
+  /** 第几集（后端 chapters[].chapter_index），目录点击埋点用 */
+  chapter_index?: string;
 }
 
 interface CollectionHistory {
@@ -297,7 +299,7 @@ interface AuthorInfo {
 const collection = ref<Collection | null>(null);
 
 // 漫剧（type 3）是看的不是读的，按钮文案换成「观看」
-const isDramaCollection = computed(() => String(collection.value?.type ?? '') === '3');
+const isDramaCollection = computed(() => collection.value?.type == '3');
 const startActionText = computed(() =>
   t(isDramaCollection.value ? 'collectionDetail.startWatching' : 'collectionDetail.startReading'),
 );
@@ -312,10 +314,12 @@ const authorInfo = ref<AuthorInfo>({
   followerCount: 0,
   isFollow: 0,
   isSubscribe: 0,
-  subscribePrice: '$12/月',
+  subscribePrice: '',
   books_group: []
 });
 const loading = ref(false);
+// 页面还在不在：离开后异步回来的结果一律不处理（route 已经是下一个页面的了）
+let alive = true;
 const userRegion = ref(false);
 const regionLoaded = ref(false);
 const userInfo = ref<any>(null);
@@ -326,6 +330,8 @@ const pendingChapter = ref<Chapter | null>(null);
 function checkLogin() {
   const token = localStorage.getItem('token');
   if (!token) {
+    // 登录后回到这个合集（和详情页、个人主页一致）
+    localStorage.setItem('loginRedirect', route.fullPath);
     router.push('/login');
     return false;
   }
@@ -402,8 +408,15 @@ async function fetchCollectionDetail() {
     // 先请求合集详情接口（公开接口）
     let response = await api.getCollectionDetail(id) as any;
 
+    if (!alive) return;
+
     if (response.code == 0) {
       const data = response.data;
+      // code 0 但没有数据：按不存在处理（以前 data.book_info 直接报错，白屏 + 预渲染输出空壳）
+      if (!data) {
+        goNotFoundIfMissing(router, route, { code: 0, data: null });
+        return;
+      }
       const bookInfo = data.book_info || data;
 
       // 从 book_info 获取作者 ID
@@ -413,6 +426,7 @@ async function fetchCollectionDetail() {
       const isSelf = !!localUid && String(localUid) === String(resolvedAuthorId);
       if (isSelf) {
         response = await api.getSelfCollectionDetail(id) as any;
+        if (!alive) return;
       }
 
       if (response.code == 0) {
@@ -442,7 +456,8 @@ async function fetchCollectionDetail() {
           authorId: resolvedAuthorId,
           latestChapterIndex: finalBookInfo.chapter_count || '',
           type: finalBookInfo.type || '',
-          status: finalBookInfo.status || '',
+          // 数字 0（连载中）不能被 || 吞掉
+          status: finalBookInfo.status != null ? String(finalBookInfo.status) : '',
           tag_id: finalBookInfo.tag_id || '',
           is_nsfw: finalBookInfo.is_nsfw || 0,
           chapter_count_private: finalBookInfo.chapter_count_private || 0,
@@ -452,7 +467,8 @@ async function fetchCollectionDetail() {
             title: chapter.title || '',
             subtitle: chapter.subtitle,
             status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
-            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1'
+            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1',
+            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
           })),
           history: finalData.history && !Array.isArray(finalData.history) && finalData.history.post_id ? {
             post_id: String(finalData.history.post_id || ''),
@@ -471,17 +487,19 @@ async function fetchCollectionDetail() {
         // 从 book_info 获取作者后，请求博主详情接口
         if (resolvedAuthorId) {
           await fetchAuthorInfo(resolvedAuthorId, showNsfw);
+          if (!alive) return;
           applyCollectionSeo();
         }
       } else {
         // 合集不存在 → 404 页（真实 404 给爬虫，T04）；其它错误照旧提示
-        if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response));
+        if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response) || t('fail'));
       }
     } else {
-      if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response));
+      if (!goNotFoundIfMissing(router, route, response)) toast(apiErrorMessage(response) || t('fail'));
     }
   } catch (error) {
     console.error('Failed to fetch collection detail:', error);
+    if (alive) toast(t('fail'));
   } finally {
     loading.value = false;
   }
@@ -522,7 +540,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
       if (!isSelf && !authorInfo.value.subscribePrice) {
         try {
           const subscriptionRes = await api.getOthersSubscription({ blogger_id: authorId }) as any;
-          if (subscriptionRes.code === 0 && subscriptionRes.data?.plan) {
+          if (subscriptionRes.code == 0 && subscriptionRes.data?.plan) {
             const planWeb3 = subscriptionRes.data.plan.web3?.price || '';
             authorInfo.value.subscribePrice = planWeb3
               ? formatPrice(planWeb3, '', true)
@@ -533,7 +551,7 @@ async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
         }
       }
     } else {
-      toast(apiErrorMessage(data));
+      toast(apiErrorMessage(data) || t('fail'));
     }
   } catch (error) {
     console.error('Failed to fetch author info:', error);
@@ -583,11 +601,11 @@ function applyCollectionSeo() {
   const tag = c.tag_id ? bookTags.value.find(x => String(x.tag_id) === String(c.tag_id)) : undefined;
   if (c.tag_id && !tag && !seoTagsRequested) {
     seoTagsRequested = true;
-    loadBookTags().then(() => { if (bookTags.value.length) applyCollectionSeo(); });
+    loadBookTags().then(() => { if (alive && bookTags.value.length) applyCollectionSeo(); });
   }
   // 「主要题材与形式」只取合集的分类标签（只有漫剧合集有），不拼内容类型
   const genre = bookTagLabel(tag);
-  const status = c.status ? t(c.status == '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
+  const status = c.status != null && String(c.status) != '' ? t(c.status == '2' ? 'seo.parts.finished' : 'seo.parts.ongoing') : '';
   // 标签 / 作者 / 状态一个都没有时，用兜底标题「{合集名} | 品牌 合集」
   const pageTitle = [genre, author, status].some(Boolean)
     ? safeJoin([title, genre, author, status, site], TITLE_SEP)
@@ -677,7 +695,7 @@ async function handleSensitiveContentAgeConfirm(isAdult: boolean) {
     try {
       const res = await api.setAdult({ is_adult: 1 }) as any;
       if (res.code != 0 && res.code != 200) {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
         return;
       }
     } catch (error) {
@@ -720,7 +738,7 @@ function goMakeSimilar(sessionId: string) {
 }
 
 function navigateToChapter(chapter: Chapter) {
-  trackCatalogChapterClick({ book_id: collection.value?.id || '', post_id: chapter.id, chapter_index: (chapter as any).chapter_index ?? (chapter as any).index ?? undefined, content_type: contentTypeOf(collection.value?.type), user_id: collection.value?.authorId || undefined });
+  trackCatalogChapterClick({ book_id: collection.value?.id || '', post_id: chapter.id, chapter_index: chapter.chapter_index || undefined, content_type: contentTypeOf(collection.value?.type), user_id: collection.value?.authorId || undefined });
   const ct = collection.value?.type || '';
   router.push(`/detail/${chapter.id}${ct ? `?tab=${ct}` : ''}`);
 }
@@ -775,7 +793,7 @@ async function toggleFollow() {
         authorInfo.value.isFollow = 0;
         authorInfo.value.followerCount = Math.max(0, authorInfo.value.followerCount - 1);
       } else {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
       }
     } else {
       const res = await api.follow(data) as any;
@@ -783,7 +801,7 @@ async function toggleFollow() {
         authorInfo.value.isFollow = 1;
         authorInfo.value.followerCount = authorInfo.value.followerCount + 1;
       } else {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
       }
     }
   } catch (error) {
@@ -801,14 +819,14 @@ async function toggleLike() {
       if (res.code == 0 || res.code == 200) {
         isLiked.value = false;
       } else {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
       }
     } else {
       const res = await api.likeBook({ book_id: collection.value.id }) as any;
       if (res.code == 0 || res.code == 200) {
         isLiked.value = true;
       } else {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
       }
     }
   } catch (error) {
@@ -823,11 +841,12 @@ function toggleSubscribe() {
 
   const token = localStorage.getItem('token');
   if (!token) {
+    localStorage.setItem('loginRedirect', route.fullPath);
     router.push('/login');
     return;
   }
 
-  if (authorInfo.value.isSubscribe === 1) {
+  if (authorInfo.value.isSubscribe == 1) {
     toast(t('userHome.alreadySubscribed'));
   } else {
     router.push(`/subscription-payment?id=${authorInfo.value.id}`);
@@ -838,9 +857,9 @@ function editChapter(chapter: Chapter | null) {
   if (chapter && collection.value) {
     const type = collection.value.type;
     let path = '/publish/comic';
-    if (type === '2') {
+    if (type == '2') {
       path = '/publish/novel';
-    } else if (type === '3') {
+    } else if (type == '3') {
       path = '/publish/video';
     }
     router.push({ path, query: { post_id: chapter.id.toString() } });
@@ -861,8 +880,8 @@ async function refreshChapters() {
     // 先请求公开接口，从 book_info 获取作者后判断是否为自己作品
     let response = await api.getCollectionDetail(id) as any;
 
-    if (response.code === 0) {
-      const data = response.data;
+    if (response.code == 0) {
+      const data = response.data || {};
       const bookInfo = data.book_info || data;
       const resolvedAuthorId = bookInfo?.user_id || data.author?.id || data.author_id || '';
 
@@ -871,8 +890,8 @@ async function refreshChapters() {
         response = await api.getSelfCollectionDetail(id) as any;
       }
 
-      if (response.code === 0) {
-        const finalData = response.data;
+      if (response.code == 0) {
+        const finalData = response.data || {};
         const chaptersData = finalData.chatpers || finalData.chapters || [];
         const finalBookInfo = finalData.book_info || finalData;
         if (collection.value) {
@@ -880,7 +899,10 @@ async function refreshChapters() {
             id: chapter.post_id || chapter.id,
             title: chapter.title || '',
             subtitle: chapter.subtitle,
-            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published'
+            status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
+            // 刷新时也要带上权限，不然作者页面上每章的「订阅 / 付费 / 仅自己可见」标签都没了
+            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1',
+            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
           }));
           collection.value.latestChapterIndex = finalBookInfo.chapter_count || '';
           collection.value.lastUpdate = finalBookInfo.updated_at || finalBookInfo.latest_post_updated || '';
@@ -904,7 +926,7 @@ async function deleteChapter(chapter: Chapter | null) {
         toast(t('success'));
         await refreshChapters();
       } else {
-        toast(apiErrorMessage(res));
+        toast(apiErrorMessage(res) || t('fail'));
       }
     } catch (error) {
       console.error(error);
@@ -920,8 +942,9 @@ function confirmDeleteChapter(chapter: Chapter) {
 }
 
 function formatNumber(num: number): string {
-  if (num >= 10000) {
-    return (num / 10000).toFixed(1) + 'K';
+  // K 是千：和其他页面一致（以前除以 10000，15000 显示成 1.5K）
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
   }
   return num.toString();
 }
@@ -965,7 +988,11 @@ onMounted(async () => {
   // 合集数据到之前只显示站点名，拿到后再拼完整标题
   document.title = siteName();
   eventBus.on('userLoggedOut', onUserLoggedOut);
-  await getCountry();
+  // 先开加载态，免得等地区接口时页面一片空白
+  loading.value = true;
+  // 地区、分类表、合集详情并行请求（以前串行：地区 → 详情 → 作者 → 分类，预渲染时可能还没拿全就被截图）
+  loadBookTags();
+  getCountry();
   fetchCollectionDetail();
 
   // 上报合集详情浏览（10 分钟内只上报一次）
@@ -975,6 +1002,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  alive = false;
   eventBus.off('userLoggedOut', onUserLoggedOut);
   restoreSeoMeta();
 });

@@ -116,6 +116,7 @@ import { useI18n } from "vue-i18n";
 import UploadMask from "./UploadMask.vue";
 import { baseUrl } from "@/util/config";
 import { toast } from "@/util/toast";
+import { useRouter, useRoute } from "vue-router";
 
 const props = defineProps<{
   visible: boolean;
@@ -124,6 +125,8 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:visible", "confirm"]);
 const { t, locale } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
 const activeTab = ref("upload");
 const selectedImage = ref("");
@@ -337,6 +340,14 @@ function confirm() {
   const src = activeTab.value === "select" ? selectedImage.value : localImage.value;
   if (!src) return;
 
+  // 没登录传不了图：先去登录，登录完回到当前页面
+  if (!localStorage.getItem("token")) {
+    localStorage.setItem("loginRedirect", route.fullPath);
+    close();
+    router.push("/login");
+    return;
+  }
+
   isUploading.value = true;
 
   cropToCanvas(src).then((cropped) => {
@@ -348,13 +359,16 @@ function confirm() {
   }).catch((error) => {
     isUploading.value = false;
     console.error("Upload error:", error);
+    // 裁剪 / 上传失败：提示并保持弹窗打开（以前只打日志，遮罩消失后什么都没发生）
+    toast(t('fail'));
   });
 }
 
 async function mockUpload(dataUrl: string): Promise<string> {
   const token = localStorage.getItem("token");
   if (!token) {
-    return '';
+    // 没登录：不能交出空串（编辑时会把原封面清掉）
+    throw new Error('not logged in');
   }
 
   try {
@@ -380,14 +394,14 @@ async function mockUpload(dataUrl: string): Promise<string> {
 
     const res = await fetch(baseUrl + "user/uploadImage", parma);
     const data = await res.json();
-    if (data.code == 0 || data.code == 200) {
-      return data.data.url || dataUrl;
-    } else {
-      return dataUrl;
+    // 上传失败不再把 base64 当封面交出去（预览会坏、提交会把几十 KB 的 base64 发给后端）
+    if ((data.code == 0 || data.code == 200) && data.data?.url) {
+      return data.data.url;
     }
+    throw new Error(data?.msg || 'upload failed');
   } catch (error) {
     console.error("Cover upload error:", error);
-    return dataUrl;
+    throw error;
   }
 }
 

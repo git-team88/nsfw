@@ -3048,6 +3048,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     queue: "Queue",
   },
   collection: {
+    noCover: "No cover",
     publicCount: "{count} {unit} public",
     paidCount: "{count} {unit} paid",
     collectionNotFound: "Collection not found",
@@ -3379,6 +3380,9 @@ If you have any questions, complaints, comments or suggestions regarding persona
     },
   },
   collectionSettings: {
+    // 标签后的冒号、两段文字之间的分隔符（按语言用全角 / 半角）
+    labelColon: ": ",
+    listSep: ", ",
     category: "Category",
     paidSetting: "Paid access",
     modifyPrice: "Change price",

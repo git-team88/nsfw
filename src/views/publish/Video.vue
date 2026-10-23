@@ -886,6 +886,16 @@ import { uploadVideoFile, PartUploadError } from "@/util/uploadVideo";
 const isEditing = computed(() => !!postId.value);
 
 const { t, locale } = useI18n();
+
+// AI 生成的漫剧：大纲（result_async.generate_manju_outline）里带了分类 tag_id 就用它建合集；
+// 没有就不传，api.addCollection 会自动取分类列表的第一个
+function outlineTagPayload(...projects: any[]): { tag_id?: string | number } {
+  for (const p of projects) {
+    const tagId = p?.result_async?.generate_manju_outline?.tag_id;
+    if (tagId !== undefined && tagId !== null && tagId !== '') return { tag_id: tagId };
+  }
+  return {};
+}
 const contentSwitch = useContentSwitchStore();
 
 function getI18nMsg(res: any) {
@@ -1551,6 +1561,7 @@ async function handlePublishFromSelection() {
             const createRes = await api.addCollection({
               title: targetProject.name,
               type: 3,
+              ...outlineTagPayload(targetProject, selectedProject.value),
               language: collectionLanguage.value,
               cover: targetProject.result_async?.generate_manju_cover || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
@@ -2694,6 +2705,7 @@ async function handlePublish(publishData?: any) {
           const createRes = await api.addCollection({
             title: project.name,
             type: 3,
+            ...outlineTagPayload(publishData?.project, project, selectedProject.value),
             language: collectionLanguage.value,
             cover: project.result_async?.generate_manju_cover || '',
             description: storySummary || t('collectionSettings.sampleDescription'),
@@ -4378,6 +4390,7 @@ async function initSingleChapter(sessionIdParam: string, urlParam: string, index
             const createRes = await api.addCollection({
               title,
               type: 3,
+              ...outlineTagPayload(selectedProject.value),
               language: collectionLanguage.value,
               cover: coverPreview.value || '',
               description: storySummary || t('collectionSettings.sampleDescription'),
@@ -4547,6 +4560,7 @@ async function initBatchPublish(session_id: string) {
           const createRes = await api.addCollection({
             title: projectTitle,
             type: 3,
+            ...outlineTagPayload(selectedProject.value),
             language: collectionLanguage.value,
             cover: coverPreview.value || '',
             description: storySummary || t('collectionSettings.sampleDescription'),

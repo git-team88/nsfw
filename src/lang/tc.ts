@@ -3149,6 +3149,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     queue: "隊列",
   },
   collection: {
+    noCover: "暫無封面",
     publicCount: "{count}{unit}公開",
     paidCount: "{count}{unit}付費",
     collectionNotFound: "合集不存在",
@@ -3472,6 +3473,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
   },
   collectionSettings: {
+    // 标签后的冒号、两段文字之间的分隔符（按语言用全角 / 半角）
+    labelColon: "：",
+    listSep: "，",
     category: "分類",
     paidSetting: "單部付費設置",
     modifyPrice: "修改價格",

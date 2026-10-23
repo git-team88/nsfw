@@ -2031,6 +2031,24 @@ async function navigateToChapter(chapter: any) {
 
 async function doNavigateToChapter(chapter: any) {
   if (!chapter || !chapter.post_id) return;
+  // 点的就是当前这一集：地址不变，路由 watcher 不会触发，这里自己重新加载这一集（和点别的集一样走 fetchDetail）。
+  // 视频地址没变时 <video> 不会自己重新加载，手动 load 一次，「可以播放」事件才会再来、转圈才会消失。
+  if (String(chapter.post_id) == String(route.params.id)) {
+    await fetchDetail(Number(chapter.post_id));
+    await nextTick();
+    const v = videoRef.value;
+    if (v) {
+      try {
+        v.currentTime = 0;
+        v.load();
+        await v.play();
+      } catch {
+        // 浏览器不允许自动播放：停在第一帧，用户自己点播放
+        isVideoLoading.value = false;
+      }
+    }
+    return;
+  }
   router.replace({
     path: `/detail/${chapter.post_id}`,
     query: route.query

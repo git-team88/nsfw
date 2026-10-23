@@ -887,7 +887,7 @@ export default {
     if (payload && payload.type == 3 && payload.tag_id === undefined) {
       try {
         const res = await axios.request({ url: "book/getBookTagsListPublic", method: "GET" }) as any;
-        const first = res?.code === 0 ? (res.data?.tags || res.data?.list || [])[0] : undefined;
+        const first = res?.code == 0 ? (res.data?.tags || res.data?.list || [])[0] : undefined;
         if (first && first.tag_id !== undefined && first.tag_id !== null) payload = { ...payload, tag_id: first.tag_id };
       } catch { /* 拉不到分类就按原参数建，不影响发布 */ }
     }

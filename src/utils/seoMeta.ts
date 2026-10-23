@@ -151,7 +151,7 @@ export function restoreSeoMeta() {
 /** 后端答复里是不是「不存在 / 已删除」这一类：匹配各语言 msg 关键词 */
 export function isNotFoundResponse(res: any): boolean {
   if (!res || typeof res !== 'object') return false;
-  if (res.code === 0 || res.code === 200) return !res.data || (typeof res.data === 'object' && !Object.keys(res.data).length);
+  if (res.code == 0 || res.code == 200) return !res.data || (typeof res.data === 'object' && !Object.keys(res.data).length);
   const text = ['msg', 'msg_cn', 'msg_tc', 'msg_jp', 'msg_ko', 'msg_th'].map(k => String(res[k] || '')).join(' ').toLowerCase();
   return /not (found|exist)|does not exist|不存在|已删除|已刪除|削除|存在しません|見つかりません|존재하지|삭제|ไม่พบ|ไม่มีอยู่/.test(text);
 }

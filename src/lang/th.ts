@@ -2518,6 +2518,7 @@ export default {
     queue: "คิว"
   },
   collection: {
+    noCover: "ไม่มีปก",
     publicCount: "เปิดใน {count}{unit}",
     paidCount: "เสียเงินใน {count}{unit}",
     collectionNotFound: "ไม่พบคอลเลกชันนี้",
@@ -2850,6 +2851,9 @@ export default {
     }
   },
   collectionSettings: {
+    // 标签后的冒号、两段文字之间的分隔符（按语言用全角 / 半角）
+    labelColon: ": ",
+    listSep: ", ",
     category: "หมวดหมู่",
     paidSetting: "ตั้งค่าแบบชำระเงิน",
     modifyPrice: "แก้ไขราคา",

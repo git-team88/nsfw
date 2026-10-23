@@ -24,7 +24,7 @@ export function loadBookTags(): Promise<BookTag[]> {
   if (!loading) {
     loading = (api.getBookTagsList() as Promise<any>)
       .then(res => {
-        const list = res?.code === 0 ? (res.data?.tags || res.data?.list || []) : [];
+        const list = res?.code == 0 ? (res.data?.tags || res.data?.list || []) : [];
         if (Array.isArray(list) && list.length) tags.value = list;
         return tags.value;
       })

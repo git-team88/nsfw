@@ -30,7 +30,7 @@ import { useI18n } from "vue-i18n";
 import { ref } from "vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import router from "@/router";
-import eventBus from "@/util/eventBus";
+import { eventBus } from "@/utils/eventBus";
 
 const { t, locale } = useI18n();
 const props = defineProps<{ modelValue: string }>();

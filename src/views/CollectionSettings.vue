@@ -39,13 +39,13 @@
 
           <div class="detail-section">
             <div class="info-item">
-              <span class="info-label">{{ t('collectionSettings.collectionName') }}：</span>
+              <span class="info-label">{{ t('collectionSettings.collectionName') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value">{{ collection.title }}</span>
             </div>
 
             <!-- 单部付费设置：只有漫剧（type 3）的合集有收费档；「修改价格」打开档位弹窗 -->
             <div class="info-item" v-if="collection.type == '3'">
-              <span class="info-label">{{ t('collectionSettings.paidSetting') }}：</span>
+              <span class="info-label">{{ t('collectionSettings.paidSetting') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value price-value">
                 <template v-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
                 <template v-else>{{ t('collectionSettings.priceOffShort') }}</template>
@@ -55,7 +55,7 @@
             </div>
 
             <div class="info-item">
-              <span class="info-label">{{ t('collectionSettings.description') }}：</span>
+              <span class="info-label">{{ t('collectionSettings.description') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value description">{{ collection.description }}</span>
             </div>
           </div>
@@ -67,15 +67,15 @@
 
           <div class="info-grid">
             <div class="info-card">
-              <span class="info-label">{{ t('collectionSettings.status') }}：</span>
+              <span class="info-label">{{ t('collectionSettings.status') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value status">{{ getStatusText(collection.status) }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">{{ getPublishedLabel() }}：</span>
+              <span class="info-label">{{ getPublishedLabel() }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value">{{ collection.chapter_count }}{{ getPublishedUnit() }}<b v-if="collection.chapter_count_private > 0" class="private-hint">{{ t('collectionSettings.privateChapterHint', { count: collection.chapter_count_private }) }}</b></span>
             </div>
             <div class="info-card">
-              <span class="info-label">{{ t('collectionSettings.createdAt') }}：</span>
+              <span class="info-label">{{ t('collectionSettings.createdAt') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value">{{ formatTimestamp(collection.createdAt) }}</span>
             </div>
           </div>
@@ -132,7 +132,7 @@
 </template>
 
 <script setup lang="ts" name="CollectionSettings">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import Header from '@/components/Header.vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
@@ -153,6 +153,18 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(false);
+// 详情没拉到：删除 / 完结 / 编辑等操作一律不让做（以前会拿空 id 去调删除接口）
+const loadFailed = ref(false);
+// 删除、完结请求进行中：确认按钮连点只发一次
+let finishing = false;
+let deleting = false;
+function guardLoaded(): boolean {
+  if (loadFailed.value || !collection.value.id) {
+    toast(t('fail'));
+    return false;
+  }
+  return true;
+}
 
 const showFinishNotice = ref(false);
 const showConfirmFinish = ref(false);
@@ -209,7 +221,7 @@ const chapterAccessText = computed(() => {
   const unit = getPublishedUnit();
   const pub = t('collection.publicCount', { count: groupCount('1'), unit });
   const paid = t('collection.paidCount', { count: groupCount('2'), unit });
-  return `${pub}，${paid}`;
+  return `${pub}${t('collectionSettings.listSep')}${paid}`;
 });
 
 const collectionInfo = computed(() => ({
@@ -222,6 +234,7 @@ const collectionInfo = computed(() => ({
 onMounted(async () => {
   const bookIdParam = route.params.id;
   if (!bookIdParam) {
+    loadFailed.value = true;
     toast(t('collectionSettings.notFound'));
     return;
   }
@@ -256,10 +269,12 @@ onMounted(async () => {
           chatpers: data.chatpers || [],
         };
     } else {
-      toast(apiErrorMessage(res));
+      loadFailed.value = true;
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error(error);
+    loadFailed.value = true;
     toast(t('fail'));
   } finally {
     loading.value = false;
@@ -271,20 +286,18 @@ function goBack() {
 }
 
 function goEditCollection() {
+  if (!guardLoaded()) return;
   router.push(`/create-collection?id=${collection.value.id}`);
 }
 
 function getStatusText(status: string): string {
-  const statusMap: Record<string, string> = {
-    '0': t('collectionSettings.statusOngoing'),
-    '2': t('collectionSettings.statusFinished')
-  };
-  return statusMap[status] || status;
+  // 2 已完结，其余（0 / 空 / 数字）都按连载中，不再把原值直接显示出来
+  return String(status) == '2' ? t('collectionSettings.statusFinished') : t('collectionSettings.statusOngoing');
 }
 
 function getPublishedLabel(): string {
   const type = collection.value.type;
-  if (type === '1' || type === '3') {
+  if (type == '1' || type == '3') {
     return t('collectionSettings.publishedEpisodes');
   }
   return t('collectionSettings.publishedChapters');
@@ -292,13 +305,14 @@ function getPublishedLabel(): string {
 
 function getPublishedUnit(): string {
   const type = collection.value.type;
-  if (type === '1' || type === '3') {
+  if (type == '1' || type == '3') {
     return t('collectionSettings.unitEpisode');
   }
   return t('collectionSettings.unitChapter');
 }
 
 function handleFinish() {
+  if (!guardLoaded()) return;
   showFinishNotice.value = true;
 }
 
@@ -308,6 +322,8 @@ function handleFinishNext() {
 }
 
 async function confirmFinish() {
+  if (finishing || !guardLoaded()) return;
+  finishing = true;
   try {
     const finishRes = await api.finishCollection({
       book_id: collection.value.id
@@ -321,22 +337,30 @@ async function confirmFinish() {
         if (detailRes.code == 0 || detailRes.code == 200) {
           const data = detailRes.data || {};
           const bookInfo = data.book_info || {};
-          collection.value.status = bookInfo.status || '1';
+          // 完结成功：后端没回状态就按「已完结」(2)，不能写成 '1'（页面会显示「1」、「设为完结」又能点）
+          collection.value.status = bookInfo.status != null && String(bookInfo.status) != '' ? String(bookInfo.status) : '2';
         }
       } catch (detailError) {
         console.error('Failed to fetch collection detail:', detailError);
-        collection.value.status = '1';
+        collection.value.status = '2';
       }
     } else {
-      toast(apiErrorMessage(finishRes));
+      toast(apiErrorMessage(finishRes) || t('fail'));
     }
   } catch (error) {
     console.error(error);
     toast(t('fail'));
+  } finally {
+    finishing = false;
   }
 }
 
+// 删除成功后 1 秒跳个人主页；这 1 秒里用户已经离开就别再强制跳走
+let navTimer: ReturnType<typeof setTimeout> | undefined;
+onBeforeUnmount(() => clearTimeout(navTimer));
+
 function handleDelete() {
+  if (!guardLoaded()) return;
   showDeleteNotice.value = true;
 }
 
@@ -346,25 +370,31 @@ function handleDeleteNext() {
 }
 
 async function confirmDelete() {
+  if (deleting || !guardLoaded()) return;
+  deleting = true;
   try {
     const res = await api.deleteCollection({ book_id: collection.value.id }) as any;
     if (res.code == 0 || res.code == 200) {
       showConfirmDelete.value = false;
       toast(t('collectionSettings.deleteSuccess'));
 
-      setTimeout(() => {
+      clearTimeout(navTimer);
+      navTimer = setTimeout(() => {
         router.push(`/user-home/${collection.value.user_id}`);
       }, 1000);
     } else {
-      toast(apiErrorMessage(res));
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error(error);
     toast(t('fail'));
+  } finally {
+    deleting = false;
   }
 }
 
 function handleBatchPermission() {
+  if (!guardLoaded()) return;
   batchChapters.value = collection.value.chatpers.map((ch: any, index: number) => ({
     id: ch.post_id || ch.id || index,
     title: ch.title || '',
@@ -426,7 +456,7 @@ async function confirmBatchPermission(type: number, startChapter?: number, plan?
       // 重新拉详情：章节权限、数量和（可能改了的）价格一起刷新
       await onPriceSaved();
     } else {
-      toast(apiErrorMessage(res));
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error(error);
