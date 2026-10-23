@@ -30,10 +30,10 @@
 
           <div class="modal-footer">
             <button
-              v-if="unpublishedChaptersCount > 2"
+              v-if="unpublishedChaptersCount > 1"
               class="batch-publish-btn"
-              :class="{ 'published': isBatchPublishing }"
-              :disabled="isBatchPublishing"
+              :class="{ 'published': busy }"
+              :disabled="busy"
               @click="handleBatchPublish"
             >
               {{ t('novel.batchPublish.batchPublishAll') }}
@@ -69,6 +69,11 @@ const props = defineProps({
   project: {
     type: Object,
     default: null
+  },
+  // 父组件正在准备批量发布（拉章节、建合集…）：按钮置灰，避免重复点
+  busy: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -81,7 +86,6 @@ const unpublishedChaptersCount = computed(() =>
 // Chapter selection
 const selectedChapter = ref('1');
 const loading = ref(false);
-const isBatchPublishing = ref(false);
 const chapterResultAsync = ref<any>(null);
 // 正文是否真的拿到了：没拿到时页面显示的是「暂无章节内容」提示，不能当正文发出去
 const chapterContentLoaded = ref(false);
@@ -181,10 +185,10 @@ function handleClose() {
 
 // Handle batch publish - close modal and go directly to batch publish page
 function handleBatchPublish() {
-  if (isBatchPublishing.value) return;
-  isBatchPublishing.value = true;
-  emit('close');
-  emit('batchPublish');
+  if (props.busy) return;
+  // 只把正在预览的作品交给父组件，弹窗不在这里关：父组件把批量区准备好后再关，
+  // 中间转圈盖在弹窗上，不会露出下面的章节勾选列表
+  emit('batchPublish', props.project);
 }
 
 // Handle overlay click

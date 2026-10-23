@@ -666,7 +666,8 @@
     </div>
 
   <UploadMask :visible="isUpload"></UploadMask>
-  <LoadingMask :visible="isSelectionLoading" @cancel="cancelSelectionLoading" />
+  <!-- 预览弹窗里点批量发布时转圈要盖在弹窗（z-index 1000）上面 -->
+  <LoadingMask :visible="isSelectionLoading" style="z-index: 1100" @cancel="cancelSelectionLoading" />
 
   <ConfirmLeaveModal :show="isShowConfirm" @cancel="confirmStay" @confirm="confirmLeave" />
 
@@ -691,6 +692,7 @@
   <ProjectNovelViewModal
     :visible="showViewModal"
     :project="previewProject"
+    :busy="isSelectionLoading"
     @close="closeViewModal"
     @publish="handlePublish"
     @batch-publish="handleBatchPublishFromModal"
@@ -4093,9 +4095,10 @@ function closeViewModal() {
   previewProject.value = null;
 }
 
-async function handleBatchPublishFromModal() {
-  // 用正在预览的那个作品（预览按钮不会改 selectedProject，选中 A 预览 B 时不能把 A 发出去）
-  const targetProject = previewProject.value || selectedProject.value;
+async function handleBatchPublishFromModal(projectFromModal?: any) {
+  // 用正在预览的那个作品（预览按钮不会改 selectedProject，选中 A 预览 B 时不能把 A 发出去）。
+  // 弹窗会把它预览的作品随事件带过来；previewProject 在弹窗关闭时会被清掉，不能只靠它
+  const targetProject = projectFromModal || previewProject.value || selectedProject.value;
   if (!targetProject) return;
   if (isSelectionLoading.value) return;
   isSelectionLoading.value = true;
@@ -4104,8 +4107,9 @@ async function handleBatchPublishFromModal() {
   const sessionId = targetProject.session_id;
   if (!sessionId) { isSelectionLoading.value = false; return; }
 
-  // 和「章节标题编辑」列表一致：只发 is_publish == 2（未发布）的，生成中的不算
-  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish == 2);
+  // 和预览弹窗里的「待发布」口径一致：不是 1（已发布）的都算待发布。
+  // 作品详情接口里未发布章节的 is_publish 不一定是 2，按 == 2 过滤会一个都选不到，流程就停在列表上
+  const unpublished = (targetProject.chapters || []).filter((c: any) => c.is_publish !== 1);
   selectedChapters.value = unpublished.map((c: any) => c.chapter);
 
   if (selectedChapters.value.length === 0 || isSelectionCancelled) {
@@ -4147,20 +4151,25 @@ async function handleBatchPublishFromModal() {
     return;
   }
 
-  isSelectionLoading.value = false;
-
   const chapterText = t('chapter', { chapter: firstChapterNum });
   let generatedTitle = `${chapterText} ${firstChapterTitle || targetProject.name}`;
   selectedEpisode.value = firstChapterNum as any;
-  await handlePublish({
-    project: targetProject,
-    episode: firstChapterNum,
-    title: generatedTitle,
-    content: firstChapterContent,
-    chapterIndex: firstChapterNum,
-    session_id: sessionId,
-    cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
-  });
+  try {
+    // 转圈一直盖到批量区（合集 / 批量设置 / 分集标题）准备好，中间不露出半成品页面
+    await handlePublish({
+      project: targetProject,
+      episode: firstChapterNum,
+      title: generatedTitle,
+      content: firstChapterContent,
+      chapterIndex: firstChapterNum,
+      session_id: sessionId,
+      cover: coverPreview.value || targetProject.result_async?.generate_novel_cover || ''
+    });
+  } finally {
+    isSelectionLoading.value = false;
+  }
+  // 批量区准备好了，这时再关预览弹窗
+  closeViewModal();
 }
 
 function handleBatchPublishAllSuccess(count: number) {
