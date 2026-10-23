@@ -1720,15 +1720,14 @@ async function confirmSelectedProject() {
         if (!videoDuration.value && resultAsync?.final_videos?.[0]?.duration) {
           videoDuration.value = parseFloat(resultAsync.final_videos[0].duration) || 0;
         }
-        if (chapterRes.data.title) {
-          form.value.title = chapterRes.data.title;
-        }
-        if (chapterRes.data.chapter_description) {
-          form.value.description = chapterRes.data.chapter_description;
-          // 渲染进编辑框，不然提交时会被编辑框里的空文本覆盖掉
-          await nextTick();
-          renderCaptionContent();
-        }
+        // AI 生成的视频作品接口只返回 video_url / video_cover_url / duration，没有标题和描述，
+        // 标题、描述由用户自己填；下面的回填先注释掉，接口以后返回了再放开
+        // if (chapterRes.data.title) {
+        //   form.value.title = chapterRes.data.title;
+        // }
+        // if (chapterRes.data.chapter_description) {
+        //   form.value.description = chapterRes.data.chapter_description;
+        // }
       }
     } catch (error) {
       console.error("Error fetching chapter details for publish:", error);
@@ -1738,6 +1737,10 @@ async function confirmSelectedProject() {
   if (url) {
     videoUrl.value = url;
     showFullContent.value = true;
+    // 描述回填（上面）注释掉了，这里的渲染也一起注释；放开回填时要连这两行一起放开，
+    // 编辑区是 v-if="showFullContent" 才渲染的，得等它出来再渲染，不然提交时会被空文本覆盖
+    // await nextTick();
+    // renderCaptionContent();
   } else {
     toast(t("submit.video.noVideoContent"));
   }
@@ -1994,6 +1997,8 @@ function onCoverConfirmed(url: string) {
 
 // Publish submit
 async function onSubmit() {
+  // 防双击：提交中再点直接忽略（遮罩要下一帧才盖上，这里再拦一道）
+  if (isUpload.value) return;
   const token = localStorage.getItem("token");
   if (!token) {
     router.push("/login");

@@ -2004,6 +2004,8 @@ function openCommunityConvention() {
 
 // Submit
 async function onSubmit() {
+  // 防双击：提交中再点直接忽略（遮罩要下一帧才盖上，这里再拦一道）
+  if (isUpload.value) return;
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');

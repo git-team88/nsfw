@@ -2558,7 +2558,8 @@ async function onReuploadPicked(e: Event) {
 
         // Update cover if the reuploaded image was the cover
         if (idx === selectedCoverIndex.value) {
-          coverPreview.value = pf._preview;
+          // 封面要用图床地址，不能把本地 blob: 预览地址提交上去
+          coverPreview.value = pf._url || pf._preview;
         }
       } else {
         toast(apiErrorMessage(res))
@@ -2660,7 +2661,7 @@ function removeImage(idx: number) {
   URL.revokeObjectURL(pf._preview);
   imageFiles.value.splice(idx, 1);
   if (coverPreview.value && idx === selectedCoverIndex.value) {
-    coverPreview.value = imageFiles.value.length > 0 ? imageFiles.value[0]._preview : "";
+    coverPreview.value = imageFiles.value.length > 0 ? (imageFiles.value[0]._url || imageFiles.value[0]._preview) : "";
     selectedCoverIndex.value = imageFiles.value.length > 0 ? 0 : null;
   }
 }
@@ -3652,6 +3653,8 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 async function onSubmit() {
+  // 防双击：提交中再点直接忽略（遮罩要下一帧才盖上，这里再拦一道）
+  if (isUpload.value) return;
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');

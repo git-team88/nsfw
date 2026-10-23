@@ -1109,10 +1109,8 @@ async function onBatchPublish() {
     return;
   }
 
-  batchPublishChapterStatuses.value = selectedChapters.value.map(chapter => ({
-    chapter,
-    status: 'waiting' as const
-  }));
+  if (isPublishing.value) return;
+  rebuildBatchStatuses();
   showBatchPublishProgress.value = true;
 
   await runBatchPublishLoop();
@@ -1267,7 +1265,17 @@ function selectBatchPartialStart(ch: number) {
 
 const showBatchPublishProgress = ref(false);
 const showBatchPublishFail = ref(false);
-const batchPublishChapterStatuses = ref<{ chapter: number; status: 'success' | 'publishing' | 'waiting' | 'fail' | 'unpublished' }[]>([]);
+const batchPublishChapterStatuses = ref<{ uid: number; chapter: number; status: 'success' | 'publishing' | 'waiting' | 'fail' | 'unpublished' }[]>([]);
+
+// 按当前列表重建进度：同一个文件（uid）上一轮已发成功的保留 success，关掉弹窗后增删 / 排序也不会错位
+function rebuildBatchStatuses() {
+  const done = new Set(batchPublishChapterStatuses.value.filter(c => c.status === 'success').map(c => c.uid));
+  batchPublishChapterStatuses.value = localItems.value.map((item, i) => ({
+    uid: item.uid,
+    chapter: i + 1,
+    status: done.has(item.uid) ? 'success' as const : 'waiting' as const
+  }));
+}
 const batchPublishFailChapters = ref<{ chapter: number; status: 'success' | 'fail' | 'unpublished' }[]>([]);
 const batchPublishFailedChapter = ref<number | undefined>(undefined);
 
@@ -1300,12 +1308,9 @@ function handleBatchPublishExit() {
 }
 
 function handleBatchPublishRetry() {
-  // 将失败/未发布的章节重置为等待状态，保留已成功的章节
-  batchPublishChapterStatuses.value.forEach(item => {
-    if (item.status !== 'success') {
-      item.status = 'waiting';
-    }
-  });
+  if (isPublishing.value) return;
+  // 按当前列表重建：失败 / 未发布的回到等待，已成功的保留
+  rebuildBatchStatuses();
   showBatchPublishFail.value = false;
   showBatchPublishProgress.value = true;
   runBatchPublishLoop();

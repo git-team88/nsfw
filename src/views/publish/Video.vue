@@ -716,7 +716,7 @@
           <button v-if="isBatchPublish" class="submit" :disabled="isUpload || isBatchPublishing" @click="onBatchPublish">
             {{ t("submit.submit") }}
           </button>
-          <button v-else class="submit" @click="onSubmit">
+          <button v-else class="submit" :disabled="isUpload" @click="onSubmit">
             {{ t("submit.submit") }}
           </button>
         </div>
@@ -4166,6 +4166,8 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 async function onSubmit() {
+  // 防双击：提交中再点直接忽略（遮罩要下一帧才盖上，这里再拦一道）
+  if (isUpload.value) return;
   const token = localStorage.getItem("token");
   if (!token) {
     router.push('/login');
