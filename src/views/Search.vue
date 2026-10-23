@@ -13,7 +13,6 @@
               type="text"
               class="search-input"
               :placeholder="t('search.placeholder')"
-              @keyup.enter="performSearch"
             />
             <img class="search-btn" src="@/assets/images/user/search.png" alt="Search" @click="performSearch" />
           </div>
@@ -66,7 +65,6 @@
               :class="{ 'is-image': post.type == '4' }"
               v-for="(post, index) in postList"
               :key="post.id"
-              ref="postCardRefs"
               :style="{ animationDelay: `${Math.min(index, 10) * 45}ms` }"
               @click="goToDetail(post)"
             >
@@ -255,7 +253,6 @@ const checkLogin = () => {
   return true;
 };
 
-import likeActive from '@/assets/images/home/like_active.png';
 import like from '@/assets/images/home/like.png';
 import defaultAvatar from "@/assets/images/base/avatar.png";
 import defaultCover from "@/assets/images/base/cover.png";
@@ -288,8 +285,13 @@ interface Post {
 }
 
 // State
-const inputKeyword = ref(route.query.keyword as string || '');
-const searchKeyword = ref(route.query.keyword as string || '');
+// ?keyword=a&keyword=b 时是数组，取第一个；顺手 trim + 限长
+function normalizeKeyword(v: unknown): string {
+  const raw = Array.isArray(v) ? v[0] : v;
+  return String(raw ?? '').trim().slice(0, 100);
+}
+const inputKeyword = ref(normalizeKeyword(route.query.keyword));
+const searchKeyword = ref(normalizeKeyword(route.query.keyword));
 const activeTab = ref(route.query.type === 'user' ? 'users' : 'posts');
 const postFilter = ref(0);
 const userRegion = ref(false);
@@ -307,8 +309,13 @@ const makeSequelAuthorId = ref('');
 const searchRobotsEl = ref<HTMLMetaElement | null>(null);
 let searchPrevRobots: string | null = null;
 
+// 标签标题：有关键词是「关键词 | 搜索 | 站点」，没有就是「搜索 | 站点」
+function searchPageName(kw: string): string {
+  return kw ? `${kw} | ${t('pageTitle.search')}` : t('pageTitle.search');
+}
+
 function setSearchNoindex() {
-  setPageTitle(searchKeyword.value || t('pageTitle.search'));
+  setPageTitle(searchPageName(searchKeyword.value));
   let robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
   if (robots) {
     searchPrevRobots = robots.getAttribute('content');
@@ -358,8 +365,6 @@ useMasonry(waterfallRef, {
   columns: (_w, vw) => (vw >= 768 ? 4 : 2),
   gap: (_w, vw) => (vw >= 768 ? 20 : 18),
 });
-const postCardRefs = ref<HTMLElement[]>([]);
-const containerHeight = ref(0);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Posts
@@ -394,28 +399,15 @@ watch(() => locale.value, () => {
     { id: 2, label: t('home.contentType.novel') }
   ]
 
-  // Re-trigger search when language changes
+  // 切语言：标题重算、按当前已提交的关键词重拉（不碰输入框里没回车的内容）
+  setPageTitle(searchPageName(searchKeyword.value));
   if (searchKeyword.value || postList.value) {
-    postsPage.value = 1;
-    postList.value = null;
-    performSearch();
+    reloadCurrent();
   }
 });
 
-// Methods
-function performSearch() {
-  // Update searchKeyword with the input value
-  searchKeyword.value = inputKeyword.value;
-
-  // Update URL with the new keyword
-  router.replace({
-    path: '/search',
-    query: {
-      keyword: inputKeyword.value,
-      type: activeTab.value === 'users' ? 'user' : 'post'
-    }
-  });
-
+// 按当前 tab 从第 1 页重拉
+function reloadCurrent() {
   if (activeTab.value === 'posts') {
     postsPage.value = 1;
     postsHasMore.value = true;
@@ -425,8 +417,27 @@ function performSearch() {
     usersHasMore.value = true;
     users.value = [];
   }
-
   loadData();
+}
+
+// Methods
+function performSearch() {
+  // 关键词 trim 后再搜；标题跟着关键词变
+  const kw = inputKeyword.value.trim();
+  inputKeyword.value = kw;
+  searchKeyword.value = kw;
+  setPageTitle(searchPageName(kw));
+
+  // Update URL with the new keyword
+  router.replace({
+    path: '/search',
+    query: {
+      keyword: kw,
+      type: activeTab.value === 'users' ? 'user' : 'post'
+    }
+  });
+
+  reloadCurrent();
 }
 
 function switchTab(tab: string) {
@@ -467,7 +478,9 @@ function setPostFilter(filter: number) {
 }
 
 async function loadData(fromLoadMore = false) {
-  if (isLoading.value || isLoadingMore.value) return;
+  // 加载更多才需要排队；新搜索 / 切 tab / 切筛选总是发出去，旧响应靠 requestId 丢弃
+  // （以前这里对所有调用都 return，请求飞行中回车搜新词会被吞掉，页面停在空白）
+  if (fromLoadMore && (isLoading.value || isLoadingMore.value)) return;
 
   // Generate a unique request ID for this request
   const requestId = ++currentRequestId.value;
@@ -486,39 +499,29 @@ async function loadData(fromLoadMore = false) {
   await getCountry();
 
   try {
-    if (activeTab.value == 'posts') {
+    if (currentActiveTab == 'posts') {
       const showNsfw = contentSwitch.showNsfw;
-      const isStandalone = postFilter.value === 4 || postFilter.value === 5;
+      const isStandalone = currentPostFilter === 4 || currentPostFilter === 5;
       const res = isStandalone
         ? await api.searchPostsPublic({
-            keyword: searchKeyword.value,
-            type: postFilter.value,
+            keyword: currentSearchKeyword,
+            type: currentPostFilter,
             page: postsPage.value,
             limit: postsLimit.value,
             show_nsfw: showNsfw,
           }) as any
         : await api.searchPost({
-            keyword: searchKeyword.value,
-            type: postFilter.value,
+            keyword: currentSearchKeyword,
+            type: currentPostFilter,
             page: postsPage.value,
             limit: postsLimit.value,
             language: apiLang(),
             show_nsfw: showNsfw,
           }) as any;
 
-      // Check if this request is still the latest one
-      if (requestId !== currentRequestId.value) {
-        isLoading.value = false;
-        isLoadingMore.value = false;
-        return; // Skip processing this response as it's outdated
-      }
-
-      // Check if the tab or filter has changed while the request was in flight
-      if (currentActiveTab !== activeTab.value || currentPostFilter !== postFilter.value || currentSearchKeyword !== searchKeyword.value) {
-        isLoading.value = false;
-        isLoadingMore.value = false;
-        return; // Skip processing this response as the tab or filter has changed
-      }
+      // 过期响应（已经发了更新的请求 / tab、筛选、关键词变了）：直接丢，不碰 loading —— 那是新请求的
+      if (requestId !== currentRequestId.value) return;
+      if (currentActiveTab !== activeTab.value || currentPostFilter !== postFilter.value || currentSearchKeyword !== searchKeyword.value) return;
 
       if (res.code == 0 || res.code == 200) {
         const newPosts = (res.data?.data || []).map((item: any) => {
@@ -543,6 +546,8 @@ async function loadData(fromLoadMore = false) {
           isLiked: item.is_liked == 1 || false,
           is_nsfw: item.is_nsfw,
           session_id: item.session_id,
+          // 视频「做同款」要看时长（超 31 秒不显示）
+          duration: item.duration,
         };
         });
 
@@ -603,24 +608,14 @@ async function loadData(fromLoadMore = false) {
     } else {
       // Use real API for users search
       const res = await api.searchUserList(
-        searchKeyword.value,
+        currentSearchKeyword,
         usersPage.value,
         18
       ) as any;
 
-      // Check if this request is still the latest one
-      if (requestId !== currentRequestId.value) {
-        isLoading.value = false;
-        isLoadingMore.value = false;
-        return; // Skip processing this response as it's outdated
-      }
-
-      // Check if the tab has changed while the request was in flight
-      if (currentActiveTab !== activeTab.value || currentSearchKeyword !== searchKeyword.value) {
-        isLoading.value = false;
-        isLoadingMore.value = false;
-        return; // Skip processing this response as the tab has changed
-      }
+      // 过期响应：直接丢，不碰 loading
+      if (requestId !== currentRequestId.value) return;
+      if (currentActiveTab !== activeTab.value || currentSearchKeyword !== searchKeyword.value) return;
 
       if (res.code === 0 || res.code === 200) {
         const userList = res.data?.data || [];
@@ -650,8 +645,11 @@ async function loadData(fromLoadMore = false) {
       }
     }
   } catch (error) {
+    if (requestId !== currentRequestId.value) return;
     console.error('Search error:', error);
     toast(t('fail'));
+    // 首屏失败：给个空列表，否则 loading 和空态都不显示，整块空白
+    if (!fromLoadMore && currentActiveTab === 'posts' && postList.value === null) postList.value = [];
     isLoading.value = false;
     isLoadingMore.value = false;
   }
@@ -677,8 +675,9 @@ const layoutWaterfall = () => {
 
 function goToDetail(post: any) {
   localStorage.setItem('searchPostFilter', postFilter.value.toString());
-  const bookId = post.book_id;
-  if (String(post.type) === '4' || String(post.type) === '5') {
+  // 和首页一致：取不到 book_id（返回的本身就是书）就用 id
+  const bookId = post.book_id || post.id;
+  if (post.type == '4' || post.type == '5') {
     // type=5 => 详情接口拼 fromSearch，靠 keyword 还原这份搜索结果，才能算出上一个/下一个
     router.push({
       path: `/detail/${post.id}`,
@@ -696,45 +695,6 @@ function goToDetail(post: any) {
 
 function goToUserHome(userId: number) {
   router.push(`/user-home/${userId}`);
-}
-
-async function toggleLike(post: Post) {
-  // Check if user is logged in
-  if (!checkLogin()) return;
-
-  try {
-    const postId = post.id;
-    // Find the post in the postList
-    const postIndex = postList.value?.findIndex(p => p.id === postId);
-    if (postIndex === -1 || postIndex === undefined) return;
-
-    const isCurrentlyLiked = post.isLiked;
-
-    // Call the appropriate API first
-    let res;
-    if (isCurrentlyLiked) {
-      // Unlike post
-      res = await api.dislikePost({ post_id: postId }) as any;
-    } else {
-      // Like post
-      res = await api.likePost({ post_id: postId }) as any;
-    }
-
-    // Check if API call was successful
-    if (res.code === 0 || res.code === 200) {
-      // Update the UI only after API success
-      if (postList.value) {
-        postList.value[postIndex].isLiked = !isCurrentlyLiked;
-        postList.value[postIndex].all_like += isCurrentlyLiked ? -1 : 1;
-      }
-    } else {
-      toast(apiErrorMessage(res));
-    }
-  } catch (error) {
-    console.error('Like/unlike error:', error);
-    // Show error message if API call failed
-    toast(t('fail'));
-  }
 }
 
 async function toggleFollow(user: any) {
@@ -764,7 +724,7 @@ async function toggleFollow(user: any) {
       // Update the UI only after API success
       users.value[userIndex].is_followed = !isCurrentlyFollowing;
       // Show success message
-      toast(isCurrentlyFollowing ? t('search.unfollow') : t('search.followed'));
+      toast(isCurrentlyFollowing ? t('home.user.unfollowSuccess') : t('search.followed'));
     } else {
       toast(apiErrorMessage(res));
     }
@@ -775,8 +735,8 @@ async function toggleFollow(user: any) {
   }
 }
 
-function formatNumber(num: number | string): string {
-  const n = typeof num === 'string' ? parseInt(num) : num;
+function formatNumber(num: number | string | null | undefined): string {
+  const n = Number(num) || 0;
   if (n >= 1000000) {
     return (n / 1000000).toFixed(1) + 'M';
   } else if (n >= 1000) {

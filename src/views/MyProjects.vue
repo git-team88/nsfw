@@ -340,8 +340,13 @@ function switchStatusTab(tab: string) {
 }
 
 function toPublish(project: any) {
-  const videoUrl = project.result_async.final_video_output.video_url;
-  const coverUrl = project.result_async.final_video_output.video_cover_url;
+  const output = project?.result_async?.final_video_output;
+  if (!output?.video_url) {
+    toast(t('fail'));
+    return;
+  }
+  const videoUrl = output.video_url;
+  const coverUrl = output.video_cover_url;
   const sessionId = project.session_id;
 
   router.push({
@@ -389,6 +394,7 @@ function closeVideoModal() {
 
 function setMenuRef(el: object | null, id: number) {
   if (el) menuRefs.set(id, el as HTMLElement);
+  else menuRefs.delete(id);
 }
 
 function toggleMenu(projectId: number, event?: MouseEvent) {
@@ -460,7 +466,7 @@ async function handleRenameConfirm(newName: string) {
 
       closeRenameModal();
     } else {
-      toast(data.message);
+      toast(data.message || t('fail'));
     }
   } catch (error) {
     toast(t('fail'));
@@ -512,7 +518,7 @@ async function handleConfirmDelete() {
 
       activeMenuProjectId.value = null;
     } else {
-      toast(data.message);
+      toast(data.message || t('fail'));
     }
   } catch (error) {
     toast(t('fail'));
@@ -615,48 +621,24 @@ async function loadProjects(reset = false) {
         hasMore.value = projects.value.length < totalCount;
       }
 
-      // Wait for images to load before updating loading state
-      nextTick(() => {
-        let loadedCount = 0;
-        const total = newProjects.length;
-        if (total === 0) {
-          loadingMore.value = false;
-          loading.value = false;
-          return;
-        }
-
-        newProjects.forEach((project: any) => {
-          // Load cover image
-          if (project.cover || project.cover_image) {
-            const img = new Image();
-            img.src = project.cover || project.cover_image;
-            img.onload = img.onerror = () => {
-              loadedCount++;
-              if (loadedCount === total) {
-                loadingMore.value = false;
-                loading.value = false;
-              }
-            };
-          } else {
-            loadedCount++;
-            if (loadedCount === total) {
-              loadingMore.value = false;
-              loading.value = false;
-            }
-          }
-        });
-      });
-
       currentPage.value++;
+      // 列表直接渲染，封面由 <img> 自己加载（以前这里预载的是未经 processImageUrl 的原图，白请求一次，
+      // 而且切 tab 后旧请求的回调还会把 loading 关掉，闪一下空态）
+      loading.value = false;
+      loadingMore.value = false;
     } else {
       console.error('API Error:', response.msg || 'Unknown error');
+      toast(response.message || response.msg || t('fail'));
       if (currentPage.value === 1) {
         projects.value = [];
       }
       hasMore.value = false;
+      loading.value = false;
       loadingMore.value = false;
     }
   } catch (error) {
+    // 过期请求的异常不碰 loading（那是新请求的）
+    if (requestId != currentRequestId.value) return;
     console.error('Error loading projects:', error);
     if (currentPage.value === 1) {
       projects.value = [];
@@ -664,10 +646,6 @@ async function loadProjects(reset = false) {
     hasMore.value = false;
     loadingMore.value = false;
     loading.value = false;
-  } finally {
-    if (!reset) {
-      loadingMore.value = false;
-    }
   }
 }
 
@@ -682,7 +660,8 @@ async function loadMoreProjects() {
 onMounted(async () => {
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/');
+    // 未登录：和 Header 入口一致，去登录页
+    router.push('/login');
     return false;
   }
 

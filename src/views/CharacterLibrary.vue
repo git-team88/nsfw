@@ -30,26 +30,16 @@
         <div class="loading-text">{{ t('characterLibrary.loading') }}</div>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="error-state">
-        <div class="error-message">{{ error }}</div>
-      </div>
-
       <!-- Character Grid -->
-      <div v-else-if="filteredCharacters.length > 0" class="character-grid">
+      <div v-else-if="characters.length > 0" class="character-grid">
         <!-- Character Cards -->
         <div
-          v-for="(character, index) in currentPageCharacters"
+          v-for="(character, index) in characters"
           :key="character.id"
           class="character-card"
           :style="{ animationDelay: `${Math.min((index + 1) * 45, 400)}ms` }"
           @click="openCharacterDetail(character)"
         >
-          <!-- Power标识 -->
-          <div v-if="activeTab === 'official' && character.useCostPoints" class="character-power">
-            <img class="power-icon" src="@/assets/images/project/coin.png" alt="" />
-            <span class="power-value">{{ character.useCostPoints }}</span>
-          </div>
           <div class="character-img-wrap">
             <img class="character-img" :src="processImageUrl(character.image)" :alt="character.name" />
             <span class="halftone" aria-hidden="true"></span>
@@ -59,14 +49,9 @@
         </div>
       </div>
 
-      <EmptyState
-        v-else
-        :title="t('characterLibrary.emptyState.title')"
-        :description="t('characterLibrary.emptyState.description')"
-        @action="goToCreatePage"
-      />
+      <EmptyState v-else :text="t('characterLibrary.emptyState.description')" />
 
-      <div class="pagination-container" v-if="!isLoading && !error && totalCount > 0 && totalPages > 1">
+      <div class="pagination-container" v-if="!isLoading && totalCount > 0 && totalPages > 1">
         <Pagination
           :total="totalCount"
           :page-size="itemsPerPage"
@@ -80,7 +65,6 @@
       :visible="showDetailModal"
       :character="selectedCharacter"
       @close="closeCharacterDetail"
-      @cast="handleCastCharacter"
     />
   </div>
 </template>
@@ -94,11 +78,9 @@ import CharacterDetailModal from '@/components/CharacterDetailModal.vue';
 import Pagination from '@/components/Pagination.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import ProcessList from '@/components/ProcessList.vue';
-import addIcon from '@/assets/images/project/add.png';
-import addHoverIcon from '@/assets/images/project/add_hover.png';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
-import { processImageUrl } from '@/util/utils';
+import { processImageUrl, apiErrorMessage } from '@/util/utils';
 
 const { t, locale } = useI18n();
 const router = useRouter();
@@ -110,32 +92,16 @@ const itemsPerPage = 20;
 const totalCount = ref(0);
 const showDetailModal = ref(false);
 const selectedCharacter = ref<any>(null);
-const isHovering = ref(false);
 const isLoading = ref(false);
-const error = ref<string | null>(null);
 const activeTab = ref('my');
 
 // Request identifier to avoid race conditions
 const currentRequestId = ref(0);
 
 // Computed
-const filteredCharacters = computed(() => {
-  return characters.value;
-});
-
 const totalPages = computed(() => {
   return Math.ceil(totalCount.value / itemsPerPage);
 });
-
-const currentPageCharacters = computed(() => {
-  return characters.value;
-});
-
-// Methods
-function goToCreatePage() {
-  // Navigate to create new character page
-  router.push('/create-character');
-}
 
 function openCharacterDetail(character: any) {
   selectedCharacter.value = character;
@@ -147,31 +113,6 @@ function closeCharacterDetail() {
   selectedCharacter.value = null;
 }
 
-function handleCastCharacter(character: any) {
-  // Store character in local storage
-  try {
-    // Get existing characters from local storage
-    let selectedCharacters = JSON.parse(localStorage.getItem('selectedCharacters') || '[]');
-
-    // Check if character is already selected
-    const isCharacterExists = selectedCharacters.some((c: any) => c.id === character.id);
-    if (!isCharacterExists) {
-      // Add new character to the list
-      selectedCharacters.push(character);
-      // Save back to local storage
-      localStorage.setItem('selectedCharacters', JSON.stringify(selectedCharacters));
-    }
-  } catch (error) {
-    console.error('Error storing character:', error);
-  }
-
-  // Close the modal
-  closeCharacterDetail();
-
-  // Navigate to home page
-  router.push('/');
-}
-
 async function loadCharacters() {
   // Generate a unique request ID for this request
   const requestId = ++currentRequestId.value;
@@ -180,23 +121,14 @@ async function loadCharacters() {
   const currentPageValue = currentPage.value;
 
   isLoading.value = true;
-  error.value = null;
   try {
-    // Use type 2 for official characters, 1 for user characters
-    const type = activeTab.value == 'official' ? 2 : 1;
+    // 只有「我的角色」一个 tab：type 固定 1
+    const type = 1;
     const response = await api.getCharacters(type, currentPage.value, itemsPerPage) as any;
 
-    // Check if this request is still the latest one
-    if (requestId !== currentRequestId.value) {
-      isLoading.value = false;
-      return; // Skip processing this response as it's outdated
-    }
-
-    // Check if the tab or page has changed while the request was in flight
-    if (currentTab !== activeTab.value || currentPageValue !== currentPage.value) {
-      isLoading.value = false;
-      return; // Skip processing this response as the tab or page has changed
-    }
+    // 过期响应（已经发了更新的请求 / 页码变了）：直接丢，不碰 loading —— 那是新请求的
+    if (requestId !== currentRequestId.value) return;
+    if (currentTab !== activeTab.value || currentPageValue !== currentPage.value) return;
 
     if (response.code == 200 && response.data) {
       if (response.data.data_list) {
@@ -207,7 +139,7 @@ async function loadCharacters() {
           tri_image: item.tri_view_url,
           description: item.desc,
           useCostPoints: item.use_cost_points,
-          isOfficial: activeTab.value === 'official'
+          isOfficial: false
         }));
         // Capture total count from API response
         totalCount.value = response.data.data_count || 0;
@@ -217,15 +149,16 @@ async function loadCharacters() {
         totalCount.value = 0;
       }
     } else {
-      toast(locale.value == 'jp' ?  response.msg_jp : response.msg)
+      toast(apiErrorMessage(response) || t('fail'))
       characters.value = [];
       totalCount.value = 0;
     }
+    isLoading.value = false;
   } catch (err) {
+    if (requestId !== currentRequestId.value) return;
     toast(t('fail'));
     characters.value = [];
     totalCount.value = 0;
-  } finally {
     isLoading.value = false;
   }
 }
@@ -253,6 +186,11 @@ function setSeoMeta() {
 
 // Lifecycle
 onMounted(() => {
+  // 未登录：和 Header 入口、我的项目一致，去登录页（不然私有接口回来会弹「登录已过期」）
+  if (!localStorage.getItem('token')) {
+    router.push('/login');
+    return;
+  }
   window.scrollTo(0, 0);
 
   setSeoMeta();

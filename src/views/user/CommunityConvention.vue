@@ -19,7 +19,7 @@ import Header from "@/components/Header.vue";
 import { ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { setMetaKeywords } from "@/utils/seoMeta";
+import { setMetaKeywords, applySeoMeta, restoreSeoMeta } from "@/utils/seoMeta";
 import { initLanguage } from "@/util/utils";
 
 const router = useRouter();
@@ -32,15 +32,8 @@ const isBind = ref(false);
 const isHide = ref(false);
 
 function setSeoMeta() {
-  document.title = t('seo.communityConvention.title');
-
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', t('seo.communityConvention.description'));
+  // 走 applySeoMeta 记录原值，离开时 restoreSeoMeta() 还原 description，不把本页的描述带到下一个页面
+  applySeoMeta({ title: t('seo.communityConvention.title'), description: t('seo.communityConvention.description') });
   setMetaKeywords(t('seo.communityConvention.keywords'));
 }
 
@@ -86,6 +79,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   removeNoIndexMeta();
+  restoreSeoMeta();
 });
 
 watch(() => locale.value, () => {

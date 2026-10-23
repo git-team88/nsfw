@@ -179,20 +179,6 @@ const contentSwitch = useContentSwitchStore()
 const route = useRoute()
 const router = useRouter()
 
-// 敏感内容地区判断：进入页面时拉一次，作品榜据此决定 show_nsfw
-const userRegion = ref(false)
-let regionFetched = false
-async function getCountry() {
-  if (regionFetched) return
-  try {
-    const res = (await api.getCode()) as any
-    regionFetched = true
-    userRegion.value = res.code == 0 && res.data?.countryCode !== 'CN'
-  } catch {
-    regionFetched = true
-    userRegion.value = false
-  }
-}
 
 const mode = ref<'work' | 'user'>('work')
 const type = ref('all')
@@ -239,11 +225,13 @@ async function loadWorkRank(reset = false) {
   }
   const page = workPage.value
   const reqType = type.value
+  let stale = false
   try {
     await contentSwitch.ensureLoaded()
     const res = (await api.popularBookRank(page, WORK_LIMIT, 'week', TYPE_PARAM[reqType] ?? 0, apiLang(), contentSwitch.showNsfw, contentSwitch.channel)) as any
-    // 请求期间切换了筛选类型则丢弃本次结果
-    if (reqType !== type.value || mode.value !== 'work') return
+    // 请求期间切换了筛选类型则丢弃本次结果（loading 留给新请求去关）
+    if (reqType !== type.value || mode.value !== 'work') { stale = true; return }
+    if (res.code !== 0 && res.code !== 200) toast(apiErrorMessage(res) || t('fail'))
     const list = ((res.code === 0 || res.code === 200) && (res.data?.data || res.data)) || []
     const mapped: RankedWork[] = (Array.isArray(list) ? list : []).map((it: any, i: number) => {
       const b = it.book || {}
@@ -273,8 +261,10 @@ async function loadWorkRank(reset = false) {
     if (reset) workItems.value = []
     workHasMore.value = false
   } finally {
-    workLoading.value = false
-    workLoadingMore.value = false
+    if (!stale) {
+      workLoading.value = false
+      workLoadingMore.value = false
+    }
   }
 }
 
@@ -309,6 +299,7 @@ async function loadUserRank(reset = false) {
   }
   const page = userPage.value
   const reqUserTab = userTab.value
+  let stale = false
   try {
     await contentSwitch.ensureLoaded()
     // 人气作者榜 / 新锐作者榜，均使用 period=week
@@ -317,8 +308,8 @@ async function loadUserRank(reset = false) {
     const res = (reqUserTab === 'rising'
       ? await api.risingUserRank(page, USER_LIMIT, period, showNsfw, contentSwitch.channel)
       : await api.popularUserRank(page, USER_LIMIT, period, showNsfw, contentSwitch.channel)) as any
-    // 请求期间切换了子榜/主榜则丢弃本次结果
-    if (reqUserTab !== userTab.value || mode.value !== 'user') return
+    // 请求期间切换了子榜/主榜则丢弃本次结果（loading 留给新请求去关）
+    if (reqUserTab !== userTab.value || mode.value !== 'user') { stale = true; return }
     if (res.code !== 0 && res.code !== 200) {
       toast((apiErrorMessage(res)) || t('fail'))
     }
@@ -342,8 +333,10 @@ async function loadUserRank(reset = false) {
     if (reset) userItems.value = []
     userHasMore.value = false
   } finally {
-    userLoading.value = false
-    userLoadingMore.value = false
+    if (!stale) {
+      userLoading.value = false
+      userLoadingMore.value = false
+    }
   }
 }
 
@@ -400,20 +393,13 @@ function onScroll() {
 
 onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  // 从首页「查看全部」进入时先同步切换 mode，避免首屏闪现「无数据」
+  // 从首页「查看全部」进入时切到用户榜：mode 变化会触发 watch(mode) 去拉用户榜，这里不再手动拉一次
   if (route.query.tab === 'user') {
-    mode.value = 'user'
     userLoading.value = true
+    mode.value = 'user'
   } else {
     workLoading.value = true
-  }
-  // 进入页面先拿地区，保证作品榜首屏请求带上正确的 show_nsfw
-  await getCountry()
-  // mode 已提前设置，watch(mode) 不会重复触发（因为值未变），这里手动首屏加载
-  if (mode.value === 'work') {
     loadWorkRank(true)
-  } else {
-    loadUserRank(true)
   }
 })
 onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))

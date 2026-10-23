@@ -583,12 +583,14 @@ watch(heroPaused, (paused) => {
   else v.play().catch(() => {});
 });
 
+// hero 装饰的几个定时器，离开页面时清掉
+const heroTimers: number[] = [];
 const initHeroParts = () => {
   const box = heroPartsRef.value;
   if (!box) return;
   const items = Array.from(box.querySelectorAll<HTMLImageElement>('.hero-part'));
   items.forEach((im, i) => {
-    window.setTimeout(() => { im.style.opacity = '1'; }, 140 + i * 70);
+    heroTimers.push(window.setTimeout(() => { im.style.opacity = '1'; }, 140 + i * 70));
   });
   box.classList.add('mg-parts-live');
 };
@@ -608,14 +610,14 @@ const popHeroParts = () => {
     im.style.transition = `transform .5s cubic-bezier(.5,0,.75,0) ${d}s, opacity .5s cubic-bezier(.5,0,.75,0) ${d}s`;
     im.style.transform = `translate(0,0) scale(.06) rotate(${p.rot}deg)`;
     im.style.opacity = '0';
-    window.setTimeout(() => {
+    heroTimers.push(window.setTimeout(() => {
       heroPartSrc.value[i] = p.after;
       const aSc = p.afterScale ?? 1;
       const aRot = p.afterRot ?? p.rot;
       im.style.transition = 'transform 1s cubic-bezier(.34,1.56,.64,1), opacity .5s cubic-bezier(.16,1,.3,1)';
       im.style.transform = `translate(0,0) scale(${aSc}) rotate(${aRot}deg)`;
       im.style.opacity = '1';
-    }, 520 + i * 40);
+    }, 520 + i * 40));
   });
 };
 
@@ -953,14 +955,9 @@ const switchContentTab = (tabId: string, index: number) => {
 
 
 // Load content from API
-let isLoadingContent = false;
+// 以前这里有个 isLoadingContent 互斥锁：请求飞行中切分类 / 切 tab / 切语言，新请求被静默吞掉，
+// 旧响应回来又因为 tab 变了被丢弃，列表就停在空白。现在新请求总是发出，旧响应靠 requestId 丢弃。
 const loadContent = async (page = 1) => {
-  // Prevent multiple concurrent requests
-  if (isLoadingContent) {
-    return;
-  }
-  isLoadingContent = true;
-
   // Generate a unique request ID for this request
   const requestId = ++currentRequestId.value;
   // Store the current tab combination at the time of the request
@@ -1010,17 +1007,9 @@ const loadContent = async (page = 1) => {
         res = await api.homePostList(page, pageSize.value, currentContentType, apiLang(), showNsfw, channel) as any;
     }
 
-    // Check if this request is still the latest one
-    if (requestId !== currentRequestId.value) {
-      isLoadingContent = false;
-      return; // Skip processing this response as it's outdated
-    }
-
-    // Check if the tab or content type has changed while the request was in flight
-    if (currentActiveTab !== activeContentTab.value || currentContentType !== activeContentType.value || currentSortOrder !== sortOrder.value) {
-      isLoadingContent = false;
-      return; // Skip processing this response as the tab has changed
-    }
+    // 过期响应（已经发了更新的请求 / tab、分类、排序变了）：直接丢，loading 留给新请求去关
+    if (requestId !== currentRequestId.value) return;
+    if (currentActiveTab !== activeContentTab.value || currentContentType !== activeContentType.value || currentSortOrder !== sortOrder.value) return;
 
     if (res.code == 0 || res.code == 200) {
       let data = res.data?.data || res.data || [];
@@ -1059,11 +1048,13 @@ const loadContent = async (page = 1) => {
       toast(apiErrorMessage(res))
     }
   } catch (error) {
+    if (requestId !== currentRequestId.value) return;
     toast(t('fail'));
   } finally {
-    loading.value = false;
-    loadingMoreContent.value = false;
-    isLoadingContent = false;
+    if (requestId === currentRequestId.value) {
+      loading.value = false;
+      loadingMoreContent.value = false;
+    }
   }
 };
 
@@ -1116,7 +1107,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
   }
   localStorage.setItem('homeContentTab', activeContentTab.value);
   localStorage.setItem('homeContentType', activeContentType.value.toString());
-  if (String(type) === '4' || String(type) === '5') {
+  if (type == '4' || type == '5') {
     const q = detailQuery(postId || bookId);
     router.push({ path: `/detail/${q.id}`, query: { tab: q.tab, type: q.type } });
   } else {
@@ -1126,7 +1117,7 @@ const navigateToDetail = (bookId: string, type?: string, postId?: string | numbe
 
 // 提供真实可爬取的详情页链接（配合模板里的 <a :href> + @click.prevent，兼顾 SEO 与 SPA 体验）
 const detailHref = (bookId: string, type?: string, postId?: string | number) => {
-  if (String(type) === '4' || String(type) === '5') {
+  if (type == '4' || type == '5') {
     const q = detailQuery(postId || bookId);
     return `/detail/${q.id}?tab=${q.tab}&type=${q.type}`;
   }
@@ -1151,7 +1142,7 @@ const toggleUserFollow = async (user: any) => {
       user.isFollowed = !user.isFollowed;
       toast(t(user.isFollowed ? 'home.user.followSuccess' : 'home.user.unfollowSuccess'));
     } else {
-      toast(locale.value == 'jp' ? response.msg_jp : response.msg);
+      toast(apiErrorMessage(response) || t('fail'));
     }
   } catch (error) {
     console.error('Error toggling follow:', error);
@@ -1529,7 +1520,7 @@ const handleScrollToBottom = () => {
 
   if (scrollTop + windowHeight >= documentHeight - 200) {
     if (activeContentTab.value === 'suggested' || viewMode.value === 'content') {
-      if (hasMoreContent.value && !isLoadingContent && !loading.value && !loadingMoreContent.value) {
+      if (hasMoreContent.value && !loading.value && !loadingMoreContent.value) {
         currentPage.value++;
         loadContent(currentPage.value);
       }
@@ -1547,6 +1538,8 @@ const handleScrollToBottom = () => {
 // 生命周期
 // ---------------------------------------------------------------------------
 watch(activeContentType, () => {
+  // 关注 / 订阅 tab 在用户模式下不显示内容列表，切 tab 时顺带改的分类不用拉数据
+  if (viewMode.value === 'user' && activeContentTab.value !== 'suggested') return;
   currentPage.value = 1;
   hasMoreContent.value = true;
   allContent.value = [];
@@ -1663,6 +1656,8 @@ onBeforeUnmount(() => {
   document.head.querySelectorAll('link[data-seo-pagination], script[data-seo-itemlist]').forEach(el => el.remove());
   window.removeEventListener('resize', handleResize);
   window.removeEventListener('scroll', handleScrollToBottom);
+  heroTimers.forEach(id => window.clearTimeout(id));
+  heroTimers.length = 0;
 });
 
 </script>

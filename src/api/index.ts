@@ -395,7 +395,7 @@ export default {
     }),
   searchUserList: (keyword: string, page: number, limit: number) =>
     axios.request({
-      url: "post/searchUserListPublic?keyword=" + keyword + "&page=" + page + "&limit=" + limit,
+      url: "post/searchUserListPublic?keyword=" + encodeURIComponent(keyword) + "&page=" + page + "&limit=" + limit,
       method: "GET",
     }),
 

@@ -472,9 +472,9 @@ router.beforeEach(async (to, from, next) => {
 });
 
 // 埋点：每次路由切换报一条 page_view（带页面名 / 作品 / 合集 / 博主 id）
-router.afterEach((to) => {
+router.afterEach((to, from) => {
   // 浏览器标签标题：配了 meta.titleKey 的路由统一设成「页面名 - 站点名」
-  applyRouteTitle(to);
+  applyRouteTitle(to, from);
   trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any });
 });
 

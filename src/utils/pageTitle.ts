@@ -20,6 +20,12 @@ export function setPageTitle(name?: string) {
   document.title = name ? `${name}${TITLE_SEP}${siteName()}` : siteName();
 }
 
+// index.html 自带的 description（站点默认值），模块加载时就记下来；
+// 没配 seoKey、自己也不写 description 的页面（个人中心、发布页等）切过去时还原成它，
+// 免得上一页（支付协议 / 博主主页 / 作品详情…）的描述留在这一页上
+const defaultDescription: string | null =
+  typeof document === "undefined" ? null : (document.head.querySelector('meta[name="description" i]')?.getAttribute("content") ?? null);
+
 function setDescription(content: string) {
   let el = document.head.querySelector<HTMLMetaElement>('meta[name="description" i]');
   if (!el) {
@@ -42,8 +48,8 @@ function setRouteRobots(noindex: boolean) {
   document.head.appendChild(m);
 }
 
-/** 按路由的 meta.titleKey / seoKey / noindex 设标题等；没配的路由不动 */
-export function applyRouteTitle(route: RouteLocationNormalized | RouteLocationNormalizedLoaded) {
+/** 按路由的 meta.titleKey / seoKey / noindex 设标题等；没配的路由只还原 description（换页面时） */
+export function applyRouteTitle(route: RouteLocationNormalized | RouteLocationNormalizedLoaded, from?: RouteLocationNormalized | RouteLocationNormalizedLoaded) {
   if (typeof document === "undefined") return;
   const key = route.meta?.titleKey as string | undefined;
   const seoKey = route.meta?.seoKey as string | undefined;
@@ -57,4 +63,6 @@ export function applyRouteTitle(route: RouteLocationNormalized | RouteLocationNo
     return;
   }
   if (key) setPageTitle(t(key));
+  // 换页面（不是同一页只改 query）时把 description 还原成站点默认值；页面自己有的 mounted 时会再写
+  if (defaultDescription !== null && (!from || from.path !== route.path)) setDescription(defaultDescription);
 }
