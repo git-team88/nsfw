@@ -179,7 +179,7 @@
                   @click.stop="checkOutlineEditBeforeAction(() => startEditChapterTitle(chapter.chapter, chapter.title))"
                 ><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
                 <button
-                  v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex)"
+                  v-if="chapter.is_publish == 2 && !(taskStatus == 'DOING' && chapter.chapter == stepChapterIndex) && !(taskStatus == 'FAIL' && chapter.chapter == stepChapterIndex) && !(isPreparing && chapter.chapter == stepChapterIndex)"
                   class="chapter-publish-btn unpublish"
                   @click.stop="checkOutlineEditBeforeAction(() => handlePublishChapter(chapter))"
                 >{{ t('novel.publish') }}</button>
@@ -740,13 +740,18 @@
                     spellcheck="false"
                   ></textarea>
                   <div v-else-if="seg.type === 'image'" class="insert-image-block">
-                    <div v-if="seg.url" class="insert-image-wrapper">
+                    <div v-if="isInsertImageRenewing(seg.placeholder)" class="insert-image-wrapper">
+                      <div class="insert-image-skeleton"></div>
+                    </div>
+                    <div v-else-if="seg.url" class="insert-image-wrapper">
                       <img :src="insertImageSrc(seg.url)" alt="" class="insert-image" />
                       <button class="insert-image-zoom-btn" @click="zoomCoverImage(seg.url)"><img src="@/assets/images/novel/zoom.png" alt="Zoom" /></button>
                     </div>
-                    <div class="insert-image-actions">
-                      <button class="insert-image-action-btn" @click="checkOutlineEditBeforeAction(() => openInsertImageEdit(seg.placeholder))"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
-                      <button class="insert-image-action-btn" @click="checkOutlineEditBeforeAction(() => openInsertImageHistory(seg.placeholder))"><img src="@/assets/images/novel/history.png" alt="History" /></button>
+                    <!-- 手动编辑正文时：可以改图、标记修改，不显示历史；点了不退出编辑。
+                         正文里插图存的是 [[img_placeholder]]，换图不影响正文保存；换图完成后 syncEditSegmentImages 会把新图同步到编辑区 -->
+                    <div class="insert-image-actions" v-if="!isChapterRenewingInsertImage()">
+                      <button class="insert-image-action-btn" @click="openInsertImageEdit(seg.placeholder)"><img src="@/assets/images/novel/edit.png" alt="Edit" /></button>
+                      <MarkupEditIcon v-if="seg.url" class="insert-image-action-btn" :label="t('markup.markupEditAction')" @click="openInsertMarkup(seg.placeholder)" />
                     </div>
                   </div>
                 </template>
@@ -1176,7 +1181,7 @@
     <!-- Batch Publish Dialog -->
     <BatchPublishDialog
       :visible="showBatchPublishDialog"
-      :chapters="chapters"
+      :chapters="publishableChapters"
       :session-id="sessionId"
       :check-ownership="checkProjectOwnership"
       @close="showBatchPublishDialog = false"
@@ -1662,7 +1667,17 @@ watch(() => outlineData.value, (newVal) => {
 
 const backupOutlineData = ref<any>(null);
 const chapters = ref<any[]>([]);
-const unpublishedChapterCount = computed(() => chapters.value.filter(c => c.is_publish == 2).length);
+// 本地补进侧栏的占位章节（生成中 / 排队 / 失败，id 为 temp-N），服务端列表里没有
+const isTempChapter = (c: any) => String(c?.id ?? '').startsWith('temp-');
+// 批量发布只算真实的未发布章节，占位章节不算
+const unpublishedChapterCount = computed(() => chapters.value.filter(c => c.is_publish == 2 && !isTempChapter(c)).length);
+const publishableChapters = computed(() => chapters.value.filter(c => !isTempChapter(c)));
+// 用服务端章节列表整体替换时，把服务端还没有的本地占位章节留下（不然失败的那一章会从侧栏消失、点不进去重试）
+const mergeLocalPlaceholders = (serverChapters: any[]) => {
+  const list = Array.isArray(serverChapters) ? serverChapters : [];
+  const placeholders = chapters.value.filter(c => isTempChapter(c) && !list.some((s: any) => s.chapter == c.chapter));
+  return placeholders.length ? [...list, ...placeholders].sort((a: any, b: any) => Number(a.chapter) - Number(b.chapter)) : list;
+};
 const showRegenerateInput = ref<boolean>(false);
 const regenerateContent = ref<string>('');
 const isSendingRegenerate = ref<boolean>(false);
@@ -1738,8 +1753,9 @@ const selectedInsertImageText = computed(() => {
   const option = insertImageOptions.value.find(o => o.value === selectedInsertImage.value);
   return option ? option.label : '';
 });
-const effectiveRegenerateNsfw = computed(() => contentSwitch.mode === 2 || (contentSwitch.showCreateNsfwToggle && regenerateNsfwMode.value));
-const showRegenerateNsfwToggle = computed(() => contentSwitch.loaded && contentSwitch.showCreateNsfwToggle && userRegion.value);
+// 这个页面的 NSFW 开关：内容开关为 1 才显示（并且要做年龄询问）；为 0 不显示、也不按 NSFW 提交；2 是强制 NSFW
+const effectiveRegenerateNsfw = computed(() => contentSwitch.mode == 2 || (contentSwitch.mode == 1 && contentSwitch.showCreateNsfwToggle && regenerateNsfwMode.value));
+const showRegenerateNsfwToggle = computed(() => contentSwitch.loaded && contentSwitch.mode == 1 && contentSwitch.showCreateNsfwToggle && userRegion.value);
 const showRegenerateInsertImage = computed(() => contentSwitch.loaded && effectiveRegenerateNsfw.value);
 
 const currentChapter = ref<any>(null);
@@ -2308,18 +2324,26 @@ async function handleSendMarkedImage(blob: Blob, instruction: string) {
     coverRenewFailed.value = false;
     showCoverEditBtn.value = false;
     coverAbortController.value = new AbortController();
-    const response = await fetch(`${aiUrl}ai/novel/renew_novel_cover`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'siteid': '1', 'token': token },
-      body: JSON.stringify({
-        session_id: sessionId.value,
-        prompt: instruction,
-        new_reference_images: [uploadedUrl],
-        is_markup: true,
-      }),
-      signal: coverAbortController.value.signal,
-    });
-    const res = await response.json();
+    // 断网、网关返回非 JSON 时也要复位，不然封面一直是骨架屏、后续操作都被「封面重绘中」挡住
+    let res: any;
+    try {
+      const response = await fetch(`${aiUrl}ai/novel/renew_novel_cover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Platform': 'web', 'siteid': '1', 'token': token },
+        body: JSON.stringify({
+          session_id: sessionId.value,
+          prompt: instruction,
+          new_reference_images: [uploadedUrl],
+          is_markup: true,
+        }),
+        signal: coverAbortController.value.signal,
+      });
+      res = await response.json();
+    } catch (error) {
+      coverRenewLoading.value = false;
+      showCoverEditBtn.value = true;
+      throw error;
+    }
     if (res.code == 200) {
       await fetchUserBalance();
       // 与普通封面重绘一致：发送后提示本次冻结算力
@@ -3044,6 +3068,10 @@ const generateInsertImage = async () => {
 
   const token = localStorage.getItem('token') || '';
   const placeholder = editingInsertImagePlaceholder.value;
+  // 章节号和参考图在点发送时就定下来：下面要先等一次接口，这期间切章的话，
+  // currentChapter 已经是别的章、参考图也被清空了，以前会按新的那一章发请求、扣费
+  const targetChapter = currentChapter.value?.chapter;
+  const refImages = insertImageRefImages.value.map(img => img.image);
   try {
     isRenewingInsertImage.value = true;
     if (await isTaskLimitExceeded()) {
@@ -3061,10 +3089,10 @@ const generateInsertImage = async () => {
       },
       body: JSON.stringify({
         session_id: sessionId.value,
-        chapter: currentChapter.value?.chapter,
+        chapter: targetChapter,
         image_index: placeholder,
         prompt: `${t('novel.modifyImage')}1，${prompt}`,
-        new_reference_images: insertImageRefImages.value.map(img => img.image)
+        new_reference_images: refImages
       })
     });
     const res = await response.json();
@@ -3079,7 +3107,7 @@ const generateInsertImage = async () => {
       // The skeleton (renewingInsertImagePlaceholder) tracks progress from here,
       // so reset the send button's loading state.
       renewingInsertImagePlaceholder.value = placeholder;
-      renewingInsertImageChapter.value = currentChapter.value?.chapter ?? null;
+      renewingInsertImageChapter.value = targetChapter ?? null;
       showInsertImageEdit.value = false;
       showInsertImageAtDropdown.value = false;
       await fetchUserBalance();
@@ -3114,9 +3142,11 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
   insertImageRenewTaskId.value = taskId;
   isRenewingInsertImage.value = true;
 
+  let netErrors = 0;
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
+      netErrors = 0;
       if (handleSessionTimeout(res.code) || res.code == 401) {
         stopInsertImageRenewPolling();
         isRenewingInsertImage.value = false;
@@ -3125,7 +3155,8 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
       if (res.code == 200 && res.data?.status == 'SUCCESS') {
         // Renew task result carries { chapter, image_index, image_url }
         const result = res.data.result || {};
-        const editedChapter = result.chapter ?? currentChapter.value?.chapter;
+        // 结果里没带章节号时，按发请求时的那一章算，不按当前正在看的章
+        const editedChapter = result.chapter ?? renewingInsertImageChapter.value ?? currentChapter.value?.chapter;
         const editedIndex = result.image_index;
         const newUrl = result.image_url || result.insert_image_url || result.url || '';
 
@@ -3160,6 +3191,7 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
       }
     } catch (error) {
       console.error('Error polling insert image renew:', error);
+      if (++netErrors < POLL_MAX_NET_ERRORS) return;
       isRenewingInsertImage.value = false;
       stopInsertImageRenewPolling();
     }
@@ -3275,6 +3307,9 @@ const chapterEditCost = ref<number>(1);
 const chapterEditSectionRef = ref<HTMLElement | null>(null);
 
 // Start polling for cover image
+// 轮询偶发一次网络错误（超时、断网）不算任务失败：后端任务还在跑，连续失败这么多次才判失败
+const POLL_MAX_NET_ERRORS = 5;
+
 const startCoverPolling = (taskId: string) => {
   coverTaskId.value = taskId;
   coverLoading.value = true;
@@ -3282,9 +3317,11 @@ const startCoverPolling = (taskId: string) => {
   taskStatus.value = 'DOING';
   hasFailed.value = false;
 
+  let netErrors = 0;
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
+      netErrors = 0;
 
       if (handleSessionTimeout(res.code) || res.code == 401) {
         if (coverPollTimer.value) {
@@ -3386,6 +3423,7 @@ const startCoverPolling = (taskId: string) => {
       }
     } catch (error) {
       console.error('Error polling cover:', error);
+      if (++netErrors < POLL_MAX_NET_ERRORS) return;
       // Set status to fail when polling fails
       taskStatus.value = 'FAIL';
       hasFailed.value = true;
@@ -3855,9 +3893,8 @@ const regenerateOutline = async () => {
     ? true
     : userSelectedSettings.value?.story_mode === 'nsfw';
   const rawInsertCount = userSelectedSettings.value?.insert_image_count;
-  selectedInsertImage.value = contentSwitch.mode === 2
-    ? 4
-    : (rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4);
+  // 强制 NSFW 时也回显用户上次的选择（0 = 无），没有记录才默认 4
+  selectedInsertImage.value = rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4;
   showInsertImageDropdown.value = false;
 };
 
@@ -3968,6 +4005,11 @@ const toggleRegenerateNsfw = () => {
 
 // Age check before enabling NSFW/unlimited mode
 const checkAgeForUnlimitedMode = (): boolean => {
+  // 未满18岁，或用户信息还没拿到（按未满处理）：先弹「是否满18岁」问询
+  if (isTeenager.value) {
+    showUnderageNoBirthdayModal.value = true;
+    return true;
+  }
   return false;
 };
 
@@ -4070,7 +4112,7 @@ const sendRegenerateRequest = async () => {
     const previousOthers = previousSettings.others || {};
 
     await contentSwitch.ensureLoaded();
-    const effectiveNsfw = contentSwitch.mode === 2 || (contentSwitch.showCreateNsfwToggle && userRegion.value && regenerateNsfwMode.value);
+    const effectiveNsfw = contentSwitch.mode == 2 || (contentSwitch.mode == 1 && contentSwitch.showCreateNsfwToggle && userRegion.value && regenerateNsfwMode.value);
 
     // Build request data based on previous settings, only updating modified fields
     const requestData = {
@@ -4078,7 +4120,8 @@ const sendRegenerateRequest = async () => {
       session_id: sessionId.value,
       language: selectedLanguage.value,
       story_mode: effectiveNsfw ? 'nsfw' : 'normal',
-      insert_image_count: effectiveNsfw ? (contentSwitch.mode === 2 ? Math.max(4, selectedInsertImage.value) : selectedInsertImage.value) : 0,
+      // 强制 NSFW 时也按用户选的来：选了「无」就是 0，不再偷偷改成 4（会按 4 张扣算力）
+      insert_image_count: effectiveNsfw ? selectedInsertImage.value : 0,
       others: {
         ...previousOthers,
         content: regenerateContent.value.trim(),
@@ -4239,9 +4282,8 @@ const cancelEditProjectName = () => {
 const isSavingProjectName = ref<boolean>(false);
 const handleProjectNameBlur = () => {
   if (!isSavingProjectName.value) {
-    if (!projectName.value?.trim()) {
-      projectName.value = originalProjectName.value;
-    }
+    // 点别处失焦等于取消：还原成已保存的名字（以前改过的名字会留在页面上，实际没保存，还会带到发布页）
+    projectName.value = originalProjectName.value;
     isEditingName.value = false;
   }
 };
@@ -4443,6 +4485,8 @@ const startCountdownTimer = () => {
     clearInterval(countdownTimer.value);
   }
 
+  // 兜底分支（拿不到开始时间）用：定时器每秒跑一次，攒够 60 次才减 1 分钟
+  let fallbackTicks = 0;
   countdownTimer.value = window.setInterval(() => {
     if (taskStartAt.value && !isLoadingNewChapter.value) {
       const startTimestamp = parseToUnixTimestamp(taskStartAt.value);
@@ -4461,6 +4505,9 @@ const startCountdownTimer = () => {
       displayMinutes.value = remainingMinutes;
       return;
     }
+    // 以前这里每秒都减 1，「约 15 分钟」十几秒就掉到「1 分钟」
+    if (++fallbackTicks < 60) return;
+    fallbackTicks = 0;
     if (displayMinutes.value > 1) {
       displayMinutes.value--;
     } else {
@@ -4583,6 +4630,8 @@ const cancelEditChapter = () => {
       } catch (error) {
         console.error('Error updating chapter:', error);
         toast(t('fail'));
+        // 网络异常：和接口报错一样保留编辑框，改的内容不丢
+        return;
       } finally {
         isSavingChapter.value = false;
       }
@@ -5179,6 +5228,8 @@ const startManualEditOutline = async () => {
 };
 
 const cancelManualEditOutline = () => {
+  // 不复位的话，之后编辑章节什么都没改也会被当成「有未保存修改」
+  outlineEditDirty.value = false;
   isManualEditingOutline.value = false;
   editingOutlineData.value = null;
   nextTick(() => {
@@ -5348,6 +5399,8 @@ const scrollToOutlineError = () => {
 
 const saveManualEditOutline = async () => {
   if (!editingOutlineData.value) return;
+  // 保存请求还没回来：连点只发一次（以前 isSavingManualOutline 从没被设成 true，按钮禁用不生效）
+  if (isSavingManualOutline.value) return;
 
   const errors = new Set<string>();
 
@@ -5389,11 +5442,13 @@ const saveManualEditOutline = async () => {
   outlineEditErrorKeys.value = new Set();
 
   if (deepEqual(editingOutlineData.value, outlineData.value)) {
+    outlineEditDirty.value = false;
     isManualEditingOutline.value = false;
     editingOutlineData.value = null;
     return;
   }
 
+  isSavingManualOutline.value = true;
   try {
     const token = localStorage.getItem('token');
 
@@ -5429,6 +5484,7 @@ const saveManualEditOutline = async () => {
     }
 
     outlineData.value = JSON.parse(JSON.stringify(editingOutlineData.value));
+    outlineEditDirty.value = false;
     isManualEditingOutline.value = false;
     editingOutlineData.value = null;
 
@@ -5524,13 +5580,19 @@ const sendAiEditOutlineRequest = async () => {
     }
 
     const editContent = aiEditOutlineInput.value.trim();
+    // 修改要求要在请求之前写进 topic（以前是请求结束后才写，发出去的是上一次的内容）；
+    // 提交失败就还原 topic、保留输入框，方便用户直接再发
+    const prevTopic = topic.value;
+    topic.value = editContent;
 
     try {
-      await callNovelOutline('edit');
-
-      isAiEditingOutline.value = false;
-      aiEditOutlineInput.value = '';
-      topic.value = editContent;
+      const submitted = await callNovelOutline('edit');
+      if (submitted) {
+        isAiEditingOutline.value = false;
+        aiEditOutlineInput.value = '';
+      } else {
+        topic.value = prevTopic;
+      }
     } finally {
       isSendingOutlineEdit.value = false;
     }
@@ -5583,7 +5645,13 @@ function formatOutlineToText(data: any): string {
   return text.trimEnd();
 }
 
+// 切章节 / 大纲的请求序号：只认最后一次点击的结果，网络慢时先发后到的旧响应直接丢掉
+let chapterViewSeq = 0;
+// 批量生成时「2 秒后自动跳到下一章」的定时器
+let autoNavTimer: ReturnType<typeof setTimeout> | undefined;
+
 const goPrevChapter = async () => {
+  const seq = ++chapterViewSeq;
 
 
   hideEdit();
@@ -5604,18 +5672,16 @@ const goPrevChapter = async () => {
       displayedContent.value = '';
       isLoading.value = true;
 
-      // Stop any ongoing polling
-      if (pollingInterval.value) {
-        clearInterval(pollingInterval.value);
-        pollingInterval.value = null;
-      }
-      stopDetailPolling();
+      // 生成中的轮询不停（和侧栏点章节一致），不然停在别的章时生成完成了也不知道；
+      // 排队中的详情轮询同样保留
+      if (!isPreparing.value) stopDetailPolling();
       if (printerInterval.value) {
         clearInterval(printerInterval.value);
         printerInterval.value = null;
       }
 
       const res = await api.detailChapter(sessionId.value, currentChapterNum - 1) as any;
+      if (seq != chapterViewSeq) return;
       if (res.code == 200 && res.data) {
         isEditingChapter.value = false;
         isChapterTyping.value = false;
@@ -5648,11 +5714,15 @@ const goPrevChapter = async () => {
             chapterContentRef.value.scrollTop = 0;
           }
         });
+      } else {
+        // 以前失败时只剩一片空白，没有任何提示
+        toast(apiErrorMessage(res) || t('fail'));
       }
     } catch (error) {
       console.error('Error navigating to previous chapter:', error);
+      if (seq == chapterViewSeq) toast(t('fail'));
     } finally {
-      isLoading.value = false;
+      if (seq == chapterViewSeq) isLoading.value = false;
     }
   } else {
     // Go to novel outline
@@ -5661,11 +5731,7 @@ const goPrevChapter = async () => {
     try {
       isLoading.value = true;
 
-      // Stop any ongoing polling
-      if (pollingInterval.value) {
-        clearInterval(pollingInterval.value);
-        pollingInterval.value = null;
-      }
+      // 生成中的轮询不停（和侧栏点「大纲」一致）
       if (printerInterval.value) {
         clearInterval(printerInterval.value);
         printerInterval.value = null;
@@ -5680,6 +5746,7 @@ const goPrevChapter = async () => {
       }
 
       const detailProjectRes = await api.detailProject(sessionId.value) as any;
+      if (seq != chapterViewSeq) return;
 
       if (detailProjectRes.code == 200) {
         if (detailProjectRes.data?.user_id) {
@@ -5724,6 +5791,7 @@ const goNextChapter = async () => {
 
 // Go to specific chapter
 const goToChapter = async (chapterNum: number) => {
+  const seq = ++chapterViewSeq;
   hideEdit();
   chapterHistoryCount.value = 0;
 
@@ -5737,11 +5805,9 @@ const goToChapter = async (chapterNum: number) => {
     clearInterval(printerInterval.value);
     printerInterval.value = null;
   }
-  if (pollingInterval.value) {
-    clearInterval(pollingInterval.value);
-    pollingInterval.value = null;
-  }
-  stopDetailPolling();
+  // 生成中的轮询不停：去的是生成中的那一章时 fetchChapterStream 会自己重启轮询；
+  // 去别的章时让它继续跑，生成完成才能更新状态
+  if (!isPreparing.value) stopDetailPolling();
 
   // Check if this chapter is in PREPARE state
   const isPrepareChapter = chapterNum == stepChapterIndex.value && isPreparing.value;
@@ -5758,6 +5824,21 @@ const goToChapter = async (chapterNum: number) => {
     if (!detailPollingInterval.value) {
       startDetailPolling();
     }
+    return;
+  }
+
+  // 生成失败的那一章先按失败显示：失败后 generatingChapter 还停在这一章，
+  // 以前会先进下面的「生成中」分支，显示几秒生成中才变回失败
+  if (chapterNum == stepChapterIndex.value && taskStatus.value == 'FAIL') {
+    const failedChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterNum);
+    currentChapter.value = {
+      chapter: chapterNum,
+      title: failedChapterData?.title || '',
+      content: ''
+    };
+    displayedContent.value = '';
+    hasFailed.value = true;
+    isLoading.value = false;
     return;
   }
 
@@ -5878,7 +5959,7 @@ const goToChapter = async (chapterNum: number) => {
 
       try {
         const chapterRes = await api.detailChapter(sessionId.value, chapterNum) as any;
-        if (chapterRes.code == 200) {
+        if (seq == chapterViewSeq && chapterRes.code == 200) {
           updateChapterHistoryFromDetail(chapterRes);
         }
       } catch (e) {
@@ -5904,6 +5985,7 @@ const goToChapter = async (chapterNum: number) => {
     };
 
     const res = await api.detailChapter(sessionId.value, chapterNum) as any;
+    if (seq != chapterViewSeq) return;
     if (res.code == 200 && res.data) {
       isEditingChapter.value = false;
       isChapterTyping.value = false;
@@ -5937,11 +6019,15 @@ const goToChapter = async (chapterNum: number) => {
           chapterContentRef.value.scrollTop = 0;
         }
       });
+    } else {
+      // 以前失败时只剩一片空白，没有任何提示
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error('Error navigating to chapter:', error);
+    if (seq == chapterViewSeq) toast(t('fail'));
   } finally {
-    isLoading.value = false;
+    if (seq == chapterViewSeq) isLoading.value = false;
   }
 };
 
@@ -6173,7 +6259,9 @@ const handleRetry = async () => {
       estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'all_chapters', from_chapter: stepChapterIndex.value || 1 }) as any;
       retryAction.value = 'all';
     } else {
-      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'chapter', from_chapter: currentChapter.value?.chapter || 1 }) as any;
+      // 停在大纲页时 currentChapter 为空，要重试的是失败的那一章（stepChapterIndex），不是第 1 章
+      retryChapterNum.value = currentChapter.value?.chapter || stepChapterIndex.value || 1;
+      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'chapter', from_chapter: retryChapterNum.value }) as any;
       retryAction.value = 'chapter';
     }
   }
@@ -6196,9 +6284,12 @@ const handleRetry = async () => {
     toast(t('novel.error.cannotOperateOtherUserProject'));
     return;
   } else {
-    toast(estimateRes.message);
+    toast(estimateRes?.message || t('fail'));
   }
 };
+
+// 重试章节时要重新生成的章节号（handleRetry 里确定，确认弹窗之后用）
+const retryChapterNum = ref<number | null>(null);
 
 // Execute retry action after confirmation
 const executeRetryAction = () => {
@@ -6209,7 +6300,7 @@ const executeRetryAction = () => {
   if (retryAction.value == 'outline') {
     callNovelOutline('retry');
   } else if (retryAction.value == 'chapter') {
-    callNovelNext(currentChapter.value?.chapter, true);
+    callNovelNext(retryChapterNum.value ?? currentChapter.value?.chapter ?? stepChapterIndex.value, true);
   } else if (retryAction.value == 'all') {
     callNovelAllChapters(true);
   }
@@ -6363,6 +6454,7 @@ const handleChapterInfoClick = async () => {
 
 // Handle chapter item click in the list
 const handleChapterItemClick = async (chapterNum: number) => {
+  const seq = ++chapterViewSeq;
 
   nextTick(() => {
     if (outlineContentRef.value) {
@@ -6472,6 +6564,8 @@ const handleChapterItemClick = async (chapterNum: number) => {
 
   try {
     const res = await api.detailChapter(sessionId.value, chapterNum) as any;
+    // 已经点了别的章：这次的结果不要了
+    if (seq != chapterViewSeq) return;
     if (res.code == 200) {
       const result = res.data;
       if (result) {
@@ -6560,7 +6654,7 @@ const handleChapterItemClick = async (chapterNum: number) => {
       // API request failed
       console.error('API request failed:', res);
       // Set an error message instead of empty string
-      displayedContent.value = '获取章节内容失败';
+      displayedContent.value = t('fail');
       // Update currentChapter with error content
       const chapterData = outlineData.value?.outline?.find((c: any) => c.chapter == chapterNum);
       currentChapter.value = {
@@ -6572,6 +6666,7 @@ const handleChapterItemClick = async (chapterNum: number) => {
   } catch (error) {
     // Handle error
     console.error('Error fetching chapter:', error);
+    if (seq != chapterViewSeq) return;
     // Set an error message instead of empty string
     displayedContent.value = t('fail');
     // Update currentChapter with error content
@@ -6582,11 +6677,14 @@ const handleChapterItemClick = async (chapterNum: number) => {
       content: t('fail')
     };
   } finally {
-    isLoading.value = false;
-    // Don't mark loading complete if generation is still in progress
-    // This preserves the NovelLoading component for when the user navigates back
-    if (!(taskStatus.value == 'DOING')) {
-      isLoadingComplete.value = true;
+    // 旧请求的 finally 不能把新请求的 loading 关掉
+    if (seq == chapterViewSeq) {
+      isLoading.value = false;
+      // Don't mark loading complete if generation is still in progress
+      // This preserves the NovelLoading component for when the user navigates back
+      if (!(taskStatus.value == 'DOING')) {
+        isLoadingComplete.value = true;
+      }
     }
   }
 };
@@ -6638,8 +6736,8 @@ const handleBatchPublishClick = async () => {
   isBatchPublishBtnLoading.value = true;
   try {
     const res = await api.detailProject(sessionId.value) as any;
-    if (res.code === 200 && res.data?.chapters) {
-      chapters.value = res.data.chapters;
+    if (res.code == 200 && res.data?.chapters) {
+      chapters.value = mergeLocalPlaceholders(res.data.chapters);
     }
   } catch (e) {
     console.error('Failed to refresh chapters:', e);
@@ -6653,7 +6751,7 @@ const handleBatchPublishClick = async () => {
 };
 
 const handleBatchPublishRefresh = (freshChapters: any[]) => {
-  chapters.value = freshChapters;
+  chapters.value = mergeLocalPlaceholders(freshChapters);
 };
 
 const handleBatchPublishConfirm = async (selectedChapters: any[]) => {
@@ -6707,6 +6805,7 @@ const cancelBatchPublish = () => {
 
 // Handle outline preview click
 const handleOutlinePreviewClick = async () => {
+  const seq = ++chapterViewSeq;
 
 
   hideEdit();
@@ -6756,6 +6855,8 @@ const handleOutlinePreviewClick = async () => {
     isOutlineLoading.value = true;
 
     const detailProjectRes = await api.detailProject(sessionId.value) as any;
+    // 已经点了某一章：不要再把用户拉回大纲
+    if (seq != chapterViewSeq) return;
     if (detailProjectRes.code == 200) {
       if (detailProjectRes.data?.user_id) {
         projectOwnerId.value = detailProjectRes.data.user_id;
@@ -6901,7 +7002,7 @@ const fetchUserInfo = async () => {
     if (res.code == 0) {
       userInfo.value = res.data;
     } else {
-      toast(apiErrorMessage(res));
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error('Error fetching user info:', error);
@@ -6920,7 +7021,7 @@ const fetchUserBalance = async () => {
       systemFrozenBalance.value = Math.max(0, totalBalance - balance);
       balanceInfo.value = res.data;
     } else {
-      toast(apiErrorMessage(res));
+      toast(apiErrorMessage(res) || t('fail'));
     }
   } catch (error) {
     console.error('Error fetching user balance:', error);
@@ -6928,7 +7029,9 @@ const fetchUserBalance = async () => {
 }
 
 // Call novelOutline API
-const callNovelOutline = async (type: string, retryCount = 0) => {
+const callNovelOutline = async (type: string, retryCount = 0): Promise<boolean | undefined> => {
+  // 后端已受理（novelOutline 返回 200）之后再出异常，不能再自动提交一次（会重复建任务、重复扣费）
+  let submitted = false;
   try {
     // Check if user has reached the task limit
     if (await isTaskLimitExceeded()) return;
@@ -7001,15 +7104,21 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
       return;
     }
 
+    submitted = true;
+
     // API successful, check if we need to show freeze computing power modal
     const hideFreezeModal = localStorage.getItem('hideFreezeComputingPowerModal');
     if (hideFreezeModal !== '1') {
-      // Get frozen points from detail project
-      const detailRes = await api.detailProject(sessionId.value) as any;
-      if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
-        freezeComputingPower.value = detailRes.data.frozen_points;
-        pendingGenerationAction.value = type === 'retry' ? 'retry-outline' : 'outline';
-        showFreezeComputingPowerModal.value = true;
+      try {
+        // Get frozen points from detail project
+        const detailRes = await api.detailProject(sessionId.value) as any;
+        if (detailRes.code == 200 && detailRes.data?.frozen_points !== undefined) {
+          freezeComputingPower.value = detailRes.data.frozen_points;
+          pendingGenerationAction.value = type === 'retry' ? 'retry-outline' : 'outline';
+          showFreezeComputingPowerModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error fetching frozen points:', error);
       }
     }
 
@@ -7092,8 +7201,14 @@ const callNovelOutline = async (type: string, retryCount = 0) => {
 
     // Fetch estimated time after successful novelOutline request
     fetchEstimatedTime();
+    return true;
   } catch (error) {
     console.error('Error calling novelOutline:', error);
+    // 任务已经提交成功：不再重提，接着轮询任务状态
+    if (submitted) {
+      startPolling();
+      return true;
+    }
     // Retry once if failed and it's the first attempt
     if (retryCount == 0) {
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
@@ -7166,6 +7281,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
     // Start polling for task status
     // Clear any existing polling interval to prevent duplicate polling
     let pollingCount = 0;
+    let netErrors = 0;
     if (pollingInterval.value) {
       clearInterval(pollingInterval.value);
       pollingInterval.value = null;
@@ -7190,6 +7306,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
           // Poll task status API for single chapter
           pollingResponse = await api.taskPolling(taskId || sessionId.value) as any;
         }
+        netErrors = 0;
 
         // Check for session timeout error
         if (handleSessionTimeout(pollingResponse.code)) {
@@ -7234,7 +7351,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
           // Check if chapter index has changed in batch mode
           if (isBatchChapter.value == 1 &&
               taskData.step_chapter_index &&
-              taskData.step_chapter_index !== chapterIndex) {
+              taskData.step_chapter_index != chapterIndex) {
             // Chapter index has changed
             const newChapterIndex = taskData.step_chapter_index;
             const previousChapterIndex = chapterIndex;
@@ -7365,12 +7482,10 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
             generatingChapter.value = null;
             hasFailed.value = false;
 
-            // Store content to display after loading animation completes
-            pendingDisplayContent.value = content;
-
-            // Only update currentChapter if we're still viewing a chapter
-            // Don't update if we're viewing outline
-            if (currentChapter.value) {
+            // 只有用户还停在生成的这一章时才显示和写入正文；
+            // 生成期间翻去看别的章（或大纲）时，不能把这一章的正文写到别的章上
+            if (currentChapter.value && currentChapter.value.chapter == chapterIndex) {
+              pendingDisplayContent.value = content;
               currentChapter.value.content = content;
             }
             // Hide estimated time display after chapter generation completes
@@ -7401,11 +7516,16 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                 isUserInitiatedGeneration.value = false;
                 isBatchChapter.value = 0;
                 shouldAutoNavigate.value = true;
-              } else if (currentChapter.value && (shouldAutoNavigate.value || currentChapter.value.chapter === chapterIndex)) {
+              } else if (currentChapter.value && (shouldAutoNavigate.value || currentChapter.value.chapter == chapterIndex)) {
                 // Auto navigate to next chapter after 2 seconds
                 // Only if user is viewing a chapter, not outline
-                setTimeout(() => {
-                  const nextChapterIndex = chapterIndex + 1;
+                const finishedIndex = chapterIndex;
+                clearTimeout(autoNavTimer);
+                autoNavTimer = setTimeout(() => {
+                  // 到点时再确认一次：这 2 秒里用户点开了别的章或大纲，就不把他拉走（侧栏状态照常更新）
+                  const stillFollowing = !!currentChapter.value
+                    && (shouldAutoNavigate.value || currentChapter.value.chapter == finishedIndex);
+                  const nextChapterIndex = finishedIndex + 1;
                   if (nextChapterIndex <= chapterCount.value) {
                     const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == nextChapterIndex);
 
@@ -7420,13 +7540,15 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
                       });
                     }
 
-                    currentChapter.value = {
-                      chapter: nextChapterIndex,
-                      title: nextChapterData?.title || '',
-                      content: ''
-                    };
-                    displayedContent.value = '';
-                    isLoading.value = true;
+                    if (stillFollowing) {
+                      currentChapter.value = {
+                        chapter: nextChapterIndex,
+                        title: nextChapterData?.title || '',
+                        content: ''
+                      };
+                      displayedContent.value = '';
+                      isLoading.value = true;
+                    }
                     hasFailed.value = false;
                     taskStatus.value = 'DOING';
                     generatingChapter.value = nextChapterIndex;
@@ -7540,6 +7662,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
         pollingCount++;
       } catch (error) {
         console.error('Error polling task status:', error);
+        if (++netErrors < POLL_MAX_NET_ERRORS) return;
         // Clear polling interval on error
         if (pollingInterval.value) {
           clearInterval(pollingInterval.value);
@@ -7548,6 +7671,7 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
 
         // Update state for failure
         hasFailed.value = true;
+        isRetryingChapter.value = false;
         taskStatus.value = 'FAIL';
         isLoading.value = false;
         isChapterTyping.value = false;
@@ -9059,6 +9183,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
 }
 
 onBeforeUnmount(() => {
+  clearTimeout(autoNavTimer);
   if (pollingInterval.value) {
     clearInterval(pollingInterval.value);
   }
@@ -10793,7 +10918,7 @@ async function selectHistoryCover(coverUrl: string) {
       coverImage.value = coverUrl;
       showCoverHistoryModal.value = false;
     } else {
-      toast(res.message);
+      toast(res.message || t('fail'));
     }
   } catch (e) {
     console.error('Error replacing cover:', e);
@@ -10870,9 +10995,11 @@ const startCoverRenewPolling = (taskId: string) => {
   coverRenewLoading.value = true;
   coverRenewFailed.value = false;
 
+  let netErrors = 0;
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
+      netErrors = 0;
 
       if (handleSessionTimeout(res.code) || res.code == 401) {
         stopCoverRenewPolling();
@@ -10920,6 +11047,7 @@ const startCoverRenewPolling = (taskId: string) => {
       }
     } catch (error) {
       console.error('Error polling cover renew:', error);
+      if (++netErrors < POLL_MAX_NET_ERRORS) return;
       coverRenewLoading.value = false;
       coverRenewFailed.value = true;
       showCoverEditBtn.value = false;
@@ -10941,7 +11069,10 @@ const stopCoverRenewPolling = () => {
   coverRenewTaskId.value = '';
 };
 
+// 封面重绘请求进行中：按钮连点只发一次（isCoverSendClicked 没人读，起不到防重作用）
+let coverSubmitting = false;
 async function doGenerateNovelCover() {
+  if (coverSubmitting) return;
   isCoverSendClicked.value = true;
 
   if (!coverInputRef.value) return;
@@ -10953,6 +11084,7 @@ async function doGenerateNovelCover() {
   }
 
   try {
+    coverSubmitting = true;
     // 先核对服务端没有任务在跑（封面不涉及章数）—— 暂时关闭
     // if (!await checkServerStateSync()) return;
     if (await isTaskLimitExceeded()) return;
@@ -11001,7 +11133,8 @@ async function doGenerateNovelCover() {
     } else {
       if (res.code == 40011) {
         await fetchUserBalance();
-        estimatedFrozenPower.value = Math.round(estimatedComputingPower.value * (balanceInfo.value?.over_freeze_rate || 1));
+        // 封面重绘的冻结额按封面价格算（以前用的是章节 / 大纲的预估值，数字不对，刚进页面时还是 0）
+        estimatedFrozenPower.value = Math.round(coverCost.value * (balanceInfo.value?.over_freeze_rate || 1));
         showInsufficientBalanceModal.value = true;
         coverRenewLoading.value = false;
         showCoverEditBtn.value = true;
@@ -11017,7 +11150,7 @@ async function doGenerateNovelCover() {
       }
       coverRenewLoading.value = false;
       coverRenewFailed.value = true;
-      toast(res.message);
+      toast(res.message || t('fail'));
     }
   } catch (error: any) {
     if (error.name == 'AbortError') return;
@@ -11027,6 +11160,7 @@ async function doGenerateNovelCover() {
     toast(t('novel.coverGenerateFailed'));
   } finally {
     coverAbortController.value = null;
+    coverSubmitting = false;
   }
 
   nextTick(() => {

@@ -31,19 +31,20 @@
             </div>
 
             <div class="type-tab-list">
-              <div
-                class="type-tab-item"
-                :class="{ active: activeTab === 'subscription' }"
-                @click="switchTab('subscription')"
-              >
-                {{ t('aiRecharge.subscriptionTab') }}
-              </div>
+              <!-- 算力包在前、订阅在后 -->
               <div
                 class="type-tab-item"
                 :class="{ active: activeTab === 'credits_pack' }"
                 @click="switchTab('credits_pack')"
               >
                 {{ t('aiRecharge.creditsPackTab') }}
+              </div>
+              <div
+                class="type-tab-item"
+                :class="{ active: activeTab === 'subscription' }"
+                @click="switchTab('subscription')"
+              >
+                {{ t('aiRecharge.subscriptionTab') }}
               </div>
             </div>
           </div>
@@ -60,9 +61,10 @@
             <span class="banner-highlight">{{ t('aiRecharge.firstMonth30OffPrefix') }}</span>{{ t('aiRecharge.firstMonth30OffSuffix') }}
           </div>
 
-          <div v-if="activeTab == 'credits_pack'" class="credits-pack-tip">
+          <!-- 算力包提示先隐藏 -->
+          <!-- <div v-if="activeTab == 'credits_pack'" class="credits-pack-tip">
             {{ t('aiRecharge.creditsPackTip') }}
-          </div>
+          </div> -->
 
           <div v-if="isLoading && rechargePlans.length === 0" class="list-loading">
             <div class="list-loading-spinner"></div>
@@ -295,7 +297,8 @@ const couponInfo = ref<{ code: string; type: string; discount_value: string; } |
 const isUserNew = ref(false);
 const promotionTitle = ref('');
 const promotionContent = ref('');
-const activeTab = ref('subscription');
+// 默认选中「算力包」（tab 顺序也是算力包在前）
+const activeTab = ref('credits_pack');
 const paymentTab = ref('usdt');
 const hasFirstMonthDiscount = ref(false);
 const showWalletModal = ref(false);
