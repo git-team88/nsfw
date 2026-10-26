@@ -1831,7 +1831,7 @@ async function handleStartFrameChange(e: Event) {
       }
     } catch (error) {
       console.error('Failed to upload start frame:', error);
-      toast((error as Error).message);
+      toast(t('submit.uploadFailed'));
     } finally {
       isUploading.value = false;
     }
@@ -1870,7 +1870,7 @@ async function handleEndFrameChange(e: Event) {
       }
     } catch (error) {
       console.error('Failed to upload end frame:', error);
-      toast((error as Error).message);
+      toast(t('submit.uploadFailed'));
     } finally {
       isUploading.value = false;
     }
@@ -3781,6 +3781,10 @@ const checkItemLimit = () => {
 
   // Photo upload limits based on mode
   let maxPhotos = currentMode === 'unlimited' ? 10 : 7;
+  // 漫画 / 漫剧：角色 + 参考图合计最多 7 张，不分模式（和选角色时的上限一致）
+  if (contentType.value === 'comic' || contentType.value === 'drama') {
+    maxPhotos = 7;
+  }
   // 图片 NSFW 模式走 Vega 模型：参考图最多 3 张
   if (contentType.value === 'photo' && currentMode === 'unlimited') {
     maxPhotos = PHOTO_UNLIMITED_MAX_COUNT;
@@ -3792,7 +3796,7 @@ const checkItemLimit = () => {
   const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length;
   if (totalItems >= maxPhotos) {
     const isComicOrDrama = contentType.value === 'comic' || contentType.value === 'drama';
-    toast(t(isComicOrDrama ? 'home.error.maxItemReached' : 'home.error.maxPhotoReached', { max: maxPhotos }));
+    toast(t(isComicOrDrama ? 'home.error.maxItemsReached' : 'home.error.maxPhotoReached', { max: maxPhotos }));
     return false;
   }
   return true;
@@ -4088,7 +4092,7 @@ const selectCharacter = (characters: any[]) => {
   // Check total count before adding new characters
   const totalItems = currentSelectedCharacters.value.length + currentUploadedImages.value.length + characters.length;
   if (totalItems > 7) {
-    toast(t('home.error.maxItemsReached'));
+    toast(t('home.error.maxItemsReached', { max: 7 }));
     showCharacterModal.value = false;
     return;
   }
@@ -5892,36 +5896,38 @@ const imageDimensionError = async (file: File): Promise<string> => {
   const isVideoUnlimited = contentType.value === 'video' && videoLimitMode.value === 'unlimited';
   if (isPhotoUnlimited) {
     if (ratio < 1 / 16 || ratio > 16) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: '1:16', max: '16:1' });
     }
     if (width < 14 || height < 14) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 14, max: 6000 });
     }
-    if (width > 6000 || height > 6000) {
-      return t('home.error.imageDimensionLimit');
+    // 和 Generate 页一致：按总像素限制（seedream5.0：[196, 6000×6000]），单边可以超过 6000
+    const area = width * height;
+    if (area < 196 || area > 6000 * 6000) {
+      return t('home.error.imageAreaLimit');
     }
   } else if (contentType.value === 'video' && videoLimitMode.value === 'fast') {
     // 极速版视频参考图片：宽高比 [0.4, 2.5]，像素 [256, 5760]
     if (ratio < 0.4 || ratio > 2.5) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: 0.4, max: 2.5 });
     }
     if (width < 256 || width > 5760 || height < 256 || height > 5760) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 256, max: 5760 });
     }
   } else if (isVideoUnlimited) {
     // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
     if (ratio < 1 / 8 || ratio > 8) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: '1:8', max: '8:1' });
     }
     if (width < 240 || width > 8000 || height < 240 || height > 8000) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 240, max: 8000 });
     }
   } else {
     if (ratio < 0.4 || ratio > 2.5) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: 0.4, max: 2.5 });
     }
     if (width < 300 || width > 6000 || height < 300 || height > 6000) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 300, max: 6000 });
     }
   }
   return '';
@@ -6078,6 +6084,10 @@ const handleFileChange = async (event: Event) => {
 
     // Photo upload limits based on mode
     let maxPhotos = currentMode === 'unlimited' ? 10 : 7;
+    // 漫画 / 漫剧：角色 + 参考图合计最多 7 张，不分模式（和选角色时的上限一致）
+    if (contentType.value === 'comic' || contentType.value === 'drama') {
+      maxPhotos = 7;
+    }
     let maxFileSizeBytes = currentMode === 'unlimited' ? 20 * 1024 * 1024 : 10 * 1024 * 1024;
     let maxFileSizeMB = currentMode === 'unlimited' ? 20 : 10;
 
@@ -6330,6 +6340,8 @@ const handleFileChange = async (event: Event) => {
 
     try {
       const files = pickedFiles;
+      // 一批里有文件上传失败时不逐个弹，全部结束后只提示一次
+      let uploadFailedCount = 0;
       const uploadPromises = files.map(async (file, index) => {
         try {
           // Determine file type
@@ -6590,15 +6602,18 @@ const handleFileChange = async (event: Event) => {
           }
         } catch (error) {
           console.error('Upload error for file', file.name, error);
-          toast(t('fail'));
+          uploadFailedCount++;
         }
       });
 
       await Promise.all(uploadPromises);
+      if (uploadFailedCount > 0) {
+        toast(t('submit.uploadFailed'));
+      }
 
       input.value = '';
     } catch (error) {
-      toast(t('fail'));
+      toast(t('submit.uploadFailed'));
     } finally {
       isUploading.value = false;
     }

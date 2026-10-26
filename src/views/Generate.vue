@@ -2462,10 +2462,10 @@ const imageDimensionError = async (file: File): Promise<string> => {
   if (isPhotoUnlimited) {
     // seedream5.0：宽高比 [1/16, 16]，单边 > 14px，总像素 [196, 6000×6000]
     if (ratio < 1 / 16 || ratio > 16) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: '1:16', max: '16:1' });
     }
     if (width < 14 || height < 14) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 14, max: 6000 });
     }
     const area = width * height;
     if (area < 196 || area > 6000 * 6000) {
@@ -2474,25 +2474,25 @@ const imageDimensionError = async (file: File): Promise<string> => {
   } else if (bottomActiveTab.value === 'video' && videoLimitMode.value === 'fast') {
     // 极速版视频参考图片：宽高比 [0.4, 2.5]，像素 [256, 5760]
     if (ratio < 0.4 || ratio > 2.5) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: 0.4, max: 2.5 });
     }
     if (width < 256 || width > 5760 || height < 256 || height > 5760) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 256, max: 5760 });
     }
   } else if (isVideoUnlimited) {
     // 无限制视频参考图片：宽高比 1:8~8:1，像素 [240, 8000]
     if (ratio < 1 / 8 || ratio > 8) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: '1:8', max: '8:1' });
     }
     if (width < 240 || width > 8000 || height < 240 || height > 8000) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 240, max: 8000 });
     }
   } else {
     if (ratio < 0.4 || ratio > 2.5) {
-      return t('home.error.imageRatioLimit');
+      return t('home.error.imageRatioLimit', { min: 0.4, max: 2.5 });
     }
     if (width < 300 || width > 6000 || height < 300 || height > 6000) {
-      return t('home.error.imageDimensionLimit');
+      return t('home.error.imageDimensionLimit', { min: 300, max: 6000 });
     }
   }
   return '';
