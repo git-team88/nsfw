@@ -1070,6 +1070,8 @@
     <!-- Cover Action Confirmation Modal -->
     <!-- Upload Mask -->
     <UploadMask :visible="isUploading" />
+    <!-- 保存章节：请求没返回前盖住页面，避免切章弹「未保存」 -->
+    <UploadMask :visible="isSavingChapter" :text="t('collection.saving')" />
 
     <!-- Cover Zoom Modal -->
     <div v-if="showCoverZoomModal" class="cover-zoom-modal" @click="closeCoverZoomModal">
@@ -4610,6 +4612,9 @@ const cancelEditChapter = () => {
           return;
         }
 
+        // 等待返回期间用户已在「未保存」框里确认退出（可能已切到别的章）：不再往当前页面写
+        if (!isEditingChapter.value) return;
+
         currentChapter.value.title = editingChapterTitle.value;
         currentChapter.value.content = editingChapterContent.value;
         displayedContent.value = editingChapterContent.value;
@@ -4677,9 +4682,11 @@ const saveChapterTitle = async (chapterId: number) => {
   isHandlingChapterAction.value = true;
   isSavingChapterTitle.value = true;
   try {
-    let chapterContent = '';
-    if (currentChapter.value && currentChapter.value.chapter == chapterId) {
-      chapterContent = currentChapter.value.content || '';
+    // update_chapter 会连正文一起覆盖：本地正文为空（没加载出来/加载失败）时向服务端取，
+    // 取不到就不提交，避免把空正文写回去
+    let chapterContent: string | null = null;
+    if (currentChapter.value && currentChapter.value.chapter == chapterId && currentChapter.value.content) {
+      chapterContent = currentChapter.value.content;
     } else {
       try {
         const chapterRes = await api.detailChapter(sessionId.value, chapterId) as any;
@@ -4689,6 +4696,10 @@ const saveChapterTitle = async (chapterId: number) => {
       } catch (e) {
         console.error('Error fetching chapter content for title update:', e);
       }
+    }
+    if (chapterContent == null) {
+      toast(t('fail'));
+      return;
     }
 
     const token = localStorage.getItem('token');
@@ -9142,7 +9153,9 @@ onMounted(async () => {
   await contentSwitch.ensureLoaded();
   const token = localStorage.getItem('token');
   if (!token) {
-    router.push('/');
+    // 未登录：跳登录页，登录后回到当前小说（replace 避免返回键又回到这里被再次跳走）
+    localStorage.setItem('loginRedirect', route.fullPath);
+    router.replace('/login');
     return false;
   }
 
