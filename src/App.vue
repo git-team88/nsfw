@@ -46,6 +46,12 @@ const routeViewKey = computed(() => {
     return 'my-projects';
   }
 
+  // 搜索页：换关键词 / 切 tab 只改 query，页面自己重新请求；
+  // 以前按 fullPath 当 key，query 一变整页重建，同一个搜索会请求两次
+  if (pathOnly === '/search') {
+    return 'search';
+  }
+
   return isHome ? 'home' : path;
 });
 

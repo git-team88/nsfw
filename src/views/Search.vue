@@ -427,6 +427,7 @@ function performSearch() {
   inputKeyword.value = kw;
   searchKeyword.value = kw;
   setPageTitle(searchPageName(kw));
+  window.scrollTo(0, 0);
 
   // Update URL with the new keyword
   router.replace({
@@ -442,6 +443,7 @@ function performSearch() {
 
 function switchTab(tab: string) {
   activeTab.value = tab;
+  window.scrollTo(0, 0);
 
   // Update URL with the new tab type
   router.replace({
@@ -965,6 +967,22 @@ onBeforeUnmount(() => {
   if (loadingSentinel.value && (loadingSentinel.value as any)._observer) {
     (loadingSentinel.value as any)._observer.disconnect();
   }
+});
+
+// 搜索页不再随 query 重建（见 App.vue routeViewKey）：
+// 地址里的关键词 / tab 被页面以外的地方改了（比如浏览器前进后退），这里同步并重新搜；
+// 页面自己 performSearch / switchTab 改的，状态已经一致、也已经发过请求，跳过
+watch(() => [route.query.keyword, route.query.type], () => {
+  if (route.path != '/search') return; // 正在离开搜索页
+  const kw = normalizeKeyword(route.query.keyword);
+  const tab = route.query.type === 'user' ? 'users' : 'posts';
+  if (kw == searchKeyword.value && tab == activeTab.value) return;
+  inputKeyword.value = kw;
+  searchKeyword.value = kw;
+  activeTab.value = tab;
+  setPageTitle(searchPageName(kw));
+  window.scrollTo(0, 0);
+  reloadCurrent();
 });
 
 // Watch activeTab to trigger layout when switching to posts
