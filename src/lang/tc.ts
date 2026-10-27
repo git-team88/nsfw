@@ -2454,6 +2454,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       uploading: "上傳中...",
       uploadInProgress: "上傳中...",
       reuploadBtn: "重新上傳",
+      restoreOriginalBtn: "恢復原影片",
       playBtn: "播放",
       format: "格式",
       size: "大小",

@@ -154,12 +154,12 @@
 
             <div class="upload-status-box">
               <div class="status-header">
-                <div class="status-info" :class="{ success: !isUpload }">
-                  <span class="status-text">{{ isUpload ? t('submit.video.uploading') : t('submit.video.uploadSuccess') }}</span>
-                  <div class="video-meta-box">格式:mp4</div>
+                <div class="status-info" :class="{ success: !isUpload && !uploadError, error: !isUpload && uploadError }">
+                  <span class="status-text">{{ isUpload ? t('submit.video.uploading') : uploadError ? t('submit.video.uploadFailed') : t('submit.video.uploadSuccess') }}</span>
+                  <div class="video-meta-box">{{ t('submit.video.format') }}:{{ videoFormat }}</div>
                 </div>
                 <div class="status-actions">
-                  <span class="action-link play" @click="previewVideo">{{ t('submit.video.playBtn') }}</span>
+                  <span class="action-link play" v-if="!uploadError" @click="previewVideo">{{ t('submit.video.playBtn') }}</span>
                   <div class="reupload-video-box" @click="reuploadVideo">
                     <span class="action-link reupload">{{ t('submit.video.reuploadBtn') }}</span>
                     <input
@@ -171,12 +171,13 @@
                       @change="onReuploadPicked"
                     />
                   </div>
+                  <span class="action-link restore" v-if="uploadError && !isUpload" @click="restoreOriginalVideo">{{ t('submit.video.restoreOriginalBtn') }}</span>
                 </div>
               </div>
               <div class="status-progress-bar">
                 <div
                   class="progress-fill"
-                  :class="{ success: !isUpload, uploading: isUpload }"
+                  :class="{ success: !isUpload && !uploadError, error: !isUpload && uploadError, uploading: isUpload }"
                   :style="{ width: (isUpload ? uploadProgress : 100) + '%' }"
                 ></div>
               </div>
@@ -636,6 +637,13 @@ const showCoverModal = ref(false);
 const sessionId = ref("");
 const isUpload = ref(false);
 const uploadProgress = ref(0);
+// 重传失败原因；非空 = 失败态：旧视频还在，状态栏变红、提交被拦，可「恢复原视频」
+const uploadError = ref("");
+// 状态栏里显示的格式：取当前视频文件的扩展名（mp4 / mov），没有本地文件时按 mp4
+const videoFormat = computed(() => {
+  const ext = videoFile.value?.name.split('.').pop()?.toLowerCase();
+  return ext === 'mov' ? 'mov' : 'mp4';
+});
 const editPostId = ref("");
 
   // Local upload file input
@@ -1832,20 +1840,22 @@ async function handleVideoFile(file: File) {
   const fileName = file.name;
   const extension = fileName.split(".").pop()?.toLowerCase() || "";
   if (extension !== "mp4" && extension !== "mov") {
-    toast(t("submit.video.formatError"));
+    failUpload(t("submit.video.formatError"));
     return;
   }
   // 大小在读元数据之前先拦一道：超限的文件没必要再解一遍。
   // 时长的上限在下面 onloadedmetadata 里判（MAX_VIDEO_DURATION）。
   if (file.size > MAX_VIDEO_SIZE) {
-    toast(t("submit.video.sizeError"));
+    failUpload(t("submit.video.sizeError"));
     return;
   }
 
-  videoFile.value = file;
   isUpload.value = true;
-
   uploadProgress.value = 0;
+  uploadError.value = "";
+  // 新文件的时长先存本地，上传成功才写进 videoFile / videoDuration；失败时旧视频的值原样保留
+  let newDuration = 0;
+
   try {
     // Validate metadata first
     const video = document.createElement("video");
@@ -1873,7 +1883,7 @@ async function handleVideoFile(file: File) {
         if (video.duration === 0 || isNaN(video.duration) || video.videoWidth === 0) {
           finish('corrupted');
         } else {
-          videoDuration.value = Math.round(video.duration * 100) / 100;
+          newDuration = Math.round(video.duration * 100) / 100;
           finish('ok');
         }
       };
@@ -1883,7 +1893,7 @@ async function handleVideoFile(file: File) {
     if (metadataResult !== 'ok') {
       URL.revokeObjectURL(video.src);
       isUpload.value = false;
-      toast(t(
+      failUpload(t(
         metadataResult === 'duration'
           ? "submit.video.durationLimit"
           : metadataResult === 'timeout'
@@ -1898,6 +1908,9 @@ async function handleVideoFile(file: File) {
     videoUrl.value = await uploadVideoFile(file, (percent) => {
       uploadProgress.value = percent;
     });
+    // 上传成功了才换成新文件的值
+    videoFile.value = file;
+    videoDuration.value = newDuration;
 
     // Capture first frame as cover
     await captureFirstFrame(file);
@@ -1908,8 +1921,19 @@ async function handleVideoFile(file: File) {
   } catch (error) {
     isUpload.value = false;
     uploadProgress.value = 0;
-    toast(error instanceof PartUploadError ? getI18nMsg(error.payload) : t("fail"));
+    failUpload(error instanceof PartUploadError ? getI18nMsg(error.payload) : t("fail"));
   }
+}
+
+// 上传失败：记下原因进失败态（状态栏变红、提交被拦），toast 照旧报具体原因
+function failUpload(msg: string) {
+  uploadError.value = msg;
+  toast(msg);
+}
+
+// 放弃这次重传、回到原来的视频：失败那次没动过 videoUrl / videoFile / videoDuration，清掉错误态即可
+function restoreOriginalVideo() {
+  uploadError.value = "";
 }
 
 async function captureFirstFrame(file: File) {
@@ -2019,6 +2043,11 @@ async function onSubmit() {
 
   if (!videoUrl.value) {
     toast(t("submit.video.toastUploadFirst"));
+    return;
+  }
+  // 重传失败态：videoUrl 还是旧视频，先让用户重传成功或「恢复原视频」再发布
+  if (uploadError.value) {
+    toast(t("submit.video.uploadFailed"));
     return;
   }
 

@@ -250,6 +250,7 @@
                       @change="onVideoPicked"
                     />
                   </div>
+                  <span class="action-link restore" v-if="uploadError && !isUpload && videoUrl" @click="restoreOriginalVideo">{{ t("submit.video.restoreOriginalBtn") }}</span>
                 </div>
               </div>
               <div class="status-progress-bar">
@@ -2859,8 +2860,28 @@ function handleUserInfoLoaded(userInfo: any) {
   }
 }
 
+// 重传前旧视频的元数据，失败后「恢复原视频」用（videoUrl 本身只在上传成功后才会换）
+let prevVideoMeta: { file: File | null; duration: number; size: number; type: string } | null = null;
+
+// 放弃这次重传、回到原来的视频
+function restoreOriginalVideo() {
+  if (!videoUrl.value) return;
+  if (prevVideoMeta) {
+    videoFile.value = prevVideoMeta.file;
+    videoDuration.value = prevVideoMeta.duration;
+    videoSize.value = prevVideoMeta.size;
+    videoType.value = prevVideoMeta.type;
+  }
+  uploadError.value = '';
+  uploadSuccess.value = true;
+  uploadProgress.value = 100;
+}
+
 async function startFakeUpload(file: File) {
   uploadError.value = '';
+  prevVideoMeta = videoUrl.value
+    ? { file: videoFile.value, duration: videoDuration.value, size: videoSize.value, type: videoType.value }
+    : null;
   videoFile.value = file;
   uploadProgress.value = 0;
   videoUploadPercent.value = 0;
@@ -4209,8 +4230,9 @@ async function onSubmit() {
     return;
   }
 
-  if (isEditMode && uploadError.value) {
-    toast(t("submit.video.toastUploadFirst"));
+  // 重传失败态：不管是编辑态、本次会话已传过、还是从历史作品选的，videoUrl 都还是旧视频，先拦住
+  if (uploadError.value) {
+    toast(t("submit.video.uploadFailed"));
     return;
   }
 

@@ -1940,6 +1940,7 @@ export default {
       uploading: "กำลังอัปโหลด...",
       uploadInProgress: "กำลังอัปโหลด...",
       reuploadBtn: "อัปโหลดใหม่",
+      restoreOriginalBtn: "ใช้วิดีโอเดิม",
       playBtn: "เล่น",
       format: "รูปแบบ",
       size: "ขนาด",

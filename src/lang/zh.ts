@@ -2460,6 +2460,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       uploading: "上传中...",
       uploadInProgress: "上传中...",
       reuploadBtn: "重新上传",
+      restoreOriginalBtn: "恢复原视频",
       playBtn: "播放",
       format: "格式",
       size: "大小",

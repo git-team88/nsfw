@@ -1940,6 +1940,7 @@ export default {
       uploading: "업로드 중...",
       uploadInProgress: "업로드 중...",
       reuploadBtn: "다시 업로드",
+      restoreOriginalBtn: "원래 영상으로 되돌리기",
       playBtn: "재생",
       format: "형식",
       size: "크기",

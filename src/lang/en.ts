@@ -2355,6 +2355,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       uploading: "Uploading...",
       uploadInProgress: "Uploading in progress...",
       reuploadBtn: "Re-upload",
+      restoreOriginalBtn: "Keep original video",
       playBtn: "Play",
       format: "Format",
       size: "Size",
