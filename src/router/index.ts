@@ -211,6 +211,8 @@ const routes = [
   {
     path: "/generate",
     name: "Generate",
+    // 需要登录的页面，不收录（标题 / 描述由页面按当前 tab 自己写）
+    meta: { noindex: true },
     component: () => import("@/views/Generate.vue"),
   },
   {
@@ -406,6 +408,7 @@ const routes = [
   // {
   //   path: "/rank",
   //   name: "Ranking",
+  //   meta: { titleKey: "rank.title" },
   //   component: () => import("@/views/Ranking.vue"),
   // },
   {

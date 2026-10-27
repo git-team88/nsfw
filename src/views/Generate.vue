@@ -1048,7 +1048,7 @@
 <script setup lang="ts" name="Generate">
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { setMetaKeywords } from '@/utils/seoMeta';
+import { setMetaKeywords, applySeoMeta, restoreSeoMeta } from '@/utils/seoMeta';
 import { toast, limitToast } from '@/util/toast';
 import { v4 as uuidv4 } from 'uuid';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -5885,17 +5885,10 @@ function setSeoMeta(tab: string) {
   const title = t(`${seoKey}.title`);
   const description = t(`${seoKey}.description`);
 
-  document.title = title;
+  // title / description / og:title / og:description / og:url 一起写（以前只写 title 和 description，分享卡片拿不到 og）
+  applySeoMeta({ title, description, type: 'website' });
   // 生成页和首页的图片 / 视频分类用同一套 TDK，keywords 也一起写
   setMetaKeywords(t(`${seoKey}.keywords`));
-
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', description);
 }
 
 const selectType = (type: string) => {
@@ -6063,6 +6056,8 @@ watch(() => locale.value, () => {
 
 
 onUnmounted(() => {
+  // 本页写的 title / description / og:* 还原，别留给下一个页面
+  restoreSeoMeta();
   videoCountObserver?.disconnect();
   photoCountObserver?.disconnect();
   document.removeEventListener('click', handleClickOutside);

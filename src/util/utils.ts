@@ -194,5 +194,6 @@ export function apiErrorMessage(res: any): string {
     lang == 'ko' ? res.msg_ko :
     lang == 'th' ? res.msg_th :
     res.msg;
-  return (msg || res.msg || '').toString().trim();
+  // aiUrl 域名的接口（app/credit/balance、app/project 等）错误文案在 message 字段，没有 msg_xx，这里也兜一下
+  return (msg || res.msg || res.message || '').toString().trim();
 }

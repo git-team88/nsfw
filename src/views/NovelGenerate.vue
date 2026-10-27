@@ -406,8 +406,8 @@
             <div class="insert-image-ref-list" v-if="insertImageRefImages.length > 0">
               <div v-for="(img, index) in insertImageRefImages" :key="img.id" :class="['insert-image-ref-item']">
                 <span class="image-index">{{ index + 1 }}</span>
-                <img @click.stop="zoomCoverImage(img.image)" :src="img.id === -1 ? toWebpImageUrl(img.image) : img.image" alt="" class="insert-image-ref-thumb" />
-                <span class="insert-image-ref-name" @click.stop="zoomCoverImage(img.image)">{{ t('novel.image') }}{{ index + 1 }}</span>
+                <img @click.stop="zoomCoverImage(img.image, false)" :src="img.id === -1 ? toWebpImageUrl(img.image) : img.image" alt="" class="insert-image-ref-thumb" />
+                <span class="insert-image-ref-name" @click.stop="zoomCoverImage(img.image, false)">{{ t('novel.image') }}{{ index + 1 }}</span>
                 <button v-if="img.id !== -1" class="insert-image-ref-remove" @click="removeInsertImageRefImage(img.id)"><img src="@/assets/images/home/remove.png" alt="Remove" /></button>
               </div>
             </div>
@@ -2262,6 +2262,7 @@ async function openCoverMarkup() {
   }
   if (!coverImage.value) return;
   if (await checkProjectOwnershipByEstimate()) return;
+  if (showInsertImageEdit.value) cancelInsertImageEdit();
   markupType.value = 'cover';
   markupPlaceholder.value = null;
   markupImageUrl.value = coverImage.value;
@@ -2294,6 +2295,7 @@ async function openInsertMarkup(placeholder?: number) {
     return;
   }
   if (checkProjectOwnership()) return;
+  if (showInsertImageEdit.value) cancelInsertImageEdit();
   const seg = contentSegments.value.find((s: any) => s.type === 'image' && s.placeholder === placeholder);
   const url = seg?.url || '';
   if (!url) return;
@@ -2304,7 +2306,6 @@ async function openInsertMarkup(placeholder?: number) {
   const imageIndex = (insertImages.value.findIndex((i: any) => Number(i.img_placeholder) === placeholder) + 1) || (placeholder + 1);
   markupImageName.value = t('novel.insertImageChapter', { chapter: chapterNum, index: imageIndex });
   markupInstruction.value = '';
-  showInsertImageEdit.value = false;
   markupOpen.value = true;
   openMarkupGuideIfNeeded();
   // 拉取插图预估算力，展示在发送按钮上
@@ -2471,7 +2472,14 @@ const openInsertImageEdit = (placeholder?: number) => {
   showInsertImageAtDropdown.value = false;
   showInsertImageHistoryModal.value = false;
   showInsertImageEdit.value = true;
-  nextTick(() => { if (insertImageInputRef.value) insertImageInputRef.value.innerHTML = ''; });
+  nextTick(() => {
+    if (insertImageInputRef.value) {
+      insertImageInputRef.value.innerHTML = '';
+      // 超字数时回退用的备份也要清，不然第一次超字数会还原成上一次打开时的内容
+      previousInsertImageInputHtml.value = '';
+      insertImageInputRef.value.focus();
+    }
+  });
   // Fetch estimated computing power for the insert image renew
   fetchInsertImageEstimate();
 };
@@ -6263,26 +6271,38 @@ const handleRetry = async () => {
   if (await isTaskLimitExceeded()) return;
 
   let estimateRes;
-  if (lastGenerationType.value == 'outline') {
-    estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'outline' }) as any;
-    retryAction.value = 'outline';
-  } else if (lastGenerationType.value == 'chapter') {
-    if (isBatchChapter.value == 1) {
-      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'all_chapters', from_chapter: stepChapterIndex.value || 1 }) as any;
-      retryAction.value = 'all';
-    } else {
-      // 停在大纲页时 currentChapter 为空，要重试的是失败的那一章（stepChapterIndex），不是第 1 章
-      retryChapterNum.value = currentChapter.value?.chapter || stepChapterIndex.value || 1;
-      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'chapter', from_chapter: retryChapterNum.value }) as any;
-      retryAction.value = 'chapter';
+  try {
+    if (lastGenerationType.value == 'outline') {
+      estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'outline' }) as any;
+      retryAction.value = 'outline';
+    } else if (lastGenerationType.value == 'chapter') {
+      if (isBatchChapter.value == 1) {
+        estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'all_chapters', from_chapter: stepChapterIndex.value || 1 }) as any;
+        retryAction.value = 'all';
+      } else {
+        // 停在大纲页时 currentChapter 为空，要重试的是失败的那一章（stepChapterIndex），不是第 1 章
+        retryChapterNum.value = currentChapter.value?.chapter || stepChapterIndex.value || 1;
+        estimateRes = await api.novelEstimate({ session_id: sessionId.value, step_name: 'chapter', from_chapter: retryChapterNum.value }) as any;
+        retryAction.value = 'chapter';
+      }
     }
+  } catch (error) {
+    console.error('Error estimating retry cost:', error);
+    toast(t('fail'));
+    return;
   }
 
   if (estimateRes && estimateRes.code == 200) {
-    const estimatedPoints = estimateRes.data.total_points;
+    // data 为空或没有算力数时按失败处理，别在 estimateRes.data.total_points 上抛 TypeError
+    const estimatedPoints = Number(estimateRes.data?.total_points);
+    if (!Number.isFinite(estimatedPoints)) {
+      toast(t('fail'));
+      return;
+    }
     estimatedComputingPower.value = estimatedPoints;
 
-    await fetchUserBalance();
+    // 余额没拿到（接口失败 / 断网）就不比较了，不然 userBalance 还是旧值或 0，会误弹「余额不足」
+    if (!(await fetchUserBalance())) return;
     const requiredPower = Math.round(estimatedPoints * 1.05);
     if (userBalance.value < requiredPower) {
       estimatedFrozenPower.value = Math.round(estimatedPoints * (balanceInfo.value?.over_freeze_rate || 1));
@@ -7022,21 +7042,25 @@ const fetchUserInfo = async () => {
 }
 
 // Fetch user balance
-const fetchUserBalance = async () => {
+// 返回是否拿到了余额：失败时调用方不要拿旧值 / 0 去做「余额不足」判断
+const fetchUserBalance = async (): Promise<boolean> => {
   try {
     const res = await api.userBalance() as any;
-    if (res.code == 200) {
+    if (res.code == 200 && res.data) {
       const totalBalance = res.data.total_balance || 0;
       const balance = res.data.balance || 0;
       userBalance.value = balance;
       frozenBalance.value = Math.max(0, totalBalance - balance);
       systemFrozenBalance.value = Math.max(0, totalBalance - balance);
       balanceInfo.value = res.data;
-    } else {
-      toast(apiErrorMessage(res) || t('fail'));
+      return true;
     }
+    toast(apiErrorMessage(res) || t('fail'));
+    return false;
   } catch (error) {
     console.error('Error fetching user balance:', error);
+    toast(t('fail'));
+    return false;
   }
 }
 
@@ -8674,25 +8698,33 @@ const startPolling = () => {
   stopDetailPolling();
 
   // Start polling every 3 seconds
+  let netErrors = 0;
   pollingInterval.value = window.setInterval(async () => {
     try {
       // Always poll taskPolling API for task status
       // This handles both outline generation and chapter generation
       const pollingRes = await api.taskPolling(sessionId.value) as any;
+      netErrors = 0;
 
       // Handle polling response
       handlePollingResponse(pollingRes);
 
     } catch (error) {
       console.error('Error during polling:', error);
-      // Stop loading when polling fails
-      isLoading.value = false;
-      // If in preparation state, set to failed state
-      if (isPreparing.value) {
-        hasFailed.value = true;
-        isPreparing.value = false;
-        prepareQueueInfo.value = null;
+      // 偶发的网络错误不碰界面状态：以前这里直接把 isLoading 清掉但轮询还在继续，
+      // 之后 DOING 不会再把 loading 置回来，任务还在生成、界面却像卡住了。
+      // 连续失败 POLL_MAX_NET_ERRORS 次才停轮询并按失败处理
+      if (++netErrors < POLL_MAX_NET_ERRORS) return;
+      if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
       }
+      isLoading.value = false;
+      hasFailed.value = true;
+      isPreparing.value = false;
+      prepareQueueInfo.value = null;
+      stopLoadingAnimation();
+      toast(t('fail'));
     }
   }, 3000);
 };
@@ -9151,6 +9183,12 @@ function setSeoMeta() {
 
 // Lifecycle
 onMounted(async () => {
+  // 监听要在任何 await 之前挂上：如果 await 期间用户离开了，onBeforeUnmount 先跑（这时还没挂，摘不到），
+  // await 回来再挂就永远摘不掉了
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  document.addEventListener('click', handleRegenerateClickOutside);
+
   await contentSwitch.ensureLoaded();
   const token = localStorage.getItem('token');
   if (!token) {
@@ -9173,10 +9211,6 @@ onMounted(async () => {
   await fetchNovelOutline();
 
   // Don't fetch points estimate here as it's already called in handleStructuredData
-
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  document.addEventListener('click', handleRegenerateClickOutside);
 });
 
 watch(() => locale.value, () => {
@@ -10866,7 +10900,11 @@ function processCoverPrompt() {
 }
 
 // Zoom cover image
-function zoomCoverImage(imageUrl: string) {
+function zoomCoverImage(imageUrl: string, closeInsertEdit = true) {
+  // 打开大图时收起插图编辑框，不然关掉大图后它又冒出来（在编辑框里点参考图缩略图时传 false 不收）
+  if (closeInsertEdit && showInsertImageEdit.value) {
+    cancelInsertImageEdit();
+  }
   zoomedCoverImage.value = imageUrl;
   showCoverZoomModal.value = true;
 }

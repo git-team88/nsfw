@@ -338,12 +338,11 @@ function checkLogin() {
   return true;
 }
 
+// 地区从 contentSwitch store 里拿（ensureLoaded 把国家码和内容开关一起请求、有缓存），不再单独多发一次 getCode
 async function getCountry() {
   try {
-    const res = await api.getCode() as any;
-    if (res.code == 0) {
-      userRegion.value = res.data.countryCode != 'CN';
-    }
+    await contentSwitch.ensureLoaded();
+    userRegion.value = !contentSwitch.isChinaRegion;
   } catch {
     userRegion.value = false;
   } finally {
@@ -402,11 +401,10 @@ async function fetchCollectionDetail() {
     }
 
     const localUid = localStorage.getItem('uid');
-    await contentSwitch.ensureLoaded();
+    // 内容开关和合集详情并行：详情接口不依赖开关，showNsfw 只给后面的作者接口用
+    const [, firstRes] = await Promise.all([contentSwitch.ensureLoaded(), api.getCollectionDetail(id)]);
     const showNsfw = contentSwitch.showNsfw;
-
-    // 先请求合集详情接口（公开接口）
-    let response = await api.getCollectionDetail(id) as any;
+    let response = firstRes as any;
 
     if (!alive) return;
 
