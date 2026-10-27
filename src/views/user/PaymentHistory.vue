@@ -769,8 +769,10 @@ async function turnOffAutoRenewal(itemId: string) {
   autoRenewLoading.value = true;
   try {
     const res = await api.cancelSubscribe() as any;
-    if (res.code === 0 || res.code === 200) {
-      window.location.href = res.data?.url;
+    if (res.code == 0 || res.code == 200) {
+      const jumpUrl = res.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t('fail'));
     } else {
       toast(apiErrorMessage(res))
     }
@@ -788,7 +790,9 @@ async function turnOnAutoRenewal(itemId: string, type: number) {
   try {
     const res = await api.cancelSubscribe() as any;
     if (res.code == 0 || res.code == 200) {
-      window.location.href = res.data?.url;
+      const jumpUrl = res.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t('fail'));
     } else {
       toast(apiErrorMessage(res))
     }
@@ -800,12 +804,17 @@ async function turnOnAutoRenewal(itemId: string, type: number) {
 }
 
 async function viewAllPaymentHistory() {
-  const uid = localStorage.getItem('uid');
-  const res = await api.cancelSubscribe() as any;
-  if (res.code == 0 || res.code == 200) {
-    window.location.href = res.data?.url;
-  } else {
-    toast(apiErrorMessage(res))
+  try {
+    const res = await api.cancelSubscribe() as any;
+    if (res.code == 0 || res.code == 200) {
+      const jumpUrl = res.data?.url;
+      if (jumpUrl) window.location.href = jumpUrl;
+      else toast(t('fail'));
+    } else {
+      toast(apiErrorMessage(res) || t('fail'))
+    }
+  } catch (error) {
+    toast(t('fail'));
   }
 }
 

@@ -50,7 +50,7 @@
                   </div>
                   <div class="read-info" v-if="collection.history">
                     <span class="label">{{ t('collectionDetail.lastRead') }}：</span>
-                    <span class="value">{{ collection.history.title }}</span>
+                    <span class="value">{{ historyTitle }}</span>
                   </div>
                   <div class="btn-row">
                     <button class="favorite-btn" :class="{ active: isLiked }" @click="toggleLike" v-if="!isOwn">
@@ -467,7 +467,7 @@ async function fetchCollectionDetail() {
             title: chapter.title || '',
             subtitle: chapter.subtitle,
             status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
-            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1',
+            accessRights: (chapter.access_rights != null ? String(chapter.access_rights) : '1') as '1' | '2' | '3',
             chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
           })),
           history: finalData.history && !Array.isArray(finalData.history) && finalData.history.post_id ? {
@@ -668,7 +668,18 @@ function buildCollectionJsonLd(o: { title: string; description: string; image?: 
   return [page, { '@type': 'BreadcrumbList', '@id': `${pageUrl}#breadcrumb`, itemListElement: crumbs }];
 }
 
+// 「上次看到」的标题：优先用目录里对应章节的标题（和目录一致），找不到时退回接口给的 title
+const historyTitle = computed(() => {
+  const history = collection.value?.history;
+  if (!history) return '';
+  const chapter = collection.value?.chapters?.find(c => String(c.id) == String(history.post_id));
+  if (chapter) return chapter.title;
+  return history.title || '';
+});
+
+// 低6 作者 id 为空时不跳 /user-home/?type=1
 function goHome() {
+  if (!authorInfo.value.id) return;
   const type = collection.value?.type || '1';
   router.push(`/user-home/${authorInfo.value.id}?type=${type}`);
 }
@@ -777,10 +788,13 @@ function confirmSensitiveContent() {
   }
 }
 
+let followPending = false;
 async function toggleFollow() {
   if (!checkLogin()) return;
 
   if (!authorInfo.value.id) return;
+  if (followPending) return;
+  followPending = true;
 
   const data = {
     followed_id: authorInfo.value.id
@@ -806,12 +820,18 @@ async function toggleFollow() {
     }
   } catch (error) {
     console.error('Failed to toggle follow:', error);
+    toast(t('fail'));
+  } finally {
+    followPending = false;
   }
 }
 
+let likePending = false;
 async function toggleLike() {
   if (!checkLogin()) return;
   if (!collection.value || !collection.value.id) return;
+  if (likePending) return;
+  likePending = true;
 
   try {
     if (isLiked.value) {
@@ -831,6 +851,8 @@ async function toggleLike() {
     }
   } catch (error) {
     toast(t('fail'));
+  } finally {
+    likePending = false;
   }
 }
 
@@ -866,9 +888,9 @@ function editChapter(chapter: Chapter | null) {
   }
 }
 
-async function refreshChapters() {
+async function refreshChapters(bookIdParam?: typeof route.query.book_id | typeof route.params.id) {
   try {
-    const bookId = route.query.book_id || route.params.id;
+    const bookId = bookIdParam ?? (route.query.book_id || route.params.id);
     if (!bookId) return;
     const id = (Array.isArray(bookId) ? bookId[0] : bookId) as string;
     if (!id) return;
@@ -901,7 +923,7 @@ async function refreshChapters() {
             subtitle: chapter.subtitle,
             status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
             // 刷新时也要带上权限，不然作者页面上每章的「订阅 / 付费 / 仅自己可见」标签都没了
-            accessRights: (String(chapter.access_rights) as '1' | '2' | '3') || '1',
+            accessRights: (chapter.access_rights != null ? String(chapter.access_rights) : '1') as '1' | '2' | '3',
             chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
           }));
           collection.value.latestChapterIndex = finalBookInfo.chapter_count || '';
@@ -918,19 +940,26 @@ async function refreshChapters() {
   }
 }
 
+let deletingChapter = false;
 async function deleteChapter(chapter: Chapter | null) {
+  if (deletingChapter) return;
   if (chapter && collection.value) {
+    deletingChapter = true;
+    // 删除期间离开本页的话，刷新用的还是进来时这个合集 id，别拿别的页面的 id 去请求
+    const bookId = route.query.book_id || route.params.id;
     try {
       const res = await api.deletePost({ post_id: chapter.id }) as any;
       if (res.code == 0) {
         toast(t('success'));
-        await refreshChapters();
+        await refreshChapters(bookId);
       } else {
         toast(apiErrorMessage(res) || t('fail'));
       }
     } catch (error) {
       console.error(error);
       toast(t('fail'));
+    } finally {
+      deletingChapter = false;
     }
   }
   showDeleteChapterModal.value = false;

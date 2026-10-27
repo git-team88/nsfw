@@ -468,10 +468,10 @@ async function handleSave() {
       if (coverUrl.value !== initialCoverUrl.value) {
         params.cover = coverUrl.value;
       }
-      if (collectionName.value.trim() !== initialCollectionName.value) {
+      if (collectionName.value.trim() !== initialCollectionName.value.trim()) {
         params.title = collectionName.value.trim();
       }
-      if (description.value.trim() !== initialDescription.value) {
+      if (description.value.trim() !== initialDescription.value.trim()) {
         params.description = description.value.trim();
       }
       if (computedIsNsfw.value !== initialIsNsfw.value) {
@@ -492,7 +492,8 @@ async function handleSave() {
           name: collectionName.value.trim(),
           cover: coverUrl.value,
           description: description.value.trim(),
-          is_nsfw: computedIsNsfw.value,
+          // 编辑时提交的是 isNsfw（没改就不提交、服务端保持原值），emit 也用它，别用 computedIsNsfw 误显示 R18
+          is_nsfw: isNsfw.value,
           language: selectedLanguage.value
         });
         handleCancel();

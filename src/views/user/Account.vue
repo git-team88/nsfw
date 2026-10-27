@@ -184,7 +184,7 @@ import { toast } from "@/util/toast";
 import router from "@/router";
 import { baseUrl, redirectUrl, siteKey } from "@/util/config";
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const sidebarKey = ref("account");
 const isShowLoad = ref(false);
 
@@ -501,7 +501,7 @@ function handleGoogleBind() {
         isShowLoad.value = false;
         localStorage.removeItem("bType");
       } else {
-        toast(locale.value == 'jp' ?  r.msg_jp : r.msg)
+        toast(apiErrorMessage(r) || t('fail'))
         isShowLoad.value = false;
         localStorage.removeItem("bType");
       }

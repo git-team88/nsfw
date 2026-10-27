@@ -390,7 +390,8 @@ async function confirmDelete() {
 
       clearTimeout(navTimer);
       navTimer = setTimeout(() => {
-        router.push(`/user-home/${collection.value.user_id}`);
+        // 合集已删，设置页不该再能后退回来
+        router.replace(`/user-home/${collection.value.user_id}`);
       }, 1000);
     } else {
       toast(apiErrorMessage(res) || t('fail'));

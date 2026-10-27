@@ -3895,8 +3895,9 @@ const regenerateOutline = async () => {
     ? true
     : userSelectedSettings.value?.story_mode === 'nsfw';
   const rawInsertCount = userSelectedSettings.value?.insert_image_count;
-  // 强制 NSFW 时也回显用户上次的选择（0 = 无），没有记录才默认 4
-  selectedInsertImage.value = rawInsertCount !== undefined && rawInsertCount !== null && rawInsertCount !== '' ? Number(rawInsertCount) : 4;
+  // 强制 NSFW 时也回显用户上次的选择（0 = 无），没有记录才默认 4；插图数量只有 0 / 4 两个值，别的一律回落到 4
+  const parsedInsertCount = Number(rawInsertCount);
+  selectedInsertImage.value = parsedInsertCount === 0 || parsedInsertCount === 4 ? parsedInsertCount : 4;
   showInsertImageDropdown.value = false;
 };
 

@@ -456,6 +456,7 @@ import { useRouter, useRoute } from "vue-router";
 import {toast} from "@/util/toast";
 import api from "@/api/index";
 import { baseUrl, siteKey } from "@/util/config";
+import { apiErrorMessage } from "@/util/utils";
 import { getLocalizedCountries, countries } from "@/data/countries";
 import zh from "@/lang/zh";
 import jp from "@/lang/jp";
@@ -634,7 +635,6 @@ const POSTAL_RE = /^\d{3}-?\d{4}$/;
 const POSTAL_ALLOWED_RE = /^[a-zA-Z0-9\s!@#$%^&*()_+=\-[\]{}|;:'",.<>?\/\\`~]*$/;
 const POSTAL_CHINESE_RE = /[\u4E00-\u9FA5]/;
 // 邮箱验证码验证：只允许字母和数字，不允许汉字
-const EMAIL_CODE_ALLOWED_RE = /^[a-zA-Z0-9]*$/;
 
 const kycForm = ref({
   last_name: "",
@@ -923,9 +923,15 @@ async function onKycFileChange(e: Event, field: string) {
     applicant_photo: "self_photo",
   };
   const uploadKey = fieldMap[field] || field;
+  if (uploadStatus.value[uploadKey].uploading) {
+    input.value = "";
+    return;
+  }
 
   uploadStatus.value[uploadKey].uploading = true;
   uploadStatus.value[uploadKey].error = "";
+  // 上传期间盖住页面，给加载反馈，也防止重复选文件
+  isLoading.value = true;
 
   try {
     const url = await uploadImageToServer(file, field);
@@ -939,6 +945,7 @@ async function onKycFileChange(e: Event, field: string) {
     input.value = "";
   } finally {
     uploadStatus.value[uploadKey].uploading = false;
+    isLoading.value = false;
   }
 }
 
@@ -956,18 +963,6 @@ function onKycPostalCodeInput() {
 
   const clean = kycForm.value.postal_code.replace(/-/g, "");
   if (clean.length == 7) lookupKycAddress();
-}
-
-// 保存上一次合法的邮箱验证码值
-let lastValidEmailCode = "";
-
-function onEmailCodeInput() {
-  // 只允许数字
-  if (EMAIL_CODE_ALLOWED_RE.test(kycForm.value.email_code)) {
-    lastValidEmailCode = kycForm.value.email_code;
-  } else {
-    kycForm.value.email_code = lastValidEmailCode;
-  }
 }
 
 function clearFieldError(field: string) {
@@ -1010,8 +1005,8 @@ function onKycPostalCodeInputAndClear() {
   clearFieldError('postal_code');
 }
 
+// 验证码由后端下发，没有固定格式，前端只校验非空，不限制输入字符
 function onEmailCodeInputAndClear() {
-  onEmailCodeInput();
   clearFieldError('email_code');
 }
 
@@ -1032,11 +1027,13 @@ async function lookupKycAddress() {
   } catch (e) { console.error(e); }
 }
 
+let grecaptchaTimer: ReturnType<typeof setTimeout> | null = null;
 function checkGrecaptcha() {
+  grecaptchaTimer = null;
   if (typeof grecaptcha !== "undefined" && grecaptcha.ready) {
     isGrecaptchaReady.value = true;
   } else {
-    setTimeout(checkGrecaptcha, 3000);
+    grecaptchaTimer = setTimeout(checkGrecaptcha, 3000);
   }
 }
 
@@ -1102,7 +1099,7 @@ function sendEmailCode() {
               toast(t("success"));
               timeCount();
             } else {
-              toast(locale.value == "jp" ? res.msg_jp : res.msg);
+              toast(apiErrorMessage(res) || t("fail"));
               isSendCode.value = false;
             }
           })
@@ -1152,7 +1149,6 @@ function validateCurrentStep(): boolean {
     else if (!EMAIL_RE.test(f.contact_email)) { kycFieldErrors.value.contact_email = t("user.materialProvider.errorEmailFormat"); }
     if (!f.email_code) { kycFieldErrors.value.email_code = req(t("user.personal.emailCode")); }
     else if (!emailToken.value) { kycFieldErrors.value.email_code = t("user.materialProvider.errorSendCodeFirst"); }
-    else if (!EMAIL_CODE_ALLOWED_RE.test(f.email_code)) { kycFieldErrors.value.email_code = t("user.materialProvider.errorEmailFormat"); }
 
     // 如果有任何错误，返回false
     if (Object.keys(kycFieldErrors.value).length > 0) {
@@ -1250,8 +1246,7 @@ const isCurrentStepValid = computed(() => {
       !!f.address_line1 &&
       !!f.contact_email &&
       EMAIL_RE.test(f.contact_email) &&
-      !!f.email_code &&
-      EMAIL_CODE_ALLOWED_RE.test(f.email_code)
+      !!f.email_code
     );
   } else if (currentStep.value == 1) {
     return (
@@ -1360,6 +1355,11 @@ onUnmounted(() => {
     clearInterval(timer.value);
     timer.value = null;
   }
+  // 组件卸载后别再轮询 grecaptcha
+  if (grecaptchaTimer) {
+    clearTimeout(grecaptchaTimer);
+    grecaptchaTimer = null;
+  }
 });
 
 // Also revoke old URLs when files change
@@ -1401,7 +1401,7 @@ async function handleKycSubmit() {
       toast(t("success"));
       router.push("/user-personal");
     } else {
-      toast(locale.value == "jp" ? result.msg_jp : result.msg);
+      toast(apiErrorMessage(result) || t("fail"));
     }
   } catch (e) {
     console.error(e);

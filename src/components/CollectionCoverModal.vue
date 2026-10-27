@@ -193,6 +193,9 @@ function readFileAsDataURL(file: File) {
   reader.onload = (e) => {
     localImage.value = e.target?.result as string;
   };
+  reader.onerror = () => {
+    toast(t('fail'));
+  };
   reader.readAsDataURL(file);
 }
 

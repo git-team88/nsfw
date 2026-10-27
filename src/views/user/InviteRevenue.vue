@@ -74,7 +74,9 @@ function handleUserInfoLoaded(userData: any) {
 function fetchInviteInfo() {
   api.userInviteInfo().then((res: any) => {
     if (res.code == 0) {
-      firstPurchaseStars.value = res.data?.user_num || res.data?.userNum || '--';
+      // 0 也是有效值，只有字段缺失才显示 "--"（以前用 || 把 0 也当成没数据）
+      const userNum = res.data?.user_num ?? res.data?.userNum;
+      firstPurchaseStars.value = userNum != null && userNum !== '' ? String(userNum) : '--';
       totalRevenue.value = res.data?.credit != null && res.data.credit !== '' ? String(res.data.credit) : '--';
     } else {
       toast(apiErrorMessage(res))

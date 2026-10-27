@@ -766,7 +766,8 @@ function confirmLogout() {
 
   const currentPath = window.location.pathname;
   const keepPaths = ["/detail", "/user-home", "character-library", "search"];
-  const shouldKeepPath = keepPaths.some(path => currentPath.includes(path));
+  // 合集详情页（/collection/:id）是公开页，登出后留在原地；/collection-settings 需要登录，仍回首页
+  const shouldKeepPath = keepPaths.some(path => currentPath.includes(path)) || /^\/collection\/[^/]+/.test(currentPath);
 
   if (!shouldKeepPath) {
     router.push("/");

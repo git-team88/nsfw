@@ -896,6 +896,8 @@
       ></NovelDetail>
     </div>
 
+    <!-- 小说模式下弹窗 / 预览 / 底部输入框都由 NovelDetail 自己管理，这里的不挂 -->
+    <template v-if="!isNovelType">
     <!-- Large Image Viewer -->
     <ImageViewer
       :visible="showLargeViewer"
@@ -965,6 +967,7 @@
     />
     <!-- 做同款 / 做续集的来源数据请求中 -->
     <UploadMask :visible="composerLoading" :text="t('home.loading')" />
+    </template>
   </div>
 </template>
 
@@ -6041,20 +6044,6 @@ function updateScrollContentPadding() {
 }
 
 // Handle scroll to load more comments
-function handleCommentsScroll() {
-  const scrollContent = document.querySelector('.scroll-content') as HTMLElement;
-  if (!scrollContent || loadingMore.value || !hasMoreComments.value) return;
-
-  const scrollTop = scrollContent.scrollTop;
-  const scrollHeight = scrollContent.scrollHeight;
-  const clientHeight = scrollContent.clientHeight;
-
-  // Check if scrolled to near bottom (within 10px)
-  if (scrollHeight - scrollTop - clientHeight <= 10) {
-    loadComments(currentPage.value + 1, true);
-  }
-}
-
 // Handle fullscreen change event on document
 function handleFullscreenChange() {
   const fullscreenEl = document.fullscreenElement;
@@ -6282,12 +6271,7 @@ onMounted(async () => {
 
   nextTick(() => {
     updateScrollContentPadding();
-
-    // Add scroll listener for loading more comments
-    const scrollContent = document.querySelector('.scroll-content');
-    if (scrollContent) {
-      scrollContent.addEventListener('scroll', handleCommentsScroll);
-    }
+    // 评论加载更多由模板上 .scroll-content 的 @scroll="handleScroll" 负责，这里不再重复监听
 
     // Listen for fullscreen change on document (handles video -> page fullscreen promotion)
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -6307,12 +6291,6 @@ onBeforeUnmount(() => {
   document.removeEventListener("keydown", handleKeyDown);
   document.removeEventListener("contextmenu", handleContextMenu);
   stopDragTracking();
-
-  // Remove scroll listener
-  const scrollContent = document.querySelector('.scroll-content');
-  if (scrollContent) {
-    scrollContent.removeEventListener('scroll', handleCommentsScroll);
-  }
 
   // Remove fullscreen change listener
   document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -6339,10 +6317,10 @@ watch(
     if (newId && route.name === 'Detail') {
       id.value = Number(newId);
       contentType.value = route.query.tab as string || route.query.contentType as string || "";
+      // 小说模式由 NovelDetail 自己拉地区和详情，这里什么都不做
+      if (isNovelType.value) return;
       await getCountry();
-      if (!isNovelType.value) {
-        fetchDetail(Number(newId));
-      }
+      fetchDetail(Number(newId));
     }
   },
 );

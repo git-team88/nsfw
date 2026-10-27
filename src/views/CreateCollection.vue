@@ -438,11 +438,11 @@ async function handleSave() {
     if (editId.value) {
       params.book_id = editId.value;
 
-      if (collectionName.value.trim() !== originalName.value) {
+      if (collectionName.value.trim() !== originalName.value.trim()) {
         params.title = collectionName.value.trim();
       }
 
-      if (description.value.trim() !== originalDescription.value) {
+      if (description.value.trim() !== originalDescription.value.trim()) {
         params.description = description.value.trim();
       }
 
@@ -487,10 +487,11 @@ async function handleSave() {
         const type = route.query.type || '2';
         const id = route.query.id;
         if (id) {
-          router.push(`/collection-settings/${id}`);
+          router.replace(`/collection-settings/${id}`);
         } else {
           const uid = route.query.uid || localStorage.getItem('uid');
-          router.push(`/user-home/${uid}?type=${type}`);
+          // uid 取不到（登录态已清）时不拼成 /user-home/null，回首页
+          router.push(uid ? `/user-home/${uid}?type=${type}` : '/');
         }
       }, 500);
     } else {

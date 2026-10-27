@@ -1541,8 +1541,11 @@ async function handleSaveCollection(collection: { id: string | number; name: str
       is_nsfw: collection.is_nsfw ?? 0,
       language: collection.language || collectionLanguage.value,
       price: '',
-      plan_id: ''
+      plan_id: '',
+      currency: ''
     };
+    // 新建的合集也是「有合集」，和单发页保持一致
+    isNoCollection.value = false;
 
     if (collection.is_nsfw == 1) {
       form.value.content = 'yes';

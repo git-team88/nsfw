@@ -2188,6 +2188,10 @@ watch(uploadOption, (newOption) => {
     selectedProject.value = null;
     selectedProjectId.value = '';
     coverPreview.value = '';
+    // 清空前先释放本地生成的 blob 地址，不然切几次就泄漏几份
+    imageFiles.value.forEach((file) => {
+      if (file._preview?.startsWith('blob:')) URL.revokeObjectURL(file._preview);
+    });
     imageFiles.value = [];
   }
 });
