@@ -34,6 +34,14 @@
       <button class="access-denied-btn" @click="goHome">{{ t('novel.accessDeniedBtn') }}</button>
     </div>
 
+    <!-- 初始加载失败（样式复用 access-denied） -->
+    <div v-else-if="isInitLoadFailed" class="access-denied-overlay">
+      <img class="access-denied-icon" src="@/assets/images/novel/fail.png" alt="" />
+      <span class="access-denied-title">{{ t('novel.error.fetchFailed') }}</span>
+      <span class="access-denied-desc">{{ initLoadErrorMsg || t('fail') }}</span>
+      <button class="access-denied-btn" :disabled="isFetchingNovelOutline" @click="retryInitLoad">{{ t('novel.retry') }}</button>
+    </div>
+
     <!-- Left Area -->
     <div v-if="!isAccessDenied" class="left-area">
       <!-- Project Name with Edit Icon -->
@@ -657,7 +665,7 @@
             </div>
             <div class="failed-actions vertical">
               <button class="recharge-button" @click="goRecharge">{{ t('novel.goRecharge') }}</button>
-              <button class="retry-button" @click="handleRetry">{{ t('novel.retry') }}</button>
+              <button class="retry-button" :disabled="isRetryLoading" @click="handleRetry">{{ t('novel.retry') }}</button>
             </div>
           </div>
 
@@ -680,7 +688,7 @@
                 <span v-html="t('novel.error.supportEmail').replace(/\n/g, '<br />')"></span>
               </template>
             </div>
-            <button class="retry-button" @click="handleRetry">
+            <button class="retry-button" :disabled="isRetryLoading" @click="handleRetry">
               {{ t('novel.retry') }}
             </button>
           </div>
@@ -1624,6 +1632,14 @@ const userInfo = ref<any>(null);
 const isLoading = ref(true);
 const isDetailLoaded = ref(false);
 const isAccessDenied = ref(false);
+// 进页面的第一次 detailProject 失败（非 200 / 网络异常）：以前只 toast，isDetailLoaded 为 false 留一片空白；现在盖一层失败提示 + 重试
+const isInitLoadFailed = ref(false);
+const initLoadErrorMsg = ref('');
+const retryInitLoad = () => {
+  isInitLoadFailed.value = false;
+  initLoadErrorMsg.value = '';
+  fetchNovelOutline();
+};
 const outlineContent = ref<string>('');
 const displayedContent = ref<string>('');
 const pendingDisplayContent = ref<string>(''); // Store content to display after loading animation completes
@@ -2313,6 +2329,23 @@ async function openInsertMarkup(placeholder?: number) {
 }
 
 // 发送标记图：上传后作为参考图 + 修改意见走现有重绘接口
+// 插图重绘 / 标记修改接口返回 40011（余额不足）/ 10407（操作过期）/ 会话过期的统一处理，和封面重绘一致；处理了返回 true
+async function handleRenewErrorCode(res: any, cost: number): Promise<boolean> {
+  if (handleSessionTimeout(res?.code)) return true;
+  if (res?.code == 40011) {
+    await fetchUserBalance();
+    estimatedFrozenPower.value = Math.round(cost * (balanceInfo.value?.over_freeze_rate || 1));
+    showInsufficientBalanceModal.value = true;
+    return true;
+  }
+  if (res?.code == 10407) {
+    toast(t('novel.error.staleOperation'));
+    setTimeout(() => { window.location.reload(); }, 1000);
+    return true;
+  }
+  return false;
+}
+
 async function handleSendMarkedImage(blob: Blob, instruction: string) {
   const file = new File([blob], `markup_${Date.now()}.png`, { type: 'image/png' });
   const uploadedUrl = await uploadCoverImage(file);
@@ -2361,7 +2394,9 @@ async function handleSendMarkedImage(blob: Blob, instruction: string) {
     } else {
       coverRenewLoading.value = false;
       showCoverEditBtn.value = true;
-      throw new Error(res.message || t('fail'));
+      // 余额不足弹充值、操作过期刷新；其它错误抛给标记编辑器显示
+      if (await handleRenewErrorCode(res, coverCost.value)) return;
+      throw new Error(apiErrorMessage(res) || res.message || t('fail'));
     }
     return;
   }
@@ -2384,7 +2419,8 @@ async function handleSendMarkedImage(blob: Blob, instruction: string) {
   });
   const res = await response.json();
   if (res.code !== 200) {
-    throw new Error(res.message || t('fail'));
+    if (await handleRenewErrorCode(res, insertImageCost.value)) return;
+    throw new Error(apiErrorMessage(res) || res.message || t('fail'));
   }
   const taskId = res.data?.task_id;
   markupOpen.value = false;
@@ -3107,8 +3143,9 @@ const generateInsertImage = async () => {
     });
     const res = await response.json();
     if (res.code !== 200) {
-      toast(res.message || t('fail'));
       isRenewingInsertImage.value = false;
+      if (await handleRenewErrorCode(res, insertImageCost.value)) return;
+      toast(apiErrorMessage(res) || res.message || t('fail'));
       return;
     }
     const taskId = res.data?.task_id;
@@ -3156,13 +3193,21 @@ const startInsertImageRenewPolling = (taskId: string, placeholder: number) => {
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
-      netErrors = 0;
       if (handleSessionTimeout(res.code) || res.code == 401) {
         stopInsertImageRenewPolling();
         isRenewingInsertImage.value = false;
         return;
       }
-      if (res.code == 200 && res.data?.status == 'SUCCESS') {
+      // 非 200（如 500）：以前落空一直轮，按网络异常同样计数，连错够次数就停
+      if (res.code != 200) {
+        if (++netErrors < POLL_MAX_NET_ERRORS) return;
+        toast(apiErrorMessage(res) || t('fail'));
+        isRenewingInsertImage.value = false;
+        stopInsertImageRenewPolling();
+        return;
+      }
+      netErrors = 0;
+      if (res.data?.status == 'SUCCESS') {
         // Renew task result carries { chapter, image_index, image_url }
         const result = res.data.result || {};
         // 结果里没带章节号时，按发请求时的那一章算，不按当前正在看的章
@@ -5038,7 +5083,9 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   //   return;
   // }
 
-  if (!skipBalanceCheck) isNextLoading.value = true;
+  // 重试流程（skipBalanceCheck）以前不置 isNextLoading，确认弹窗点两下会重复提交；现在一律置上，finally 复位
+  if (isNextLoading.value) return;
+  isNextLoading.value = true;
   // 任务是否已被服务端受理（novelNext 返回 200 之后为 true）
   let submitted = false;
   try {
@@ -6090,7 +6137,9 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
 
   hideEdit();
 
-  if (!skipBalanceCheck) isAllChaptersLoading.value = true;
+  // 重试流程（skipBalanceCheck）以前不置 isAllChaptersLoading，确认弹窗点两下会重复提交；现在一律置上，finally 复位
+  if (isAllChaptersLoading.value) return;
+  isAllChaptersLoading.value = true;
   // 任务是否已被服务端受理（novelAllChapters 返回 200 之后为 true）
   let submitted = false;
   try {
@@ -6276,7 +6325,17 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
 };
 
 // Handle retry on failed generation
+const isRetryLoading = ref<boolean>(false);
 const handleRetry = async () => {
+  if (isRetryLoading.value) return;
+  isRetryLoading.value = true;
+  try {
+    await doHandleRetry();
+  } finally {
+    isRetryLoading.value = false;
+  }
+};
+const doHandleRetry = async () => {
   if (coverRenewFailed.value) {
     toast(t('novel.coverRenewFailedTip'));
     return;
@@ -6825,31 +6884,36 @@ const handleBatchPublishConfirm = async (selectedChapters: any[]) => {
   const cover = coverImage.value || '';
   const title = projectName.value || '';
 
-  if (selectedChapters.length === 1) {
-    router.push({
-      path: '/publish/novel',
-      query: {
-        session_id: sessionId.value,
-        cover,
-        index: selectedChapters[0].chapter,
-        title
+  const target = selectedChapters.length === 1
+    ? {
+        path: '/publish/novel',
+        query: {
+          session_id: sessionId.value,
+          cover,
+          index: selectedChapters[0].chapter,
+          title
+        }
       }
-    });
-    return;
+    : {
+        path: '/publish/novel',
+        query: {
+          session_id: sessionId.value,
+          batch: 'true',
+          indexes: selectedChapters.map(c => c.chapter).join(','),
+          cover,
+          name: title
+        }
+      };
+
+  // 跳转被路由守卫拦下（返回 NavigationFailure）或抛错时，页面还停在这里，要把遮罩收掉
+  try {
+    const failure = await router.push(target);
+    if (failure) isBatchPublishLoading.value = false;
+  } catch (e) {
+    console.error('Batch publish navigation failed:', e);
+    toast(t('fail'));
+    isBatchPublishLoading.value = false;
   }
-
-  const chapterIndexes = selectedChapters.map(c => c.chapter);
-
-  router.push({
-    path: '/publish/novel',
-    query: {
-      session_id: sessionId.value,
-      batch: 'true',
-      indexes: chapterIndexes.join(','),
-      cover,
-      name: title
-    }
-  });
 };
 
 const cancelBatchPublish = () => {
@@ -7323,15 +7387,17 @@ const fetchChapterStream = async (chapterIndex: number, taskId: string = '') => 
     // Only show loading if we're still viewing a chapter
     // Don't show loading if we're viewing outline
     // Only set loading state if the requested chapter matches the currently viewed chapter
-    if (currentChapter.value && currentChapter.value.chapter === chapterIndex) {
+    if (currentChapter.value && currentChapter.value.chapter == chapterIndex) {
       isLoading.value = true;
       displayedContent.value = '';
       pendingDisplayContent.value = '';
       isWaitingForData.value = true;
-    } else {
+    } else if (isBatchChapter.value != 1) {
       // If viewing a different chapter, don't interfere with its display
       return;
     }
+    // 批量模式下用户翻去看别的章 / 大纲时也要继续轮询：PREPARE→DOING 后只有这里在轮 detailProject，
+    // 直接 return 就没人更新章节列表和生成状态了；下面循环里写正文 / 切章都已按「是否停在该章」判断
 
     // Wait for DOM to mount chapter content view
     await nextTick();
@@ -7785,7 +7851,10 @@ const fetchNovelOutline = async () => {
     }
 
     if (detailProjectRes.code !== 200) {
-      toast(detailProjectRes.message || t('novel.error.fetchFailed'));
+      if (!handleSessionTimeout(detailProjectRes.code)) {
+        initLoadErrorMsg.value = apiErrorMessage(detailProjectRes) || detailProjectRes.message || '';
+        isInitLoadFailed.value = true;
+      }
       isLoading.value = false;
       isFetchingNovelOutline.value = false;
       return;
@@ -8551,7 +8620,14 @@ const fetchNovelOutline = async () => {
       }
     }
   } catch (error) {
-    toast(t('fail'));
+    console.error('Error loading novel project:', error);
+    // 第一次 detailProject 就挂了（isDetailLoaded 还没置）：盖失败层给重试；后面步骤出错照旧 toast
+    if (!isDetailLoaded.value) {
+      initLoadErrorMsg.value = '';
+      isInitLoadFailed.value = true;
+    } else {
+      toast(t('fail'));
+    }
     isLoading.value = false;
   } finally {
     isFetchingNovelOutline.value = false;
@@ -8659,13 +8735,22 @@ const handlePollingResponse = async (pollingRes: any) => {
       return;
     }
 
+    const failedOutline = isGeneratingOutline.value || currentStepName.value == 'outline';
     isLoading.value = false;
     hasFailed.value = true;
     isGeneratingOutline.value = false;
     isPreparing.value = false; // Reset preparation state
     prepareQueueInfo.value = null; // Clear queue info
     generatingChapter.value = null;
-    outlineContent.value = pollingRes.data?.error_msg || pollingRes.data?.result || t('novel.error.generationFailed');
+    isRetryingChapter.value = false;
+    statusMessage.value = pollingRes.data?.status_message || '';
+    stopLoadingAnimation();
+    // 只有大纲失败才把错误信息写进 outlineContent；章节失败写进去会显示在大纲的兜底文本区
+    if (failedOutline) {
+      outlineContent.value = pollingRes.data?.error_msg || pollingRes.data?.result || t('novel.error.generationFailed');
+    }
+    // 失败会退回冻结的算力，刷新一下余额
+    await fetchUserBalance();
 
     if (currentChapter.value && currentStepName.value == 'chapter') {
       const chapterIndex = currentChapter.value.chapter;
@@ -9153,10 +9238,16 @@ const fetchDetailProjectForOutline = async () => {
       if (coverTaskId.value && !coverImage.value) {
         startCoverPolling(coverTaskId.value);
       }
+    } else {
+      // 非 200：和网络异常一样进失败态，不能一直停在「生成中」
+      if (!handleSessionTimeout(detailProjectRes.code)) toast(apiErrorMessage(detailProjectRes) || t('fail'));
+      isGeneratingOutline.value = false;
+      hasFailed.value = true;
     }
   } catch (error) {
     console.error('Error fetching detail project for outline:', error);
     // Fallback: show error state
+    toast(t('fail'));
     isGeneratingOutline.value = false;
     hasFailed.value = true;
   }
@@ -9305,7 +9396,10 @@ async function refreshChapterContent(chapterIndex: number) {
           content = taskData.content;
         }
 
-        if (content) {
+        // await 回来之前用户可能已经切了章 / 回了大纲，或者任务结果根本不是这一章的：不写，交给正常轮询处理
+        const stillOnChapter = !!currentChapter.value && currentChapter.value.chapter == chapterIndex;
+        const resultIsThisChapter = taskData.step_chapter_index == null || taskData.step_chapter_index == chapterIndex;
+        if (content && stillOnChapter && resultIsThisChapter) {
           currentChapter.value.content = content;
           displayedContent.value = content;
           isLoading.value = false;
@@ -9932,6 +10026,8 @@ const handleAiEditChapterInput = () => {
 const sendAiEditChapterRequest = async () => {
   if (isSendingChapterEdit.value) return;
   isSendingChapterEdit.value = true;
+  // 任务是否已被服务端受理（novelNext 返回 200 之后为 true）
+  let submitted = false;
 
   if (!aiEditChapterInput.value?.trim()) {
     toast(t('novel.error.emptyRegenerateContent'));
@@ -10005,6 +10101,7 @@ const sendAiEditChapterRequest = async () => {
       return;
     }
 
+    submitted = true;
     isAiEditingChapter.value = false;
     aiEditChapterInput.value = '';
 
@@ -10066,6 +10163,8 @@ const sendAiEditChapterRequest = async () => {
   } catch (error) {
     console.error('Error sending AI edit chapter request:', error);
     toast(t('fail'));
+    // 已受理后（detailProject / 余额 / 预估等）出错：任务在服务端已经跑了，不清 loading，改用详情轮询接着跟进度
+    if (submitted) startDetailPolling();
   } finally {
     isSendingChapterEdit.value = false;
   }
@@ -11073,14 +11172,26 @@ const startCoverRenewPolling = (taskId: string) => {
   const poll = async () => {
     try {
       const res = await api.taskPolling(taskId) as any;
-      netErrors = 0;
 
       if (handleSessionTimeout(res.code) || res.code == 401) {
         stopCoverRenewPolling();
         return;
       }
+      // 非 200（如 500）：以前落空一直轮，按网络异常同样计数，连错够次数就按失败收尾
+      if (res.code != 200) {
+        if (++netErrors < POLL_MAX_NET_ERRORS) return;
+        toast(apiErrorMessage(res) || t('fail'));
+        coverRenewLoading.value = false;
+        coverRenewFailed.value = true;
+        showCoverEditBtn.value = false;
+        hasFailed.value = false;
+        taskStatus.value = 'SUCCESS';
+        stopCoverRenewPolling();
+        return;
+      }
+      netErrors = 0;
 
-      if (res.code == 200 && res.data?.status == 'SUCCESS') {
+      if (res.data?.status == 'SUCCESS') {
         const newCoverUrl = res.data.result?.cover_url || res.data.result?.generate_novel_cover || res.data.result?.renew_novel_cover || '';
         if (newCoverUrl) {
           coverImage.value = newCoverUrl;
@@ -11203,6 +11314,9 @@ async function doGenerateNovelCover() {
 
       if (taskId) {
         startCoverRenewPolling(taskId);
+      } else {
+        // 受理了但没给 task_id：改用项目详情轮询跟进度（详情里有 renew_novel_cover 步骤），不能让 coverRenewLoading 一直 true
+        startDetailPolling();
       }
     } else {
       if (res.code == 40011) {

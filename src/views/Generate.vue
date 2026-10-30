@@ -2120,6 +2120,8 @@ const resetVideoSettings = () => {
   uploadedVideoCover.value = '';
   // Reset unlimited mode when switching tabs
   currentVideoMode.value = 'normal';
+  // 版本也回到生效模式的默认值（同生成成功后的重置）
+  selectedNsfwVersion.value = availableVideoVersions.value[0];
   // 分辨率 / 比例 / 时长跟着当前档位走，别写死 720P / 30s —— 极速版没有这两个值
   resetVideoParams();
 };
@@ -5744,6 +5746,8 @@ const doGenerateVideo = async () => {
       selectedVideoMultimodal.value = 'multimodal';
       // 本项目强制 NSFW 由 effectiveVideoMode（contentSwitch.mode == 2）兜住，这里回 normal 即可
       currentVideoMode.value = 'normal';
+      // 版本也跟着回到生效模式的默认值，不然模式已经切回去了、版本还是上一次选的，档位算出来对不上
+      selectedNsfwVersion.value = availableVideoVersions.value[0];
       // 分辨率 / 比例 / 时长跟着当前档位走，别写死 720P / 30s —— 极速版没有这两个值
       resetVideoParams();
       enableVideoOptimizePrompt.value = false;
