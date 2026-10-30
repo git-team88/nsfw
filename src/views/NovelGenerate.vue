@@ -5039,6 +5039,8 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   // }
 
   if (!skipBalanceCheck) isNextLoading.value = true;
+  // 任务是否已被服务端受理（novelNext 返回 200 之后为 true）
+  let submitted = false;
   try {
 
   if (await isTaskLimitExceeded()) { isRetryingChapter.value = false; return; }
@@ -5126,6 +5128,7 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   }
 
   // API successful, now set UI state
+  submitted = true;
   const nextChapterData = outlineData.value?.outline?.find((c: any) => c.chapter == nextChapterIndex);
   currentChapter.value = {
     chapter: nextChapterIndex,
@@ -5203,6 +5206,15 @@ const callNovelNext = async (retryChapter?: number, skipBalanceCheck: boolean = 
   if (!hasFailed.value) {
     await fetchPointsEstimate();
   }
+  } catch (error) {
+    // 网络异常等未处理错误：给出提示；任务未受理时恢复标志，已受理则改用详情轮询跟进度
+    console.error('callNovelNext failed:', error);
+    toast(t('fail'));
+    if (submitted) {
+      startDetailPolling();
+    } else {
+      isRetryingChapter.value = false;
+    }
   } finally {
     isNextLoading.value = false;
   }
@@ -6079,6 +6091,8 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
   hideEdit();
 
   if (!skipBalanceCheck) isAllChaptersLoading.value = true;
+  // 任务是否已被服务端受理（novelAllChapters 返回 200 之后为 true）
+  let submitted = false;
   try {
 
   // Check if user has reached the task limit
@@ -6171,6 +6185,7 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
   }
 
   // API successful, now set UI state
+  submitted = true;
   // Set flag for batch chapter generation
   isBatchChapter.value = 1;
   // Set shouldShowTypewriter to false for direct content display
@@ -6248,6 +6263,13 @@ const callNovelAllChapters = async (skipBalanceCheck: boolean = false) => {
   if (!hasFailed.value) {
     await fetchPointsEstimate();
   }
+  } catch (error) {
+    // 网络异常等未处理错误：给出提示；任务已受理则改用详情轮询跟进度
+    console.error('callNovelAllChapters failed:', error);
+    toast(t('fail'));
+    if (submitted) {
+      startDetailPolling();
+    }
   } finally {
     isAllChaptersLoading.value = false;
   }
