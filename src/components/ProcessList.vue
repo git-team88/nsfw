@@ -143,18 +143,11 @@ const categories = computed(() => {
 
   const cats = [
     {
-      type: 'novel',
-      label: t('process.novel'),
-      itemLabel: t('process.novel') + '-' + t('process.outline'),
-      items: processData.value.novel_list || [],
-      currentIndex: categoryIndices.value.novel
-    },
-    {
-      type: 'manhua',
-      label: t('process.comic'),
-      itemLabel: t('process.comic') + '-' + t('process.script'),
-      items: processData.value.manhua_list || [],
-      currentIndex: categoryIndices.value.manhua
+      type: 'video',
+      label: t('home.contentType.video'),
+      itemLabel: t('home.video'),
+      items: processData.value.simple_video_list || [],
+      currentIndex: categoryIndices.value.video
     },
     {
       type: 'image',
@@ -164,11 +157,18 @@ const categories = computed(() => {
       currentIndex: categoryIndices.value.image
     },
     {
-      type: 'video',
-      label: t('home.contentType.video'),
-      itemLabel: t('home.video'),
-      items: processData.value.simple_video_list || [],
-      currentIndex: categoryIndices.value.video
+      type: 'manhua',
+      label: t('process.comic'),
+      itemLabel: t('process.comic') + '-' + t('process.script'),
+      items: processData.value.manhua_list || [],
+      currentIndex: categoryIndices.value.manhua
+    },
+    {
+      type: 'novel',
+      label: t('process.novel'),
+      itemLabel: t('process.novel') + '-' + t('process.outline'),
+      items: processData.value.novel_list || [],
+      currentIndex: categoryIndices.value.novel
     }
   ];
 

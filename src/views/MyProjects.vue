@@ -307,11 +307,12 @@ const projectCardRefs = ref<HTMLElement[]>([]);
 const loadingSentinel = ref<HTMLElement | null>(null);
 
 // Tabs Data
+// 顺序：漫剧 → 视频 → 图片 → 漫画 → 小说（漫剧在模板里过滤掉了，先隐藏）
 const mainTabs = ref([
+  { value: 'manju', id: 3 },
   { value: 'video', id: 5 },
   { value: 'photo', id: 4 },
   { value: 'manhua', id: 2 },
-  { value: 'manju', id: 3 },
   { value: 'novel', id: 1 }
 ]);
 
