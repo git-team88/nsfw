@@ -148,17 +148,23 @@ function utmParams(): Record<string, string> {
 // 发送（队列 + 批量）
 // ============================================================
 
-type TrackEvent = { event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
+type TrackEvent = { event_id: string; event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
 
-// 事件不是来一条发一条：先存进 localStorage 队列，满 1 分钟或攒够 50 条才请求一次上报接口。
+// 发送方式和 GA 一样是「近实时 + 小批量合并」：事件先进本地队列（localStorage），
+// 5 秒内连着触发的几条合成一个请求发出去，攒够 20 条立即发；页面隐藏 / 关闭用 sendBeacon 把剩下的送出。
+// 高频低价值的事件（视频播放进度）标 lowPriority：只进队列不起定时器，等别的事件发送时捎上、攒够 20 条或关页时才发。
 // 存本地是为了刷新 / 关页不丢：下次打开时把上次没发完的一起带上。
+// 发失败按 2s → 4s → 8s … 最多 60s 退避重试（GA 是丢了就丢，这里不丢），每条事件带 event_id 给后端去重。
 const KEY_QUEUE = "trk_queue";
-const FLUSH_DELAY = 60 * 1000;
-const FLUSH_MAX = 50;
+const FLUSH_DELAY = 5000;           // 合并窗口：事件触发后等这么久再发，期间触发的一起带上
+const FLUSH_MAX = 20;               // 攒够这么多条不等窗口直接发
+const RETRY_BASE = 2000;            // 失败后首次重试间隔
+const RETRY_MAX = 60 * 1000;        // 重试间隔上限
 const QUEUE_CAP = 500; // 本地最多攒这么多，再多丢最旧的，避免 localStorage 撑爆
 let queue: TrackEvent[] = loadQueue();
 let flushTimer: number | null = null;
 let flushing = false;
+let failCount = 0; // 连续失败次数，算退避间隔用；成功一次清零
 
 function loadQueue(): TrackEvent[] {
   try {
@@ -172,10 +178,14 @@ function saveQueue() {
   if (queue.length === 0) safeDel(localStorage, KEY_QUEUE);
   else safeSet(localStorage, KEY_QUEUE, JSON.stringify(queue));
 }
-function armTimer() {
+function armTimer(delay = FLUSH_DELAY) {
   if (flushTimer == null && typeof window !== "undefined") {
-    flushTimer = window.setTimeout(() => void flush(), FLUSH_DELAY);
+    flushTimer = window.setTimeout(() => void flush(), delay);
   }
+}
+/** 失败后的重试间隔：2s、4s、8s … 封顶 60s */
+function retryDelay(): number {
+  return Math.min(RETRY_MAX, RETRY_BASE * Math.pow(2, Math.max(0, failCount - 1)));
 }
 
 function buildHeader(deviceId: string) {
@@ -189,9 +199,10 @@ function buildHeader(deviceId: string) {
   };
 }
 
-function enqueue(eventName: string, params: Record<string, unknown>) {
+function enqueue(eventName: string, params: Record<string, unknown>, lowPriority = false) {
   if (!TRACK_ENABLED) return;
   queue.push({
+    event_id: uuid(), // 补发可能重复，后端按它去重
     event_name: eventName,
     event_time: Date.now(),
     session_id: safeGet(sessionStorage, KEY_SESSION), // 事件归哪个会话；队列会跨会话攒着，所以放事件上不放 header
@@ -199,8 +210,11 @@ function enqueue(eventName: string, params: Record<string, unknown>) {
   });
   saveQueue();
   if (isDebug) console.log("[Track Debug]", eventName, params, `(队列 ${queue.length})`);
-  if (queue.length >= FLUSH_MAX) void flush();
-  else armTimer();
+  // 正在退避重试时不插队，等重试定时器；否则攒够了立即发，没攒够等合并窗口；
+  // 低优先级事件不起定时器，只在攒满时发，其余时候等别的事件 / 关页捎带
+  if (failCount > 0) armTimer(retryDelay());
+  else if (queue.length >= FLUSH_MAX) void flush();
+  else if (!lowPriority) armTimer();
 }
 
 /** 把队列里的事件发出去。beacon=true 用 sendBeacon（页面关闭 / 隐藏时用，fetch 可能发不出去） */
@@ -230,28 +244,34 @@ async function flush(beacon = false) {
       // 发成功才从本地队列里去掉，失败留着下一轮再发
       queue = queue.slice(events.length);
       saveQueue();
+      failCount = 0;
       if (isDebug) console.log("[Track Debug] 已上报", events.length, "条");
-    } else if (isDebug) {
-      console.warn("[Track Debug] 上报失败 HTTP", res.status);
+    } else {
+      failCount++;
+      if (isDebug) console.warn("[Track Debug] 上报失败 HTTP", res.status, "，", retryDelay() / 1000, "秒后重试");
     }
   } catch (err) {
-    if (isDebug) console.warn("[Track Debug] 上报失败", err);
+    failCount++;
+    if (isDebug) console.warn("[Track Debug] 上报失败", err, "，", retryDelay() / 1000, "秒后重试");
   } finally {
     flushing = false;
-    // 还有剩（一批没发完 / 发失败）：接着排下一次
-    if (queue.length >= FLUSH_MAX) void flush();
-    else if (queue.length > 0) armTimer();
+    // 还有剩：发成功了接着发下一批；失败了按退避间隔再试，别把挂掉的接口打爆
+    if (queue.length > 0) {
+      if (failCount > 0) armTimer(retryDelay());
+      else if (queue.length >= FLUSH_MAX) void flush();
+      else armTimer();
+    }
   }
 }
 
 /** 通用上报：事件名 + 业务参数（按《埋点字段定义.md》） */
-export function track(eventName: string, params: Record<string, unknown> = {}) {
+export function track(eventName: string, params: Record<string, unknown> = {}, opts: { lowPriority?: boolean } = {}) {
   // 过滤掉 undefined / null / 空串，少传没意义的字段
   const clean: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && v !== "") clean[k] = v;
   }
-  enqueue(eventName, clean);
+  enqueue(eventName, clean, !!opts.lowPriority);
 }
 
 // ============================================================

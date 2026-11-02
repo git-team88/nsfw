@@ -2495,6 +2495,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     subscribeToView: "メンバーシップ者のみ全文を表示可能",
     updatedToEpisode: "第 {count} 話まで更新",
     readToEpisode: "第 {count} 話まで読了",
+    readToChapter: "第 {count} 章まで読了",
     continueReading: "続きを読む",
     updatedChapters: "{count} 章更新済み",
     viewCollectionInfo: "コレクション情報を表示",
@@ -2572,6 +2573,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       comic: "マンガ",
       video: "アニメドラマ",
       myFavorites: "お気に入り",
+      watchHistory: "視聴履歴",
       myWorks: "マイ作品",
       image: "画像",
       photo: "動画"

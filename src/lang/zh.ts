@@ -2780,6 +2780,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     subscribeToView: "订阅用户可查看完整内容",
     updatedToEpisode: "更新至第 {count} 集",
     readToEpisode: "看至第 {count} 集",
+    readToChapter: "看至第 {count} 章",
     continueReading: "继续查看",
     updatedChapters: "已更新 {count} 章",
     viewCollectionInfo: "查看合集信息",
@@ -2858,6 +2859,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       comic: "漫画",
       video: "漫剧",
       myFavorites: "我的收藏",
+      watchHistory: "观看历史",
       myWorks: "我的作品",
       image: "图片",
       photo: "视频"

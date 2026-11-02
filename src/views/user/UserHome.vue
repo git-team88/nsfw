@@ -115,6 +115,12 @@
               :class="{ active: topTab === 'favorites' && viewMode === 'posts' }"
               @click="showFavorites()"
             >{{ t('userHome.contentType.myFavorites') }}</div>
+            <div
+              v-if="isSelf"
+              class="main-tab"
+              :class="{ active: topTab === 'history' && viewMode === 'posts' }"
+              @click="showFavorites('history')"
+            >{{ t('userHome.contentType.watchHistory') }}</div>
           </div>
           <div class="stats-nums">
             <div
@@ -150,10 +156,10 @@
             {{ type.label }}<template v-if="!type.hideCount"> ({{ type.count }})</template>
           </div>
         </div>
-        <!-- 我的收藏：按类型筛选（接口 type: 1 漫画 / 2 小说 / 3 漫剧） -->
-        <div class="sub-tabs" v-if="topTab === 'favorites' && viewMode === 'posts'">
+        <!-- 我的收藏 / 观看历史：按类型筛选（接口 type: 1 漫画 / 2 小说 / 3 漫剧 / 4 图片 / 5 视频） -->
+        <div class="sub-tabs" v-if="(topTab === 'favorites' || topTab === 'history') && viewMode === 'posts'">
           <div
-            v-for="type in favoriteContentTypes"
+            v-for="type in (topTab === 'history' ? historyContentTypes : favoriteContentTypes)"
             :key="type.id"
             class="sub-tab-item"
             :class="{ active: favoriteContentType === type.id }"
@@ -168,7 +174,7 @@
         <!-- Posts View -->
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
-          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites' && activeContentType !== 0 && activeContentType !== 4 && activeContentType !== 5">
+          <div class="filter-bar" v-if="isSelf && !isListKind(activeContentType) && activeContentType !== 0 && activeContentType !== 4 && activeContentType !== 5">
             <div class="collection-header">
               <button
                 class="create-collection-btn"
@@ -227,11 +233,19 @@
                     </div>
 
                   <div class="card-bottom">
-                    <div class="update-badge" v-if="collection.chapter_count > 0">
+                    <!-- 观看历史里的合集：看至第几章 · 共几章（已完结就显示「已完结」，不显示总数） -->
+                    <div class="update-badge" v-if="activeContentType === 'history' && !isPostItem(collection) && (Number(collection.read_chapter_index) > 0 || collection.status == 2 || Number(collection.total_post_nums) > 0)">
+                      <!-- 看到第几章是 0（接口给的 "0"）就不显示这一段 -->
+                      <template v-if="Number(collection.read_chapter_index) > 0">{{ itemType(collection) === 2 ? t('detail.readToChapter', { count: collection.read_chapter_index }) : t('detail.readToEpisode', { count: collection.read_chapter_index }) }}</template>
+                      <template v-if="Number(collection.read_chapter_index) > 0 && (collection.status == 2 || Number(collection.total_post_nums) > 0)"> · </template>
+                      <template v-if="collection.status == 2">{{ t('home.statusFinished') }}</template>
+                      <template v-else-if="Number(collection.total_post_nums) > 0">{{ itemType(collection) === 2 ? t('home.totalChapterFormat', { chapter: collection.total_post_nums }) : t('home.totalEpisodeFormat', { episode: collection.total_post_nums }) }}</template>
+                    </div>
+                    <div class="update-badge" v-else-if="collection.chapter_count > 0">
                       {{ itemType(collection) === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
                     <div class="card-actions-row">
-                      <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
+                      <div class="card-actions" v-if="isSelf && !isListKind(activeContentType)">
                         <div
                           class="card-action-btn"
                           @click.stop="collection.is_top === '1' ? unpinCollection(collection) : pinCollection(collection)"
@@ -264,7 +278,7 @@
                           </div>
                         </template>
                       </div>
-                      <div class="make-btns-wrap" v-if="activeContentType !== 'favorites' && ((collection.type != '4' && collection.session_id) || collection.type == '5')">
+                      <div class="make-btns-wrap" v-if="((collection.type != '4' && collection.session_id) || collection.type == '5')">
                         <div class="make-similar-btn" v-if="collection.type != '4' && collection.type != '5' && collection.session_id" @click.stop="handleMakeSimilar(collection)">
                           <img :src="makeIcon" alt="" class="make-icon" />
                           <div class="make-similar-tooltip">{{ t('home.makeSimilar') }}</div>
@@ -291,7 +305,7 @@
             <EmptyState v-else-if="collectionsInitialized && collections.length == 0 && userInfo.is_blacked != 1" />
 
             <!-- Load more indicator -->
-            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && (activeContentType === 'favorites' ? hasMoreLikedBooks : hasMoreCollections)">
+            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && (isListKind(activeContentType) ? hasMoreLikedBooks : hasMoreCollections)">
               <div v-if="collectionsLoading" class="loading-spinner small"></div>
               <span v-else>{{ t("userHome.loadMore") }}</span>
             </div>
@@ -702,12 +716,20 @@ const isSelf = computed(() => {
 });
 
 const currentTab = ref("all");
-/** 地址栏里 fav=1 表示当前在「我的收藏」，type 仍然是 1~5 的内容类型 */
+/** 「我的收藏」和「观看历史」共用一套子 tab / 列表逻辑，用 ListKind 区分 */
+type ListKind = 'favorites' | 'history';
+const isListKind = (v: unknown): v is ListKind => v === 'favorites' || v === 'history';
+/** 地址栏里 fav=1 表示「我的收藏」、his=1 表示「观看历史」，type 仍然是 1~5 的内容类型 */
+function listKindFromQuery(): ListKind | null {
+  if (String(route.query.fav ?? '') === '1') return 'favorites';
+  if (String(route.query.his ?? '') === '1') return 'history';
+  return null;
+}
 function isFavoritesQuery(): boolean {
-  return String(route.query.fav ?? '') === '1';
+  return listKindFromQuery() !== null;
 }
 
-const topTab = ref<"works" | "favorites">(isFavoritesQuery() ? 'favorites' : 'works');
+const topTab = ref<"works" | ListKind>(listKindFromQuery() ?? 'works');
 const dateRange = ref({ start: '', end: '' });
 const searchKeyword = ref("");
 
@@ -757,10 +779,45 @@ function resolveFavoriteTypeFromQuery(): number {
   return FAVORITE_TYPES.includes(n) ? n : FAVORITE_TYPE_DEFAULT;
 }
 
-const favoriteContentType = ref<number>(resolveFavoriteTypeFromQuery());
+const favoriteContentType = ref<number>(resolveFavoriteTypeFromQuery()); // 收藏 / 历史当前选中的类型子 tab（两个 tab 共用）
 
 // 收藏列表接口返回的 total，按类型记下来；博主信息里没给分组数量时兜底用
 const favoriteListTotals = ref<Record<number, number>>({});
+// 观看历史列表接口返回的 total，按类型记；博主信息里没有历史分组数量，只有拉过的类型才显示数字
+const historyListTotals = ref<Record<number, number>>({});
+
+/** 收藏 / 历史子 tab 的文案（type → 名称） */
+function subTypeLabels(): Record<number, string> {
+  return {
+    0: t('userHome.collection.all'),
+    3: t('userHome.contentType.video'),
+    5: t('userHome.contentType.photo'),
+    4: t('userHome.contentType.image'),
+    1: t('userHome.contentType.comic'),
+    2: t('userHome.contentType.novel'),
+  };
+}
+// 观看历史的列表接口（getHistoryBookList / getHistoryPostList）和数量分组后端还没出，
+// 先用收藏的接口和收藏的数量顶着；接口出了把这个改成 false 即可，页面逻辑不用再动
+const HISTORY_USE_FAVORITES_API = true;
+
+/**
+ * 观看历史的类型子 tab。数量优先取博主信息里的 history_book_group / history_post_group（结构同 fav_*_group），
+ * 没有就用列表接口返回的 total；临时用收藏接口期间直接显示收藏的数量
+ */
+const historyContentTypes = computed(() => {
+  if (HISTORY_USE_FAVORITES_API) return favoriteContentTypes.value;
+  const getCountByType = (type: number) => {
+    const group = type === 4 || type === 5
+      ? ((userInfo.value as any).history_post_group || [])
+      : ((userInfo.value as any).history_book_group || []);
+    const item = group.find((item: BooksGroupItem) => item.type === String(type));
+    const fromGroup = item ? parseInt(item.num) || 0 : 0;
+    return fromGroup || historyListTotals.value[type] || 0;
+  };
+  const labels = subTypeLabels();
+  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: getCountByType(id) }));
+});
 
 const favoriteContentTypes = computed(() => {
   // 数量来自「获取自己的博主信息」：合集（1/2/3）在 fav_book_group，
@@ -773,14 +830,7 @@ const favoriteContentTypes = computed(() => {
     const fromGroup = item ? parseInt(item.num) || 0 : 0;
     return fromGroup || favoriteListTotals.value[type] || 0;
   };
-  const labels: Record<number, string> = {
-    0: t('userHome.collection.all'),
-    3: t('userHome.contentType.video'),
-    5: t('userHome.contentType.photo'),
-    4: t('userHome.contentType.image'),
-    1: t('userHome.contentType.comic'),
-    2: t('userHome.contentType.novel'),
-  };
+  const labels = subTypeLabels();
   // 「全部」的数量 = 其它类型之和
   const allCount = FAVORITE_TYPES.filter((id) => id !== 0).reduce((sum, id) => sum + getCountByType(id), 0);
   return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: id === 0 ? allCount : getCountByType(id) }));
@@ -801,34 +851,37 @@ function isPostItem(item: any): boolean {
 
 /** 当前列表实际的内容类型：作品 tab 就是 activeContentType，收藏 tab 是 favoriteContentType */
 const listContentType = computed<number | string>(() =>
-  activeContentType.value === 'favorites' ? favoriteContentType.value : activeContentType.value,
+  isListKind(activeContentType.value) ? favoriteContentType.value : activeContentType.value,
 );
 
-/** 把当前收藏 tab 写进地址栏：type=<内容类型> & fav=1（replace，不压历史），返回时能回到这个 tab */
+/** 把当前收藏 / 历史 tab 写进地址栏：type=<内容类型> & fav=1（收藏）/ his=1（历史）（replace，不压历史），返回时能回到这个 tab */
 function syncFavoriteQuery() {
   const newQuery: Record<string, any> = { ...route.query };
   delete newQuery.tab;
+  delete newQuery.fav;
+  delete newQuery.his;
   newQuery.type = String(favoriteContentType.value);
-  newQuery.fav = '1';
+  if (activeContentType.value === 'history') newQuery.his = '1';
+  else newQuery.fav = '1';
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
     router.replace({ path: `/user-home/${route.params.id}`, query: newQuery });
   }
 }
 
-/** 切换收藏的类型子 tab。fromRoute 表示由地址栏变化（前进/后退）驱动，不再回写地址栏 */
+/** 切换收藏 / 历史的类型子 tab。fromRoute 表示由地址栏变化（前进/后退）驱动，不再回写地址栏 */
 function setFavoriteContentType(typeId: number, fromRoute = false) {
-  if (favoriteContentType.value === typeId && activeContentType.value === 'favorites') return;
+  if (favoriteContentType.value === typeId && isListKind(activeContentType.value)) return;
   favoriteContentType.value = typeId;
   activeCollectionTab.value = 0;
   fetchLikedBooks(true);
   if (!fromRoute) syncFavoriteQuery();
 }
 
-/** 点顶部「我的收藏」 */
-function showFavorites() {
+/** 点顶部「我的收藏」/「观看历史」 */
+function showFavorites(kind: ListKind = 'favorites') {
   viewMode.value = "posts";
-  topTab.value = "favorites";
-  activeContentType.value = 'favorites';
+  topTab.value = kind;
+  activeContentType.value = kind;
   favoriteContentType.value = FAVORITE_TYPE_DEFAULT;
   activeCollectionTab.value = 0;
   fetchLikedBooks(true);
@@ -847,7 +900,8 @@ const DEFAULT_CONTENT_TYPE = 5;
  * 默认那个 tab，列表也白取一次数。
  */
 function resolveContentTypeFromQuery(): number | string {
-  if (isFavoritesQuery()) return 'favorites';
+  const kind = listKindFromQuery();
+  if (kind) return kind;
   const n = parseInt(route.query.type as string);
   if (!isNaN(n) && [1, 2, 3, 4, 5].includes(n)) return n;
   return DEFAULT_CONTENT_TYPE;
@@ -1053,21 +1107,28 @@ async function fetchLikedBooks(reset = false) {
     collectionsLoading.value = true;
 
     const requestType = favoriteContentType.value;
-    // 图片 / 视频是单篇作品，走作品收藏接口；漫画 / 小说 / 漫剧是合集，走合集收藏接口
+    // 收藏 / 观看历史各一套接口，结构一样（历史接口没出之前先用收藏的）
+    const isHistory = activeContentType.value === 'history' && !HISTORY_USE_FAVORITES_API;
+    // 图片 / 视频是单篇作品，走作品接口；漫画 / 小说 / 漫剧是合集，走合集接口
     const isPostType = requestType === 4 || requestType === 5;
-    const response = (isPostType
-      ? await api.getLikedPostList(likedBooksPage.value, 20, requestType)
-      : await api.getLikedBookList(likedBooksPage.value, 20, requestType)) as any;
+    const response = (isHistory
+      ? (isPostType
+        ? await api.getHistoryPostList(likedBooksPage.value, 20, requestType)
+        : await api.getHistoryBookList(likedBooksPage.value, 20, requestType))
+      : (isPostType
+        ? await api.getLikedPostList(likedBooksPage.value, 20, requestType)
+        : await api.getLikedBookList(likedBooksPage.value, 20, requestType))) as any;
     if (requestId !== likedBooksRequestId) return;
 
     if (response.code == 0) {
       // 没有数据时接口返回的是 data: false，不是空数组
       const rawList = Array.isArray(response.data?.data) ? response.data.data : [];
       const total = parseInt(response.data?.total);
+      const totals = isHistory ? historyListTotals : favoriteListTotals;
       if (!isNaN(total)) {
-        favoriteListTotals.value[requestType] = total;
+        totals.value[requestType] = total;
       } else if (likedBooksPage.value === 1 && rawList.length === 0) {
-        favoriteListTotals.value[requestType] = 0;
+        totals.value[requestType] = 0;
       }
       const bookData = rawList.map((item: any) => item.book_info ? ({
         id: item.book_id || item.book_info?.id,
@@ -1079,6 +1140,10 @@ async function fetchLikedBooks(reset = false) {
         is_top: '0',
         chapter_count: 0,
         latest_post_chapter_index: item.book_info?.latest_post_chapter_index,
+        // 观看历史用：看到第几章 = book_info.latest_post_chapter_index；合集总章数 total_post_nums；连载状态 status（2 = 已完结）
+        read_chapter_index: item.book_info?.latest_post_chapter_index ?? item.chapter_index,
+        total_post_nums: item.book_info?.total_post_nums,
+        status: item.book_info?.status,
         session_id: item.book_info?.session_id,
         user_id: item.book_info?.user_id,
         isFavorite: true,
@@ -1093,6 +1158,9 @@ async function fetchLikedBooks(reset = false) {
         is_top: '0',
         chapter_count: 0,
         user_id: item.post_info?.user_id,
+        // 做同款视频（≤30 秒才显示）/ 做续集要用
+        duration: item.post_info?.duration,
+        session_id: item.post_info?.session_id,
         isFavorite: true,
       }) : ({
         // 兜底：接口以后直接平铺作品字段时也能用
@@ -1133,7 +1201,7 @@ const collectionCardRefs = ref<HTMLElement[]>([]);
 const collectionsGridRef = ref<HTMLElement | null>(null);
 // 「图片」tab 和「我的收藏」用 JS 瀑布流：图片卡片高度按图片自适应，其他类型保持原高度。
 // 列宽按原 grid 的 minmax(258px, 1fr) 折算列数
-const isMasonryList = computed(() => activeContentType.value == 4 || activeContentType.value === 'favorites');
+const isMasonryList = computed(() => activeContentType.value == 4 || isListKind(activeContentType.value));
 useMasonry(collectionsGridRef, {
   itemSelector: '.collection-card',
   enabled: isMasonryList,
@@ -1392,7 +1460,7 @@ onMounted(() => {
     (entries) => {
       const entry = entries[0];
       if (entry.isIntersecting && !collectionsLoading.value && collectionsInitialized.value) {
-        if (activeContentType.value === 'favorites') {
+        if (isListKind(activeContentType.value)) {
           if (hasMoreLikedBooks.value) fetchLikedBooks();
         } else {
           if (hasMoreCollections.value) fetchCollections();
@@ -1442,13 +1510,13 @@ let lastId = ref<any>(route.params.id);
 let lastTab = ref(route.query.tab);
 let lastType = ref(route.query.type);
 
-watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav], async ([newId, newTab, newType, newFav], [oldId, oldTab, oldType, oldFav]) => {
+watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav, route.query.his], async ([newId, newTab, newType, newFav, newHistory], [oldId, oldTab, oldType, oldFav, oldHistory]) => {
   // 离开本页（跳到别的带 :id 的路由）时 watcher 也可能跑一次，不要拿别的路由的 id 当用户 id 去请求
   if (route.name !== 'UserHome') return;
 
   const idChanged = newId !== oldId;
   const tabChanged = newTab !== oldTab;
-  const typeChanged = newType !== oldType || newFav !== oldFav;
+  const typeChanged = newType !== oldType || newFav !== oldFav || newHistory !== oldHistory;
 
   if (idChanged) {
     // Reset states
@@ -1483,9 +1551,10 @@ watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav
     setSeoMeta();
     trackHomeView(String(newId));
 
-    if (String(newFav ?? '') === '1') {
-      topTab.value = 'favorites';
-      activeContentType.value = 'favorites';
+    const newKind = listKindFromQuery();
+    if (newKind) {
+      topTab.value = newKind;
+      activeContentType.value = newKind;
       favoriteContentType.value = resolveFavoriteTypeFromQuery();
     } else {
       // 新地址没带 type（比如从粉丝列表点进别人主页）：回默认 tab，
@@ -1518,8 +1587,9 @@ watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav
     // 只在地址栏和当前状态真的不一致时才动 —— 自己切 tab 时写地址栏
     // 也会触发这个 watcher，不拦住的话列表会取两次数
     let target: number | string | null = null;
-    if (String(newFav ?? '') === '1') {
-      target = 'favorites';
+    const newKind = listKindFromQuery();
+    if (newKind) {
+      target = newKind;
     } else if (newType) {
       const typeNum = parseInt(newType as string);
       if (!isNaN(typeNum) && [1, 2, 3, 4, 5].includes(typeNum)) {
@@ -1532,8 +1602,8 @@ watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav
 
     if (target !== null && target !== activeContentType.value) {
       setActiveContentType(target, true);
-    } else if (target === 'favorites') {
-      // 还在收藏里，只是子 tab（type）变了
+    } else if (isListKind(target)) {
+      // 还在收藏 / 历史里，只是子 tab（type）变了
       const favType = resolveFavoriteTypeFromQuery();
       if (favType !== favoriteContentType.value) setFavoriteContentType(favType, true);
     }
@@ -1562,7 +1632,7 @@ watch(() => [route.params.id, route.query.tab, route.query.type, route.query.fav
 // Watch for language changes
 watch(() => locale.value, () => {
   // 切语言要从第一页重新拉并替换列表（reset）；不传 reset 会当成加载下一页，把同一页追加到后面，列表出现重复
-  if (activeContentType.value === 'favorites') {
+  if (isListKind(activeContentType.value)) {
     fetchLikedBooks(true);
   } else {
     fetchCollections(true);
@@ -1605,12 +1675,12 @@ function getEndDate() {
  */
 function setActiveContentType(typeId: number | string, fromRoute = false) {
   viewMode.value = "posts";
-  topTab.value = typeId === 'favorites' ? "favorites" : "works";
+  topTab.value = isListKind(typeId) ? typeId : "works";
   activeContentType.value = typeId;
   activeCollectionTab.value = 0;
 
-  if (typeId === 'favorites') {
-    // 前进/后退回到收藏时，子 tab 也从地址栏的 type 恢复
+  if (isListKind(typeId)) {
+    // 前进/后退回到收藏 / 历史时，子 tab 也从地址栏的 type 恢复
     favoriteContentType.value = fromRoute ? resolveFavoriteTypeFromQuery() : FAVORITE_TYPE_DEFAULT;
     fetchLikedBooks(true);
   } else {
@@ -1619,7 +1689,7 @@ function setActiveContentType(typeId: number | string, fromRoute = false) {
 
   if (fromRoute) return;
 
-  if (typeId === 'favorites') {
+  if (isListKind(typeId)) {
     syncFavoriteQuery();
     return;
   }
@@ -1630,6 +1700,7 @@ function setActiveContentType(typeId: number | string, fromRoute = false) {
   const newQuery: Record<string, any> = { ...route.query };
   delete newQuery.tab;
   delete newQuery.fav;
+  delete newQuery.his;
   newQuery.type = String(typeId);
 
   if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
@@ -1718,7 +1789,7 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   viewMode.value = "posts";
   currentTab.value = "all";
 
-  if (activeContentType.value === 'favorites') {
+  if (isListKind(activeContentType.value)) {
     fetchLikedBooks(true);
   } else {
     fetchCollections(true);
@@ -1727,8 +1798,9 @@ function goToCollections(fromRouteOrEvent: boolean | MouseEvent = false) {
   if (!fromRoute) {
     const newQuery: Record<string, any> = { ...route.query };
     delete newQuery.tab;
-    // 点「我的作品」回来时把 type 也写进地址栏、去掉 fav，不然返回还会落到收藏
+    // 点「我的作品」回来时把 type 也写进地址栏、去掉 fav / his，不然返回还会落到收藏 / 历史
     delete newQuery.fav;
+    delete newQuery.his;
     newQuery.type = String(activeContentType.value);
 
     if (JSON.stringify(newQuery) !== JSON.stringify(route.query)) {
@@ -2418,7 +2490,7 @@ async function deletePost(collection: any) {
       toast(t('success'));
       // tab 上的数量来自博主信息（books_group / total_posts_N），删完重新请求一次，只更新被删类型的数量
       refreshPostCount(collection.type ?? activeContentType.value);
-      if (activeContentType.value === 'favorites') {
+      if (isListKind(activeContentType.value)) {
         fetchLikedBooks(true);
       } else {
         fetchCollections(true);
@@ -4078,6 +4150,26 @@ async function unpinCollection(collection: any) {
 @media (max-width: 768px) {
   .home-bg {
     height: 120px;
+  }
+
+  // 小屏：顶部「我的作品 / 我的收藏 / 观看历史」和右边的关注 / 粉丝数各占一行，tab 不折行、字号缩一点
+  .tabs-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .main-tabs {
+      width: max-content;
+      max-width: 100%;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+
+      .main-tab {
+        white-space: nowrap;
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+    }
   }
 
   .user-info-card {

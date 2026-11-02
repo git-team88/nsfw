@@ -2773,6 +2773,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     subscribeToView: "訂閱用戶可查看完整內容",
     updatedToEpisode: "更新至第 {count} 集",
     readToEpisode: "看至第 {count} 集",
+    readToChapter: "看至第 {count} 章",
     continueReading: "繼續查看",
     updatedChapters: "已更新 {count} 章",
     viewCollectionInfo: "查看合集信息",
@@ -2851,6 +2852,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
       comic: "漫畫",
       video: "漫劇",
       myFavorites: "我的收藏",
+      watchHistory: "觀看歷史",
       myWorks: "我的作品",
       image: "圖片",
       photo: "視頻"

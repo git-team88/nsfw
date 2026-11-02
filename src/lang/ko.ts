@@ -2254,6 +2254,7 @@ export default {
     subscribeToView: "구독자는 전체 콘텐츠를 볼 수 있습니다",
     updatedToEpisode: "{count}화까지 업데이트됨",
     readToEpisode: "{count}화까지 시청함",
+    readToChapter: "{count}장까지 읽음",
     continueReading: "이어서 보기",
     updatedChapters: "{count}화 업데이트됨",
     viewCollectionInfo: "컬렉션 정보 보기",
@@ -2332,6 +2333,7 @@ export default {
       comic: "만화",
       video: "애니 드라마",
       myFavorites: "내 즐겨찾기",
+      watchHistory: "시청 기록",
       myWorks: "내 작품",
       image: "이미지",
       photo: "동영상"

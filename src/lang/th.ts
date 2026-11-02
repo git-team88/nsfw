@@ -2254,6 +2254,7 @@ export default {
     subscribeToView: "สมาชิกสามารถดูเนื้อหาทั้งหมดได้",
     updatedToEpisode: "อัปเดตถึงตอนที่ {count}",
     readToEpisode: "ดูถึงตอนที่ {count}",
+    readToChapter: "อ่านถึงบทที่ {count}",
     continueReading: "ดูต่อ",
     updatedChapters: "อัปเดตแล้ว {count} ตอน",
     viewCollectionInfo: "ดูข้อมูลคอลเลกชัน",
@@ -2332,6 +2333,7 @@ export default {
       comic: "มังงะ",
       video: "อนิเมะดราม่า",
       myFavorites: "ที่บันทึกไว้ของฉัน",
+      watchHistory: "ประวัติการดู",
       myWorks: "ผลงานของฉัน",
       image: "รูปภาพ",
       photo: "วิดีโอ"

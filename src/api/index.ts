@@ -542,6 +542,18 @@ export default {
       url: "book/getLikedPostList?page=" + page + "&limit=" + limit + "&type=" + type,
       method: "GET",
     }),
+  // 观看历史 —— 合集列表（漫画 1 / 小说 2 / 漫剧 3），参数和返回同 getLikedBookList
+  getHistoryBookList: (page: number, limit: number, type: number = 0) =>
+    axios.request({
+      url: "book/getHistoryBookList?page=" + page + "&limit=" + limit + "&type=" + type,
+      method: "GET",
+    }),
+  // 观看历史 —— 单篇作品列表（图片 4 / 视频 5），参数和返回同 getLikedPostList
+  getHistoryPostList: (page: number, limit: number, type: number = 0) =>
+    axios.request({
+      url: "book/getHistoryPostList?page=" + page + "&limit=" + limit + "&type=" + type,
+      method: "GET",
+    }),
   likeBook: (data: any) =>
     axios.request({
       url: "book/likeBook",

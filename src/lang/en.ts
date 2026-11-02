@@ -2673,6 +2673,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     subscribeToView: "Subscribe to view full content",
     updatedToEpisode: "Updated to episode {count}",
     readToEpisode: "Read to episode {count}",
+    readToChapter: "Read to chapter {count}",
     continueReading: "Continue Reading",
     updatedChapters: "Updated {count} chapters",
     viewCollectionInfo: "View Collection Info",
@@ -2882,6 +2883,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       comic: "Comic",
       video: "Drama",
       myFavorites: "My Favorites",
+      watchHistory: "Watch History",
       myWorks: "My Works",
       image: "Image",
       photo: "Video"
