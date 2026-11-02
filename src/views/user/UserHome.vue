@@ -107,7 +107,7 @@
             <div
               class="main-tab"
               :class="{ active: topTab === 'works' && viewMode === 'posts' }"
-              @click="setActiveContentType(2)"
+              @click="setActiveContentType(DEFAULT_CONTENT_TYPE)"
             >{{ t('userHome.contentType.myWorks') }}</div>
             <div
               v-if="isSelf"
@@ -168,7 +168,7 @@
         <!-- Posts View -->
         <template v-if="viewMode == 'posts'">
           <!-- Filters & Tabs -->
-          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites' && activeContentType !== 4 && activeContentType !== 5">
+          <div class="filter-bar" v-if="isSelf && activeContentType !== 'favorites' && activeContentType !== 0 && activeContentType !== 4 && activeContentType !== 5">
             <div class="collection-header">
               <button
                 class="create-collection-btn"
@@ -217,7 +217,7 @@
                 ref="collectionCardRefs"
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
-                  <div class="card-cover" :style="isMasonryList && (activeContentType == 4 || collection.type == '4') ? { aspectRatio: coverAspect(processImageUrl(collection.cover)) } : undefined" @click="(listContentType == 4 || listContentType == 5) ? goDetail(collection.id, collection.user_id) : goCollectionDetail(collection.id)">
+                  <div class="card-cover" :style="isMasonryList && (activeContentType == 4 || collection.type == '4') ? { aspectRatio: coverAspect(processImageUrl(collection.cover)) } : undefined" @click="isPostItem(collection) ? goDetail(collection.id, collection.user_id, itemType(collection)) : goCollectionDetail(collection.id)">
                     <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
@@ -228,7 +228,7 @@
 
                   <div class="card-bottom">
                     <div class="update-badge" v-if="collection.chapter_count > 0">
-                      {{ activeContentType === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
+                      {{ itemType(collection) === 2 ? t("userHome.collection.updatedChapter", { count: collection.chapter_count }) : t("userHome.collection.updatedEpisode", { count: collection.chapter_count }) }}
                     </div>
                     <div class="card-actions-row">
                       <div class="card-actions" v-if="isSelf && activeContentType !== 'favorites'">
@@ -238,7 +238,7 @@
                         >
                           <img src="@/assets/images/user/top.png" alt="" />
                         </div>
-                        <template v-if="activeContentType == 4 || activeContentType == 5">
+                        <template v-if="isPostItem(collection)">
                           <div class="card-action-btn" @click.stop="toggleCardDropdown(collection.id, $event)">
                             <img src="@/assets/images/user/set.png" alt="" />
                           </div>
@@ -720,8 +720,16 @@ const workContentTypes = computed(() => {
     return item ? parseInt(item.num) || 0 : 0;
   };
 
-  // 漫画 / 小说先隐藏，要恢复把下面两行的注释去掉即可
+  // 顺序：漫剧 3 → 视频 5 → 图片 4 → 漫画 1 → 小说 2；本站漫剧 / 漫画 / 小说先隐藏，要恢复把注释去掉即可
+  // 「全部」的数量 = 各类型之和（合集 1/2/3 取 books_group，视频 5 / 图片 4 取 total_posts_N）
+  const countOf = (type: number) => getCountByType(String(type)) || Number((userInfo.value as any)[`total_posts_${type}`]) || 0;
+  const allCount = [3, 5, 4, 1, 2].reduce((sum, type) => sum + countOf(type), 0);
+
   return [
+    // 「全部」走合集接口 type=0，合集 + 视频图片混排
+    // 「全部」先隐藏，要放出来把下一行注释去掉（FAVORITE_TYPES 里的 0、DEFAULT_CONTENT_TYPE、地址栏合法值里的 0 一起恢复）
+    // { id: 0, label: t('userHome.collection.all'), count: allCount, hideCount: false },
+    // { id: 3, label: t('userHome.contentType.video'), count: getCountByType('3') || userInfo.value.total_posts_3 || 0, hideCount: false },
     { id: 5, label: t('userHome.contentType.photo'), count: getCountByType('5') || userInfo.value.total_posts_5 || 0, hideCount: false },
     { id: 4, label: t('userHome.contentType.image'), count: getCountByType('4') || userInfo.value.total_posts_4 || 0, hideCount: false },
     // { id: 1, label: t('userHome.contentType.comic'), count: getCountByType('1') || userInfo.value.total_posts_1 || 0, hideCount: false },
@@ -729,12 +737,13 @@ const workContentTypes = computed(() => {
   ];
 });
 
-// 我的收藏的类型子 tab，顺序和「我的作品」的子 tab 一致（视频 5 → 漫剧 3 → 图片 4 → 漫画 1 → 小说 2），
+// 我的收藏的类型子 tab，顺序和「我的作品」的子 tab 一致（漫剧 3 → 视频 5 → 图片 4 → 漫画 1 → 小说 2），
 // 值直接作为收藏列表接口的 type 参数。
 // 和作品一样先只显示视频 / 图片，要恢复其它类型把注释去掉即可
 const FAVORITE_TYPES: number[] = [
-  5,
+  // 0, // 「全部」先隐藏
   // 3,
+  5,
   4,
   // 1,
   // 2,
@@ -765,14 +774,30 @@ const favoriteContentTypes = computed(() => {
     return fromGroup || favoriteListTotals.value[type] || 0;
   };
   const labels: Record<number, string> = {
-    5: t('userHome.contentType.photo'),
+    0: t('userHome.collection.all'),
     3: t('userHome.contentType.video'),
+    5: t('userHome.contentType.photo'),
     4: t('userHome.contentType.image'),
     1: t('userHome.contentType.comic'),
     2: t('userHome.contentType.novel'),
   };
-  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: getCountByType(id) }));
+  // 「全部」的数量 = 其它类型之和
+  const allCount = FAVORITE_TYPES.filter((id) => id !== 0).reduce((sum, id) => sum + getCountByType(id), 0);
+  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: id === 0 ? allCount : getCountByType(id) }));
 });
+
+/** 列表里这一条的内容类型：优先用数据自己的 type（「全部」tab 是混排），没有就按当前 tab */
+function itemType(item: any): number {
+  const t = Number(item?.type);
+  if (!isNaN(t) && t > 0) return t;
+  const cur = Number(listContentType.value);
+  return isNaN(cur) ? 0 : cur;
+}
+/** 这一条是不是单篇作品（视频 5 / 图片 4），不是的就是合集 */
+function isPostItem(item: any): boolean {
+  const t = itemType(item);
+  return t === 4 || t === 5;
+}
 
 /** 当前列表实际的内容类型：作品 tab 就是 activeContentType，收藏 tab 是 favoriteContentType */
 const listContentType = computed<number | string>(() =>
@@ -811,6 +836,7 @@ function showFavorites() {
 }
 
 /** 作品子 tab 的默认值。地址栏里没有 type 时落在这一档 */
+// 默认打开第一个子 tab（「全部」先隐藏，放出来时改成 0）
 const DEFAULT_CONTENT_TYPE = 5;
 
 /**
@@ -954,12 +980,11 @@ async function fetchCollections(reset = false) {
       // 没有数据时部分接口返回的是 data: false，不是空数组
       let collectionData = Array.isArray(response.data?.data) ? response.data.data : [];
 
-      if (type === 4 || type === 5) {
-        collectionData = collectionData.map((item: any) => ({
-          ...item,
-          type: item.type ?? String(type),
-          is_top: String(item.is_post_top ?? item.is_top ?? '0'),
-        }));
+      if (type === 4 || type === 5 || type === 0) {
+        // 单篇作品的置顶字段叫 is_post_top；「全部」是混排，只给视频 / 图片归一
+        collectionData = collectionData.map((item: any) => (
+          type === 0 && !isPostItem(item) ? item : { ...item, type: item.type ?? String(type), is_top: String(item.is_post_top ?? item.is_top ?? '0') }
+        ));
       }
 
       if (reset) {
@@ -2222,11 +2247,11 @@ function goMakeSequelSubscribe() {
   }
 }
 
-function goDetail(id: number | string, authorId?: number | string) {
-  // 收藏 tab 下 activeContentType 是 'favorites'，实际列表类型在 listContentType
-  const type = Number(listContentType.value);
+function goDetail(id: number | string, authorId?: number | string, itemTypeNum?: number) {
+  // 收藏 tab 下 activeContentType 是 'favorites'，实际列表类型在 listContentType；「全部」混排时按这一条的类型
+  const type = itemTypeNum ?? Number(listContentType.value);
   const queryParams: any = {
-    tab: listContentType.value,
+    tab: itemTypeNum ?? listContentType.value,
   };
 
   if (type !== 4 && type !== 5) {
@@ -2283,7 +2308,7 @@ async function confirmReplacePin() {
     const newCollection = pendingPinCollection.value;
     const replaceId = selectedReplaceId.value;
 
-    const type = Number(activeContentType.value);
+    const type = itemType(newCollection);
     const alterId = replaceId?.toString() || '';
     // 图片 / 视频是单篇作品，走 post/pin；合集才走 book/setBookTop（和 pinCollection 一致）
     const res = (type === 4 || type === 5
@@ -2361,7 +2386,7 @@ function toggleCardDropdown(id: string | number, event: Event) {
 
 function goEditPost(collection: any) {
   activeCardDropdownId.value = null;
-  const type = Number(activeContentType.value);
+  const type = itemType(collection);
   if (type === 4) {
     router.push(`/publish/image?post_id=${collection.id}`);
   } else if (type === 5) {
@@ -2425,6 +2450,7 @@ function toggleCollectionMenu(id: string | number, event: MouseEvent) {
 }
 
 async function pinCollection(collection: any) {
+  const itemTypeNum = itemType(collection);
   activeCollectionMenuId.value = null;
 
   const pinnedCount = pinnedCollections.value.length;
@@ -2436,7 +2462,7 @@ async function pinCollection(collection: any) {
   }
 
   try {
-    const type = Number(activeContentType.value);
+    const type = itemTypeNum;
     let res;
     if (type === 4 || type === 5) {
       res = await api.postPin({ post_id: collection.id }) as any;
@@ -2456,9 +2482,10 @@ async function pinCollection(collection: any) {
 }
 
 async function unpinCollection(collection: any) {
+  const itemTypeNum = itemType(collection);
   activeCollectionMenuId.value = null;
   try {
-    const type = Number(activeContentType.value);
+    const type = itemTypeNum;
     let res;
     if (type === 4 || type === 5) {
       res = await api.postUnpin({ post_id: collection.id }) as any;

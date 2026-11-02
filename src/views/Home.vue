@@ -731,8 +731,10 @@ const onCardTiltReset = (e: MouseEvent) => {
 // Content Types
 // 漫画 / 小说先隐藏（推荐、关注、订阅三个 tab 下的作品列表共用这一份类型筛选）。
 // 要恢复把下面两行的注释去掉即可。
+// 顺序：漫剧 3 → 视频 5 → 图片 4 → 漫画 1 → 小说 2（本站漫剧 / 漫画 / 小说先隐藏）
 const contentTypes = ref([
   { id: 0, label: 'all' },
+  // { id: 3, label: 'drama' },
   { id: 5, label: 'video' },
   { id: 4, label: 'image' },
   // { id: 1, label: 'comic' },

@@ -346,8 +346,10 @@ const tabs = ref([
 ]);
 
 // 漫画 / 小说先隐藏，要恢复把下面两行的注释去掉即可
+// 顺序：漫剧 3 → 视频 5 → 图片 4 → 漫画 1 → 小说 2（本站漫剧 / 漫画 / 小说先隐藏）
 const postFilters = ref([
   { id: 0, label: t('home.contentType.all') },
+  // { id: 3, label: t('home.contentType.drama') },
   { id: 5, label: t('home.contentType.video') },
   { id: 4, label: t('home.contentType.image') },
   // { id: 1, label: t('home.contentType.comic') },
@@ -393,10 +395,11 @@ watch(() => locale.value, () => {
 
   postFilters.value = [
     { id: 0, label: t('home.contentType.all') },
-    { id: 4, label: t('home.contentType.image') },
+    // { id: 3, label: t('home.contentType.drama') },
     { id: 5, label: t('home.contentType.video') },
-    { id: 1, label: t('home.contentType.comic') },
-    { id: 2, label: t('home.contentType.novel') }
+    { id: 4, label: t('home.contentType.image') },
+    // { id: 1, label: t('home.contentType.comic') },
+    // { id: 2, label: t('home.contentType.novel') }
   ]
 
   // 切语言：标题重算、按当前已提交的关键词重拉（不碰输入框里没回车的内容）
