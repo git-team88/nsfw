@@ -19,6 +19,8 @@ const KEY_FIRST_VISIT = "trk_first_visit_at";
 const KEY_SESSION = "trk_session_id";
 const KEY_SESSION_ACTIVE = "trk_session_active";
 const KEY_SESSION_START = "trk_session_start";
+const KEY_SESSION_PV = "trk_session_pv"; // 本次会话浏览页次数（session_end 的 page_views）
+const KEY_LOGGED_USERS = "trk_logged_users"; // 这台设备登录过的账号（user_identify 的 is_first_login）
 const SESSION_TIMEOUT = 30 * 60 * 1000;
 
 // 调试日志：本地和测试环境打。原来按域名结尾判断，wwwtest.fansfans.ai / wwwtest.blfans.ai 会被误当成正式环境
@@ -60,7 +62,7 @@ async function getDeviceId(): Promise<string> {
 }
 
 /**
- * 当前会话 id。30 分钟没动作就开新会话（先补报上一个会话的 session_end）。
+ * 当前会话 id。30 分钟没动作就开新会话（先补报上一个会话的 session_end，再报新会话的 session_start）。
  * touch=true 表示这是一次用户动作，刷新「最后活动时间」。
  */
 function currentSessionId(touch = true): string {
@@ -68,11 +70,16 @@ function currentSessionId(touch = true): string {
   let sid = safeGet(sessionStorage, KEY_SESSION);
   const last = Number(safeGet(sessionStorage, KEY_SESSION_ACTIVE)) || 0;
   if (!sid || (last && now - last > SESSION_TIMEOUT)) {
+    // 没有会话 = 新开的标签页 / 冷启动；有但超时 = 超时后重新计
+    const reason = sid ? "timeout_restart" : "cold_start";
     if (sid) flushSessionEnd();
     sid = "s_" + uuid();
     safeSet(sessionStorage, KEY_SESSION, sid);
     safeSet(sessionStorage, KEY_SESSION_START, String(now));
     safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
+    safeSet(sessionStorage, KEY_SESSION_PV, "0");
+    safeDel(sessionStorage, "trk_session_ended");
+    enqueue("session_start", { start_reason: reason });
   }
   if (touch) safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
   return sid;
@@ -141,7 +148,7 @@ function utmParams(): Record<string, string> {
 // 发送（队列 + 批量）
 // ============================================================
 
-type TrackEvent = { event_name: string; event_time: number; params: Record<string, unknown> };
+type TrackEvent = { event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
 
 // 事件不是来一条发一条：先存进 localStorage 队列，满 1 分钟或攒够 50 条才请求一次上报接口。
 // 存本地是为了刷新 / 关页不丢：下次打开时把上次没发完的一起带上。
@@ -187,6 +194,7 @@ function enqueue(eventName: string, params: Record<string, unknown>) {
   queue.push({
     event_name: eventName,
     event_time: Date.now(),
+    session_id: safeGet(sessionStorage, KEY_SESSION), // 事件归哪个会话；队列会跨会话攒着，所以放事件上不放 header
     params,
   });
   saveQueue();
@@ -279,6 +287,7 @@ function flushSessionEnd(beacon = false) {
   safeSet(sessionStorage, "trk_session_ended", sid);
   enqueue("session_end", {
     duration: Math.max(0, Math.round((last - start) / 1000)),
+    page_views: Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0,
   });
   if (beacon) void flush(true);
 }
@@ -295,6 +304,7 @@ export function trackPageView(info: {
   query?: Record<string, any>;
 }) {
   currentSessionId(); // 刷新会话活动时间（超时会自动开新会话）
+  safeSet(sessionStorage, KEY_SESSION_PV, String((Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0) + 1));
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
@@ -339,18 +349,48 @@ export function trackPageView(info: {
   enqueue("page_view", { page_name, path, ...extra });
 }
 
+export type LoginType = "email" | "google" | "phone" | "third_party" | "auto";
+
+/** 这台设备是否第一次登录这个账号（localStorage 记登录过的账号列表） */
+function isFirstLoginOnDevice(uid: string): boolean {
+  let list: string[] = [];
+  try { list = JSON.parse(safeGet(localStorage, KEY_LOGGED_USERS) || "[]"); } catch { list = []; }
+  if (list.includes(uid)) return false;
+  list.push(uid);
+  if (list.length > 50) list = list.slice(list.length - 50);
+  safeSet(localStorage, KEY_LOGGED_USERS, JSON.stringify(list));
+  return true;
+}
+
 /**
- * user_identify：登录 / 注册成功时调，把登录前的 device_id 和账号绑上（身份缝合）。
- * 已登录状态下的日常事件 header 里本来就带 user_id，不需要再报。
+ * user_identify：登录 / 注册成功时调，把登录前的 device_id 和账号绑上（身份缝合）；
+ * 已登录用户冷启动（initTracking）也报一次，login_type=auto。
  */
-export function trackUserIdentify(userId: string | number, loginType: "email" | "google") {
+export function trackUserIdentify(userId: string | number, loginType: LoginType) {
   const uid = String(userId || "");
   if (!uid) return;
   track("user_identify", {
     user_id: uid,
     anonymous_id: safeGet(localStorage, KEY_DEVICE),
     login_type: loginType,
+    is_first_login: isFirstLoginOnDevice(uid),
   });
+}
+
+/** register：注册成功（邮箱 / Google …），同时报 user_identify 做身份缝合 */
+export function trackRegisterSuccess(userId: string | number, loginType: LoginType) {
+  const uid = String(userId || "");
+  if (!uid) return;
+  track("register", { user_id: uid, anonymous_id: safeGet(localStorage, KEY_DEVICE), login_type: loginType });
+  trackUserIdentify(uid, loginType);
+}
+
+/** login：登录成功（邮箱 / Google …），同时报 user_identify 做身份缝合 */
+export function trackLoginSuccess(userId: string | number, loginType: LoginType) {
+  const uid = String(userId || "");
+  if (!uid) return;
+  track("login", { user_id: uid, anonymous_id: safeGet(localStorage, KEY_DEVICE), login_type: loginType });
+  trackUserIdentify(uid, loginType);
 }
 
 /**
@@ -361,19 +401,29 @@ export function initTracking() {
   if (typeof window === "undefined" || !TRACK_ENABLED) return;
   // 上次没发完的先排上（满 50 立即发，否则 1 分钟后发）
   if (queue.length >= FLUSH_MAX) void flush(); else if (queue.length > 0) armTimer();
+  // 冷启动 = 这个标签页还没有会话（刷新页面 sessionStorage 还在，不算）
+  const coldStart = !safeGet(sessionStorage, KEY_SESSION);
+  currentSessionId(); // 先开会话，后面的 first_open 等事件才带得上 session_id
   trackFirstVisit();
-  currentSessionId();
+  // 已登录用户冷启动：报一次 user_identify(auto) 确认身份（文档 user_identify 触发时机）
+  if (coldStart) {
+    const uid = getUserId();
+    if (uid) trackUserIdentify(uid, "auto");
+  }
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") {
       flushSessionEnd(true);
       void flush(true);
     } else {
-      // 回到前台：超过 30 分钟会在 currentSessionId 里开新会话；
-      // 没超时就是同一会话恢复，允许它之后再报一次 session_end
+      // 回到前台：超过 30 分钟会在 currentSessionId 里开新会话（报 timeout_restart）；
+      // 没超时就是同一会话恢复：报一条 session_start(resume)，并允许它之后再报一次 session_end
       const before = safeGet(sessionStorage, KEY_SESSION);
       const sid = currentSessionId();
-      if (sid === before) safeDel(sessionStorage, "trk_session_ended");
+      if (sid === before && safeGet(sessionStorage, "trk_session_ended") === sid) {
+        safeDel(sessionStorage, "trk_session_ended");
+        enqueue("session_start", { start_reason: "resume" });
+      }
     }
   });
   window.addEventListener("pagehide", () => { flushSessionEnd(true); void flush(true); });
@@ -409,10 +459,23 @@ function viewedThisSession(key: string): boolean {
 }
 
 /**
- * 入口来源：按上一个路由推。没有上一个路由（直接打开 / 刷新）时，
- * 外站 referrer 当分享链接 share，其它算 other。
+ * 入口来源，取值按文档：
+ *   合集 / 视频图片详情：home_feed（首页）/ community（博主主页）/ search / recommend / share（外站链接）/ other
+ *   章节详情：catalog（目录点进来）/ auto_play（上一章 / 下一章 / 连播）/ home_feed / share / other
+ * 「点了什么进来」优先：点击处先 markEntrySource()，下一次曝光事件用掉；没标记的按上一个路由推。
  */
-function entrySourceOf(): string {
+export type EntrySource = "home_feed" | "community" | "search" | "recommend" | "share" | "catalog" | "auto_play" | "other";
+let pendingEntrySource: EntrySource | "" = "";
+/** 点击「会进详情页」的入口时标一下来源（目录点击在 trackCatalogChapterClick 里自动标；上一章 / 下一章 / 连播标 auto_play） */
+export function markEntrySource(src: EntrySource) {
+  pendingEntrySource = src;
+}
+function entrySourceOf(forChapter = false): EntrySource {
+  if (pendingEntrySource) {
+    const src = pendingEntrySource;
+    pendingEntrySource = "";
+    return src;
+  }
   const prev = prevPagePath;
   if (!prev) {
     let ref = "";
@@ -420,17 +483,19 @@ function entrySourceOf(): string {
     if (ref && !ref.startsWith(window.location.origin)) return "share";
     return "other";
   }
-  // 取值和 page_view 的 page_name 一套：home / user_home / search / collection_detail / detail
-  if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(?:novel|comic|drama|photo|video)\/?)?$/.test(prev)) return "home";
-  if (/^\/user-home/.test(prev)) return "user_home";
+  if (/^\/(?:(?:ja|en|zh-cn|zh-tw|ko|th)\/?)?(?:(?:novel|comic|drama|photo|video)\/?)?$/.test(prev)) return "home_feed";
+  if (forChapter) {
+    // 章节页：从合集页来的默认算目录进来；其它页面来的没有对应枚举，记 other
+    if (/^\/collection\//.test(prev)) return "catalog";
+    return "other";
+  }
+  if (/^\/user-home/.test(prev)) return "community";
   if (/^\/search/.test(prev)) return "search";
-  if (/^\/collection\//.test(prev)) return "collection_detail";
-  if (/^\/detail/.test(prev)) return "detail";
   return "other";
 }
 
-/** 9.1.1 合集详情页曝光 */
-export function trackCollectionView(p: { book_id: string | number; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
+/** 9.1.1 合集详情页曝光（book_title = 文档的 collection_name） */
+export function trackCollectionView(p: { book_id: string | number; book_title?: string; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
   if (!p.book_id || viewedThisSession("collection:" + p.book_id)) return;
   track("collection_view", { ...p, entry_source: entrySourceOf() });
 }
@@ -440,10 +505,10 @@ export function trackChapterView(p: { post_id: string | number; book_id: string 
   if (!p.post_id) return;
   const prev = lastChapterPostId;
   lastChapterPostId = String(p.post_id);
-  if (viewedThisSession("chapter:" + p.post_id)) return;
+  if (viewedThisSession("chapter:" + p.post_id)) { pendingEntrySource = ""; return; }
   track("chapter_view", {
     ...p,
-    entry_source: entrySourceOf(),
+    entry_source: entrySourceOf(true),
     prev_post_id: prev && prev !== String(p.post_id) ? prev : undefined,
   });
 }
@@ -456,5 +521,49 @@ export function trackWorkView(p: { post_id: string | number; content_type: strin
 
 /** 9.1.4 目录里点某一章 */
 export function trackCatalogChapterClick(p: { book_id: string | number; post_id: string | number; chapter_index?: string | number; content_type: string; user_id?: string | number }) {
+  markEntrySource("catalog"); // 接下来的 chapter_view 记目录进来
   track("catalog_chapter_click", p);
+}
+
+// ============================================================
+// 九 9.2 互动：like_click / unlike_click / comment_publish / share / follow
+// 目标用 target_type + target_id：collection 合集 / chapter 章节 / video / image / blogger 博主；
+// 章节带所属合集 book_id；内容带博主 user_id；is_bot 由后端判，前端不报。
+// ============================================================
+export type InteractTarget = {
+  target_type: "collection" | "chapter" | "video" | "image" | "blogger";
+  target_id: string | number;
+  /** 章节所属合集 */
+  book_id?: string | number;
+  /** 内容所属博主 */
+  user_id?: string | number;
+  content_type?: string;
+};
+/** 作品的互动目标：type 4 图片 / 5 视频按单作品，其它（小说 / 漫画 / 漫剧）按章节 */
+export function workTarget(post: { id: string | number; type?: unknown; book_id?: string | number; user_id?: string | number }): InteractTarget {
+  const ct = contentTypeOf(post.type);
+  const target_type = ct === "video" ? "video" : ct === "image" ? "image" : "chapter";
+  return {
+    target_type,
+    target_id: post.id,
+    book_id: target_type === "chapter" && post.book_id && Number(post.book_id) > 0 ? post.book_id : undefined,
+    user_id: post.user_id,
+    content_type: ct || undefined,
+  };
+}
+/** 9.2.2 点赞 */
+export function trackLike(t: InteractTarget) { track("like_click", t); }
+/** 9.2.3 取消点赞 */
+export function trackUnlike(t: InteractTarget) { track("unlike_click", t); }
+/** 9.2.4 发布评论成功 */
+export function trackCommentPublish(t: InteractTarget, p: { comment_id?: string | number; reply_to_comment_id?: string | number; content_length?: number }) {
+  track("comment_publish", { ...t, ...p });
+}
+/** 9.2.5 分享（复制链接等） */
+export function trackShareEvent(t: InteractTarget, channel: "copy_link" | "whatsapp" | "x" | "facebook" | "instagram" | "telegram" | "other" = "copy_link") {
+  track("share", { ...t, share_channel: channel });
+}
+/** 9.2.6 关注博主 */
+export function trackFollow(bloggerId: string | number) {
+  track("follow", { target_type: "blogger", target_id: bloggerId });
 }

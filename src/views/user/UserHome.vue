@@ -492,6 +492,7 @@ import { useI18n } from "vue-i18n";
 import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta } from "@/utils/seoMeta";
 import { siteName } from "@/utils/pageTitle";
 import { trackSubscribeToCreator } from "@/utils/analytics";
+import { trackFollow } from "@/utils/track";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import { processImageUrl, initLanguage, formatTimestamp, apiErrorMessage } from '@/util/utils';
@@ -1802,6 +1803,7 @@ async function toggleListFollow(user: FollowUser) {
       const res = await api.follow(data);
       const response = res as any;
       if (response.code === 200 || response.code === 0) {
+        trackFollow(user.id);
         user.isFollowed = true;
         if (isSelf.value) userInfo.value.following = userInfo.value.following + 1;
         if (headerRef.value) {
@@ -1842,6 +1844,7 @@ async function toggleFollow() {
     } else {
       const res = await api.follow(data) as any;
       if (res.code == 0 || res.code == 200) {
+        trackFollow(userInfo.value.id);
         userInfo.value.is_follow = 1;
         await fetchUserStats();
 

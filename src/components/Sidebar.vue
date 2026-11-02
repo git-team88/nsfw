@@ -375,6 +375,7 @@ import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { trackShare } from '@/utils/analytics';
+import { contentTypeOf, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent } from '@/utils/track';
 import { baseUrl } from '@/util/config';
 import { uploadVideoFile, PartUploadError } from '@/util/uploadVideo';
 import { formatTimestamp, apiErrorMessage } from '@/util/utils';
@@ -1023,6 +1024,10 @@ async function submitComment() {
 
     const res = await response.json();
     if (res.code === 0 || res.code === 200) {
+      trackCommentPublish(
+        workTarget({ id: props.detail.id, type: props.detail.type, book_id: props.detail.book_id, user_id: props.detail.author?.id }),
+        { comment_id: res.data?.id || res.data?.comment_id, reply_to_comment_id: commentId || parentId || undefined, content_length: text.length },
+      );
       cancelInput();
 
       await updateCommentCount();
@@ -1286,6 +1291,8 @@ function toggleLike() {
   api.likePost({ post_id: props.detail.id, action: liked.value ? 'unlike' : 'like' })
     .then((response: any) => {
       if (response.code === 0) {
+        const target = workTarget({ id: props.detail.id, type: props.detail.type, book_id: props.detail.book_id, user_id: props.detail.author?.id });
+        if (liked.value) trackUnlike(target); else trackLike(target);
         liked.value = !liked.value;
         likes.value = liked.value ? likes.value + 1 : likes.value - 1;
 
@@ -1315,6 +1322,7 @@ async function toggleFav() {
     if (!isFav.value) {
       const res = await api.likeBook({ book_id: props.detail.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackLike({ target_type: 'collection', target_id: props.detail.book_id, user_id: props.detail.author?.id, content_type: contentTypeOf(props.detail.type) || undefined });
         isFav.value = true;
         if (res.data && res.data.fav_num !== undefined) {
           favNum.value = Number(res.data.fav_num);
@@ -1328,6 +1336,7 @@ async function toggleFav() {
     } else {
       const res = await api.unlikeBook({ book_id: props.detail.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackUnlike({ target_type: 'collection', target_id: props.detail.book_id, user_id: props.detail.author?.id, content_type: contentTypeOf(props.detail.type) || undefined });
         isFav.value = false;
         if (res.data && res.data.fav_num !== undefined) {
           favNum.value = Number(res.data.fav_num);
@@ -1355,6 +1364,7 @@ async function share() {
     await navigator.clipboard.writeText(shareUrl);
     toast(t('userHome.shareSuccess'));
     trackShare({ method: 'copy_link', itemId: String(id) });
+    trackShareEvent(workTarget({ id, type: props.detail.type, book_id: props.detail.book_id, user_id: props.detail.author?.id }), 'copy_link');
   } catch (e) {
     console.log(e);
   }
@@ -2133,6 +2143,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
       // Like chapter
       const res = await api.likePost({ post_id: chapter.post_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackLike(workTarget({ id: chapter.post_id, type: props.detail.type, book_id: props.detail.book_id, user_id: props.detail.author?.id }));
         chapter.liked = true;
 
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
@@ -2147,6 +2158,7 @@ async function toggleChapterLike(chapter: any, event: MouseEvent) {
       // Unlike chapter
       const res = await api.dislikePost({ post_id: chapter.post_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackUnlike(workTarget({ id: chapter.post_id, type: props.detail.type, book_id: props.detail.book_id, user_id: props.detail.author?.id }));
         chapter.liked = false;
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
           chapter.likes = Number(res.data.like_count || res.data.likes);

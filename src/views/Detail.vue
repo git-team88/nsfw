@@ -1021,7 +1021,7 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
-import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf } from "@/utils/track";
+import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/track";
 
 const { t, locale } = useI18n();
 
@@ -1703,6 +1703,7 @@ async function enterCurrentChapter() {
 // Go to next chapter directly (used by "下一集" button)
 async function goToNextChapter() {
   if (nextChapterId.value) {
+    markEntrySource('auto_play');
     isCollectionMode.value = true;
     activeTab.value = 'collection';
     isRightPanelHidden.value = false;
@@ -1994,9 +1995,11 @@ async function loadChapters() {
 }
 
 // Navigate to chapter
-async function navigateToChapter(chapter: any) {
+// source：catalog = 目录里点的（报 catalog_chapter_click）；auto_play = 上一集 / 下一集 / 播完自动接下一集（只标 chapter_view 的来源）
+async function navigateToChapter(chapter: any, source: 'catalog' | 'auto_play' = 'catalog') {
   if (!chapter || !chapter.post_id) return;
-  trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id });
+  if (source === 'auto_play') markEntrySource('auto_play');
+  else trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
     if (detail.value.author.id && detail.value.author.id == uid) {
@@ -2283,9 +2286,9 @@ function handleLeftPanelWheel(event: WheelEvent) {
 }
 
 // Play collection item
-function playCollectionItem(chapter: any) {
+function playCollectionItem(chapter: any, source: 'catalog' | 'auto_play' = 'catalog') {
   if (chapter) {
-    navigateToChapter(chapter);
+    navigateToChapter(chapter, source);
   }
 
   if (isCollectionMode.value) {
@@ -4143,7 +4146,7 @@ function onVideoEnded() {
   if (isCollectionMode.value && detail.value.type == '3' && collections.value.length > 0) {
     const nextEpisode = collections.value[currentCollectionIndex.value + 1];
     if (nextEpisode) {
-      playCollectionItem(nextEpisode);
+      playCollectionItem(nextEpisode, 'auto_play');
     } else if (videoRef.value) {
       isVideoEnded.value = false;
       videoRef.value.play().catch(() => {
@@ -4652,11 +4655,12 @@ function goPrev() {
     // 在合集模式下，直接切换到上一个合集项目
     const chapter = collections.value.find(c => c.post_id === prevChapterId.value);
     if (chapter) {
-      navigateToChapter(chapter);
+      navigateToChapter(chapter, 'auto_play');
     }
   } else if (prevId.value) {
-    // 在非合集模式下切换页面：当前往下滑出，上一个从上滑入
+    // 在非合集模式下切换页面：当前往下滑出，上一个从上滑入（推荐流里翻，来源记 home_feed）
     const targetId = prevId.value;
+    markEntrySource('home_feed');
     slideSwitch('down', () => {
       activeTab.value = 'detail';
       router.replace({
@@ -4675,11 +4679,12 @@ function goNext() {
     // 在合集模式下，直接切换到下一个合集项目
     const chapter = collections.value.find(c => c.post_id === nextChapterId.value);
     if (chapter) {
-      navigateToChapter(chapter);
+      navigateToChapter(chapter, 'auto_play');
     }
   } else if (nextId.value) {
-    // 在非合集模式下切换页面：当前往上滑出，下一个从下滑入
+    // 在非合集模式下切换页面：当前往上滑出，下一个从下滑入（推荐流里翻，来源记 home_feed）
     const targetId = nextId.value;
+    markEntrySource('home_feed');
     slideSwitch('up', () => {
       activeTab.value = 'detail';
       router.replace({
@@ -4848,6 +4853,7 @@ async function toggleFollow() {
     }
 
     if (res.code === 0 || res.code === 200) {
+      if (!detail.value.isFollowed) trackFollow(authorId);
       detail.value.isFollowed = !detail.value.isFollowed;
     } else {
       toast(apiErrorMessage(res))
@@ -5753,6 +5759,10 @@ async function submitComment() {
 
     const res = await response.json();
     if (res.code === 0 || res.code === 200) {
+      trackCommentPublish(
+        workTarget({ id: id.value, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }),
+        { comment_id: res.data?.id || res.data?.comment_id, reply_to_comment_id: commentId || parentId || undefined, content_length: text.length },
+      );
       cancelInput();
 
       await updateCommentCount();
@@ -5825,6 +5835,7 @@ async function toggleLike() {
       // Like post
       const res = await api.likePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackLike(workTarget({ id: id.value, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }));
         liked.value = true;
 
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
@@ -5841,6 +5852,7 @@ async function toggleLike() {
       // Unlike post
       const res = await api.dislikePost({ post_id: id.value }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackUnlike(workTarget({ id: id.value, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }));
         liked.value = false;
         if (res.data && (res.data.like_count !== undefined || res.data.likes !== undefined)) {
           likes.value = Number(res.data.like_count || res.data.likes);
@@ -5877,6 +5889,7 @@ async function toggleFav() {
         ? await api.bookLikePost({ post_id: detail.value.id }) as any
         : await api.likeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        if (!isStandalone) trackLike({ target_type: 'collection', target_id: detail.value.book_id, user_id: detail.value.author?.id, content_type: contentTypeOf(detail.value.type) || undefined });
         isFav.value = true;
         detail.value.isFav = true;
         if (res.data && res.data.fav_num !== undefined) {
@@ -5894,6 +5907,7 @@ async function toggleFav() {
         ? await api.bookUnlikePost({ post_id: detail.value.id }) as any
         : await api.unlikeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        if (!isStandalone) trackUnlike({ target_type: 'collection', target_id: detail.value.book_id, user_id: detail.value.author?.id, content_type: contentTypeOf(detail.value.type) || undefined });
         isFav.value = false;
         detail.value.isFav = false;
         if (res.data && res.data.fav_num !== undefined) {
@@ -5933,6 +5947,7 @@ async function toggleCollectionLike(item: any) {
       // Like collection item
       const res = await api.likePost({ post_id: postId }) as any;
       if (res.code == 0 || res.code == 200) {
+        trackLike(workTarget({ id: postId, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }));
         item.liked = true;
         // 原来这里写的是 likes.value —— 那是详情页顶部整篇作品的赞数，
         // 结果列表这一项的数字不动，反而把顶部的赞数冲掉了。
@@ -5950,6 +5965,7 @@ async function toggleCollectionLike(item: any) {
       // Unlike collection item
       const res = await api.dislikePost({ post_id: postId }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackUnlike(workTarget({ id: postId, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }));
         item.liked = false;
         item.likes = Math.max(0, previousLikes - 1);
         if (isCurrentPost) {
@@ -5975,6 +5991,7 @@ async function share() {
     await navigator.clipboard.writeText(shareUrl);
     toast(t('userHome.shareSuccess'));
     trackShare({ method: "copy_link", itemId: id });
+    trackShareEvent(workTarget({ id, type: detail.value.type, book_id: detail.value.book_id, user_id: detail.value.author?.id }), 'copy_link');
   } catch (e) {
     console.log(e);
   }

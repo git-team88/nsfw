@@ -232,7 +232,7 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
-import { trackCollectionView, trackCatalogChapterClick, contentTypeOf } from '@/utils/track';
+import { trackCollectionView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/track';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -480,7 +480,7 @@ async function fetchCollectionDetail() {
         applyCollectionSeo();
 
         // 埋点：合集详情页曝光（同一会话同一合集只记一次）
-        trackCollectionView({ book_id: collection.value.id, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });
+        trackCollectionView({ book_id: collection.value.id, book_title: collection.value.title || undefined, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });
 
         // 从 book_info 获取作者后，请求博主详情接口
         if (resolvedAuthorId) {
@@ -810,6 +810,7 @@ async function toggleFollow() {
     } else {
       const res = await api.follow(data) as any;
       if (res.code == 0) {
+        trackFollow(authorInfo.value.id);
         authorInfo.value.isFollow = 1;
         authorInfo.value.followerCount = authorInfo.value.followerCount + 1;
       } else {
@@ -835,6 +836,7 @@ async function toggleLike() {
     if (isLiked.value) {
       const res = await api.unlikeBook({ book_id: collection.value.id }) as any;
       if (res.code == 0 || res.code == 200) {
+        trackUnlike({ target_type: 'collection', target_id: collection.value.id, user_id: collection.value.authorId || undefined, content_type: contentTypeOf(collection.value.type) || undefined });
         isLiked.value = false;
       } else {
         toast(apiErrorMessage(res) || t('fail'));
@@ -842,6 +844,7 @@ async function toggleLike() {
     } else {
       const res = await api.likeBook({ book_id: collection.value.id }) as any;
       if (res.code == 0 || res.code == 200) {
+        trackLike({ target_type: 'collection', target_id: collection.value.id, user_id: collection.value.authorId || undefined, content_type: contentTypeOf(collection.value.type) || undefined });
         isLiked.value = true;
       } else {
         toast(apiErrorMessage(res) || t('fail'));

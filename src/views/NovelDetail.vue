@@ -154,10 +154,10 @@
 
         <!-- Chapter navigation buttons (only in collection mode) -->
         <div class="chapter-navigation" v-if="isCollectionMode && (prevChapterId || nextChapterId)">
-          <button class="nav-btn prev" @click="navigateToChapter({ post_id: prevChapterId })" v-if="prevChapterId">
+          <button class="nav-btn prev" @click="navigateToChapter({ post_id: prevChapterId }, 'auto_play')" v-if="prevChapterId">
             {{ t('detail.prevChapter') }}
           </button>
-          <button class="nav-btn next" @click="navigateToChapter({ post_id: nextChapterId })" v-if="nextChapterId">
+          <button class="nav-btn next" @click="navigateToChapter({ post_id: nextChapterId }, 'auto_play')" v-if="nextChapterId">
             {{ t('detail.nextChapter') }}
           </button>
           <!-- Last chapter prompt in collection mode (right of buttons) -->
@@ -314,7 +314,7 @@ import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackShare, trackSubscribeToContent } from '@/utils/analytics';
-import { trackChapterView, trackCatalogChapterClick } from '@/utils/track';
+import { trackChapterView, trackCatalogChapterClick, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from '@/utils/track';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -968,6 +968,8 @@ async function toggleLike() {
       ? await api.dislikePost({ post_id: id })
       : await api.likePost({ post_id: id })) as any;
     if (response.code == 0 || response.code == 200) {
+      const target = workTarget({ id, type: '2', book_id: detail.value.book_id, user_id: detail.value.author?.id });
+      if (liked.value) trackUnlike(target); else trackLike(target);
       liked.value = !liked.value;
       likes.value += liked.value ? 1 : -1;
       detail.value.liked = liked.value;
@@ -995,6 +997,7 @@ async function toggleFav() {
     if (!isFav.value) {
       const res = await api.likeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackLike({ target_type: 'collection', target_id: detail.value.book_id, user_id: detail.value.author?.id, content_type: 'novel' });
         isFav.value = true;
         detail.value.isFav = true;
         if (res.data && res.data.fav_num !== undefined) {
@@ -1008,6 +1011,7 @@ async function toggleFav() {
     } else {
       const res = await api.unlikeBook({ book_id: detail.value.book_id }) as any;
       if (res.code === 0 || res.code === 200) {
+        trackUnlike({ target_type: 'collection', target_id: detail.value.book_id, user_id: detail.value.author?.id, content_type: 'novel' });
         isFav.value = false;
         detail.value.isFav = false;
         if (res.data && res.data.fav_num !== undefined) {
@@ -1147,6 +1151,10 @@ async function submitComment() {
 
     const res = await response.json();
     if (res.code === 0 || res.code === 200) {
+      trackCommentPublish(
+        workTarget({ id: detail.value.id, type: '2', book_id: detail.value.book_id, user_id: detail.value.author?.id }),
+        { comment_id: res.data?.id || res.data?.comment_id, reply_to_comment_id: commentId || parentId || undefined, content_length: text.length },
+      );
       cancelInput();
       await loadComments();
       toast(t('detail.commentSubmitted'));
@@ -1535,6 +1543,7 @@ async function toggleFollow() {
       // 关注
       const response = await api.follow(data) as any;
       if (response.code == 0 || response.code == 200) {
+        trackFollow(authorId);
         detail.value.isFollowed = true;
       } else {
         toast(apiErrorMessage(response));
@@ -1547,9 +1556,11 @@ async function toggleFollow() {
 }
 
 // Navigate to chapter
-function navigateToChapter(chapter: any) {
+// source：catalog = 目录里点的（报 catalog_chapter_click）；auto_play = 上一章 / 下一章按钮（只标 chapter_view 的来源）
+function navigateToChapter(chapter: any, source: 'catalog' | 'auto_play' = 'catalog') {
   if (!chapter || !chapter.post_id) return;
-  trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: 'novel', user_id: detail.value.author?.id });
+  if (source === 'auto_play') markEntrySource('auto_play');
+  else trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: 'novel', user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
     if (detail.value.author.id && detail.value.author.id == uid) {
@@ -1620,6 +1631,7 @@ async function shareContent() {
     await navigator.clipboard.writeText(shareUrl);
     toast(t('userHome.shareSuccess'));
     trackShare({ method: "copy_link", itemId: id });
+    trackShareEvent(workTarget({ id, type: '2', book_id: detail.value.book_id, user_id: detail.value.author?.id }), 'copy_link');
   } catch (error) {
     console.error('Failed to copy:', error);
     toast(t('fail'));
@@ -1972,7 +1984,7 @@ function goPrev() {
   if (isCollectionMode.value) {
     const chapter = chapters.value.find(c => c.post_id === prevChapterId.value);
     if (chapter) {
-      navigateToChapter(chapter);
+      navigateToChapter(chapter, 'auto_play');
     }
   } else {
     if (prevId.value) {
@@ -1992,7 +2004,7 @@ function goNext() {
   if (isCollectionMode.value) {
     const chapter = chapters.value.find(c => c.post_id === nextChapterId.value);
     if (chapter) {
-      navigateToChapter(chapter);
+      navigateToChapter(chapter, 'auto_play');
     }
   } else {
     if (nextId.value) {
