@@ -6,11 +6,12 @@
         <div class="text-col">
           <div class="username">{{ item.commenter.nickname }}</div>
           <div class="desc" v-if="item.comment.parent_id == 0">
-            {{ t("user.messages.commentedText") }} <span class="content">{{ item.comment.content }}</span>
+            <span class="label">{{ t("user.messages.commentedText") }}</span>
+            <span class="content">{{ stripTags(item.comment.content) }}</span>
           </div>
           <div class="desc" v-else-if="item.comment.parent_id > 0">
-            {{ replyCommentText(item.comment.reply_to_nickname) }}
-            <span class="content">{{ item.comment.content }}</span>
+            <span class="label">{{ replyCommentText(item.comment.reply_to_nickname) }}</span>
+            <span class="content">{{ stripTags(item.comment.content) }}</span>
           </div>
           <div class="time">{{ formatTimestamp(item.timestamp) }}</div>
         </div>
@@ -43,6 +44,11 @@ function replyCommentText(nickname: string) {
 }
 const router = useRouter();
 defineProps<{ list: any[] }>();
+
+// 评论内容只显示文字：去掉 <b> 这类标签（详情页用 v-html 渲染，这里是纯文本，不去的话标签会原样显示出来）
+function stripTags(html: string): string {
+  return String(html || "").replace(/<[^>]*>/g, "");
+}
 
 function toDetail(post: any, comment: any) {
   if (post && parseInt(post.access_rights) <= 0) {
@@ -90,6 +96,7 @@ function goUserHome(userId: string) {
   background: rgba(255,255,255,0.06);
 }
 .left-info {
+  flex: 1 1 0; // 占满右侧作品框之外的宽度，不然左侧按文字长短撑开，竖线位置每条都不一样
   min-width: 0;
   display: flex;
   gap: 19px;
@@ -102,6 +109,7 @@ function goUserHome(userId: string) {
   object-fit: cover;
 }
 .text-col {
+  flex: 1 1 0; // 占满头像右边的宽度（评论内容要靠它撑开）
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -117,7 +125,16 @@ function goUserHome(userId: string) {
   font-size: 14px;
   color: #f5f5f5;
 }
+// 「评论了您的作品：」固定一行不换行、不被挤；评论内容占剩下的宽度，超出省略号
+.label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-right: 4px;
+}
 .content {
+  flex: 1 1 auto;
+  min-width: 0;
+  contain: inline-size; // 不让这段不换行的长文字参与最小宽度计算，否则会把整个消息页撑出容器、窗口小时出横向滚动条
   max-width: 704px;
   white-space: nowrap;
   overflow: hidden;
@@ -133,7 +150,8 @@ function goUserHome(userId: string) {
 .right-work-box {
   display: flex;
   align-items: center;
-  flex: 0 1 544px;
+  flex: 0 1 400px; // 右侧作品框窄一点，把宽度让给左侧评论文字
+  max-width: 40%; // 卡片不够宽时右侧先让：左侧至少留 60%，不然日 / 韩 / 泰文的「评论了您的作品：」一长，评论内容就没地方显示了
   min-width: 0;
   gap: 29px;
 
@@ -178,6 +196,7 @@ function goUserHome(userId: string) {
   }
   .right-work-box {
     width: 100%;
+    max-width: none;
     margin-top: 13px;
   }
   .content {

@@ -262,6 +262,7 @@ async function fetchData() {
 }
 .main {
   flex: 1;
+  min-width: 0; // flex 子项默认 min-width:auto，会被里面不换行的评论内容撑到比容器还宽，窗口小于 1200 时页面出横向滚动条
   padding: 24px;
   border: 1px solid #3d3d3d;
   border-radius: 14px;
