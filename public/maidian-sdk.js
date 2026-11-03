@@ -530,7 +530,7 @@
         case 'batch': instance.trackBatch(args[1]); break;
         case 'flush': instance.flush(false); break;
         case 'get_distinct_id': return instance.distinct_id;
-        case 'get_session_id': return instance.config.auto_session ? instance._sessionId() : '';
+        case 'get_session_id': return instance.initialized && instance.config.auto_session ? instance._sessionId() : ''; // config 之前没有会话
         case 'get_queue_length': return instance.queue.length;
         default: log(instance.config, 'warn', '未知指令: ' + cmd);
       }

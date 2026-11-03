@@ -3,6 +3,8 @@ export const redirectUrl = "https://wwwtest.fansfans.ai";
 export const aiUrl = "https://testapi.addaiaroot.com/";
 // 埋点上报域名
 export const trackUrl = "https://track-test.blfans.ai/";
+// 埋点应用 id（后端 Maidian 后台分配，web_ 开头；测试 / 正式同一个，不用跟着切）。空着时埋点不上报
+export const trackAppId = "";
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
 // export const baseUrl = "https://api.moegen.ai/";

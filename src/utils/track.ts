@@ -1,30 +1,28 @@
-// 自家埋点上报（Moegen Track，POST {host}/report）。
-// 信封格式固定：header（设备 / 用户 / 端）+ events[]（事件名 / 时间 / 会话 / 参数），
-// 事件名和 params 按《埋点字段定义.md》填；移动端独有的事件（plus_click / next_step_click / first_open）不在这里。
+// 自家埋点（业务层）。发送由 public/maidian-sdk.js 负责（index.html 里引入，挂在 window.maidian 上）：
+// 本地队列、批量合并、失败重试、event_id 去重、会话（session_start / session_end）、
+// 端 / 设备 / 系统 / 浏览器 / 页面等公共字段都在 SDK 里，这里只管「报什么事件、带什么参数」。
 //
+// 事件名和 params 按《埋点字段定义.md》填；移动端独有的事件（plus_click / next_step_click）不在这里。
 // 用法：各页面调下面导出的 trackXxx()；新事件直接 track(event_name, params)。
-// 事件先存进本地队列（localStorage），满 1 分钟或攒够 50 条才请求一次上报接口；
-// 页面隐藏 / 关闭时用 sendBeacon 把剩下的一次送出，发失败的留在本地下次打开再发。
-import { IS_TESTNET, trackUrl } from "@/util/config";
+// 后端接口：POST {trackUrl}/api/v1/track/batch，每条 { app_id, event, distinct_id, user_id, timestamp, extra_data }，
+// 这里的 params 原样进 extra_data。
+import { IS_TESTNET, trackUrl, trackAppId } from "@/util/config";
 import { getGaClientId } from "@/utils/analytics";
 
-// 上报总开关：先全部关掉，不入队、不存本地、不请求 /report。要打开改成 true
+// 上报总开关：先全部关掉（SDK enabled=false：不入队、不存本地、不请求）。要打开改成 true
 const TRACK_ENABLED = false;
 
-// 上报地址：域名在 config.ts 的 trackUrl 里配
-const REPORT_URL = trackUrl + "report";
-
-const KEY_DEVICE = "trk_device_id";
 const KEY_FIRST_VISIT = "trk_first_visit_at";
-const KEY_SESSION = "trk_session_id";
-const KEY_SESSION_ACTIVE = "trk_session_active";
-const KEY_SESSION_START = "trk_session_start";
-const KEY_SESSION_PV = "trk_session_pv"; // 本次会话浏览页次数（session_end 的 page_views）
 const KEY_LOGGED_USERS = "trk_logged_users"; // 这台设备登录过的账号（user_identify 的 is_first_login）
-const SESSION_TIMEOUT = 30 * 60 * 1000;
+const KEY_VIEWED = "trk_viewed"; // 本会话已曝光的目标（浏览去重）
 
 // 调试日志：本地和测试环境打。原来按域名结尾判断，wwwtest.fansfans.ai / wwwtest.blfans.ai 会被误当成正式环境
 const isDebug = IS_TESTNET;
+
+// initTracking 里 config 过 SDK 才为 true。config 要先等 GA client_id（最多 0.8s），这期间路由已经在报 page_view 了，
+// 所以 ready 之前的事件先攒在 pendingEvents 里，config 完了再按顺序交给 SDK；总开关关着 / 没 app_id 时直接丢
+let ready = false;
+let pendingEvents: Array<[string, Record<string, unknown>, boolean]> = [];
 
 function safeGet(store: Storage, key: string): string {
   try { return store.getItem(key) || ""; } catch { return ""; }
@@ -32,89 +30,98 @@ function safeGet(store: Storage, key: string): string {
 function safeSet(store: Storage, key: string, val: string) {
   try { store.setItem(key, val); } catch { /* 隐私模式等存不了就算了 */ }
 }
-function safeDel(store: Storage, key: string) {
-  try { store.removeItem(key); } catch { /* ignore */ }
-}
-function uuid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
-  });
-}
 
-// ============================================================
-// 设备 / 会话 / 用户
-// ============================================================
-
-let deviceIdCache = "";
-
-/** 设备标识：优先 GA 的 client_id（和 GA 数据能对上），拿不到就自己生成一个存起来 */
-async function getDeviceId(): Promise<string> {
-  if (deviceIdCache) return deviceIdCache;
-  const cached = safeGet(localStorage, KEY_DEVICE);
-  if (cached) return (deviceIdCache = cached);
-  let id = "";
-  try { id = await getGaClientId(800); } catch { id = ""; }
-  if (!id) id = "d_" + uuid();
-  safeSet(localStorage, KEY_DEVICE, id);
-  return (deviceIdCache = id);
-}
-
-/**
- * 当前会话 id。30 分钟没动作就开新会话（先补报上一个会话的 session_end，再报新会话的 session_start）。
- * touch=true 表示这是一次用户动作，刷新「最后活动时间」。
- */
-function currentSessionId(touch = true): string {
-  const now = Date.now();
-  let sid = safeGet(sessionStorage, KEY_SESSION);
-  const last = Number(safeGet(sessionStorage, KEY_SESSION_ACTIVE)) || 0;
-  if (!sid || (last && now - last > SESSION_TIMEOUT)) {
-    // 没有会话 = 新开的标签页 / 冷启动；有但超时 = 超时后重新计
-    const reason = sid ? "timeout_restart" : "cold_start";
-    if (sid) flushSessionEnd();
-    sid = "s_" + uuid();
-    safeSet(sessionStorage, KEY_SESSION, sid);
-    safeSet(sessionStorage, KEY_SESSION_START, String(now));
-    safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
-    safeSet(sessionStorage, KEY_SESSION_PV, "0");
-    safeDel(sessionStorage, "trk_session_ended");
-    enqueue("session_start", { start_reason: reason });
-  }
-  if (touch) safeSet(sessionStorage, KEY_SESSION_ACTIVE, String(now));
-  return sid;
+/** window.maidian：index.html 里的桩或 SDK 本体；SSR / 预渲染没有 window 时为空 */
+function sdk(): MaidianFn | null {
+  return typeof window !== "undefined" && typeof window.maidian === "function" ? window.maidian : null;
 }
 
 function getUserId(): string {
   return safeGet(localStorage, "uid");
 }
 
+/** 设备 id（= SDK 的 distinct_id，优先 GA client_id）；user_identify 的 anonymous_id 用 */
+function getDeviceId(): string {
+  const m = sdk();
+  return m ? String(m("get_distinct_id") || "") : "";
+}
+
+/** 当前会话 id（SDK 管理：30 分钟无动作开新会话并自动报 session_start / session_end）；config 之前还没有会话 */
+function currentSessionId(): string {
+  const m = sdk();
+  return m && ready ? String(m("get_session_id") || "") : "";
+}
+
 // ============================================================
-// 环境信息
+// 发送：交给 SDK
 // ============================================================
 
-const UA = typeof navigator !== "undefined" ? navigator.userAgent : "";
+/**
+ * 报一条事件。lowPriority=true 的高频事件（视频播放进度）只进队列不触发定时器，
+ * 等别的事件发送时捎上、攒够一批或关页时才发。
+ */
+export function track(eventName: string, params: Record<string, unknown> = {}, opts: { lowPriority?: boolean } = {}) {
+  if (!TRACK_ENABLED) return;
+  // 过滤掉 undefined / null / 空串，少传没意义的字段
+  const clean: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") clean[k] = v;
+  }
+  if (!ready) {
+    pendingEvents.push([eventName, clean, !!opts.lowPriority]);
+    return;
+  }
+  const m = sdk();
+  if (!m) return;
+  m("event", eventName, clean, opts.lowPriority ? { lowPriority: true } : undefined);
+  if (isDebug) console.log("[Track Debug]", eventName, clean);
+}
 
-// pc
-function clientType(): "web" {
-  return "web";
+/** 登录态同步给 SDK：登录 / 冷启动传 uid，退出登录传 null（之后的事件 user_id 为空） */
+export function setTrackUser(userId: string | number | null) {
+  const m = sdk();
+  if (!m) return;
+  m("set", { user_id: userId === null || userId === undefined || userId === "" ? null : String(userId) });
 }
-function osName(): string {
-  if (/iPhone|iPad|iPod/i.test(UA)) return "iOS";
-  if (/Android/i.test(UA)) return "Android";
-  if (/Windows/i.test(UA)) return "Windows";
-  if (/Mac OS X|Macintosh/i.test(UA)) return "macOS";
-  if (/Linux/i.test(UA)) return "Linux";
-  return "other";
+
+/**
+ * 应用启动时调一次（App.vue）：config SDK，同步登录态，报 first_open（首次）；
+ * 已登录用户冷启动报一次 user_identify(auto)。会话、关页兜底发送都在 SDK 里。
+ */
+export async function initTracking() {
+  const m = sdk();
+  if (!m) return;
+  if (!trackAppId) {
+    if (isDebug) console.warn("[Track Debug] config.ts 没配 trackAppId，埋点不上报");
+    return;
+  }
+  // 冷启动 = 这个标签页还没有会话（刷新页面 sessionStorage 还在，不算）；要在 config 之前判，config 会开会话
+  const coldStart = !safeGet(sessionStorage, "__maidian_session_id__");
+  // 设备 id 优先用 GA 的 client_id，和 GA 报表能对上；拿不到 SDK 自己生成一个存起来
+  let gaId = "";
+  try { gaId = await getGaClientId(800); } catch { gaId = ""; }
+  m("config", trackAppId, {
+    server_url: trackUrl.replace(/\/+$/, ""),
+    distinct_id: gaId || undefined,
+    app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
+    enabled: TRACK_ENABLED,
+    debug: isDebug && TRACK_ENABLED,
+  });
+  ready = TRACK_ENABLED;
+  const uid = getUserId();
+  setTrackUser(uid || null);
+  trackFirstVisit();
+  // 已登录用户冷启动：报一次 user_identify(auto) 确认身份（文档 user_identify 触发时机）
+  if (coldStart && uid) trackUserIdentify(uid, "auto");
+  // config 之前攒下的事件（首个 page_view 等）按顺序补上
+  const backlog = pendingEvents;
+  pendingEvents = [];
+  for (const [name, params, lowPriority] of backlog) track(name, params, { lowPriority });
 }
-function browserName(): string {
-  if (/Edg\//i.test(UA)) return "Edge";
-  if (/OPR\//i.test(UA)) return "Opera";
-  if (/Chrome\//i.test(UA)) return "Chrome";
-  if (/Safari\//i.test(UA) && !/Chrome/i.test(UA)) return "Safari";
-  if (/Firefox\//i.test(UA)) return "Firefox";
-  return "other";
-}
+
+// ============================================================
+// 二、用户概况：first_open / page_view / user_identify（session_start / session_end 由 SDK 报）
+// ============================================================
 
 /**
  * 落地页类型 + 对应 id：投放链接一般是首页 / 作品详情 / 合集详情 / 个人主页，
@@ -144,178 +151,27 @@ function utmParams(): Record<string, string> {
   return out;
 }
 
-// ============================================================
-// 发送（队列 + 批量）
-// ============================================================
-
-type TrackEvent = { event_id: string; event_name: string; event_time: number; session_id: string; params: Record<string, unknown> };
-
-// 发送方式和 GA 一样是「近实时 + 小批量合并」：事件先进本地队列（localStorage），
-// 5 秒内连着触发的几条合成一个请求发出去，攒够 20 条立即发；页面隐藏 / 关闭用 sendBeacon 把剩下的送出。
-// 高频低价值的事件（视频播放进度）标 lowPriority：只进队列不起定时器，等别的事件发送时捎上、攒够 20 条或关页时才发。
-// 存本地是为了刷新 / 关页不丢：下次打开时把上次没发完的一起带上。
-// 发失败按 2s → 4s → 8s … 最多 60s 退避重试（GA 是丢了就丢，这里不丢），每条事件带 event_id 给后端去重。
-const KEY_QUEUE = "trk_queue";
-const FLUSH_DELAY = 5000;           // 合并窗口：事件触发后等这么久再发，期间触发的一起带上
-const FLUSH_MAX = 20;               // 攒够这么多条不等窗口直接发
-const RETRY_BASE = 2000;            // 失败后首次重试间隔
-const RETRY_MAX = 60 * 1000;        // 重试间隔上限
-const QUEUE_CAP = 500; // 本地最多攒这么多，再多丢最旧的，避免 localStorage 撑爆
-let queue: TrackEvent[] = loadQueue();
-let flushTimer: number | null = null;
-let flushing = false;
-let failCount = 0; // 连续失败次数，算退避间隔用；成功一次清零
-
-function loadQueue(): TrackEvent[] {
-  try {
-    const raw = safeGet(localStorage, KEY_QUEUE);
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch { return []; }
-}
-function saveQueue() {
-  if (queue.length > QUEUE_CAP) queue = queue.slice(queue.length - QUEUE_CAP);
-  if (queue.length === 0) safeDel(localStorage, KEY_QUEUE);
-  else safeSet(localStorage, KEY_QUEUE, JSON.stringify(queue));
-}
-function armTimer(delay = FLUSH_DELAY) {
-  if (flushTimer == null && typeof window !== "undefined") {
-    flushTimer = window.setTimeout(() => void flush(), delay);
-  }
-}
-/** 失败后的重试间隔：2s、4s、8s … 封顶 60s */
-function retryDelay(): number {
-  return Math.min(RETRY_MAX, RETRY_BASE * Math.pow(2, Math.max(0, failCount - 1)));
-}
-
-function buildHeader(deviceId: string) {
-  return {
-    device_id: deviceId,
-    user_id: getUserId() || "",
-    client_type: clientType(),
-    platform: clientType(), // 端口：PC 站固定 web（os 放在 first_open 的 params 里）
-    source: "fansfans", // 平台（来源站点）
-    app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
-  };
-}
-
-function enqueue(eventName: string, params: Record<string, unknown>, lowPriority = false) {
-  if (!TRACK_ENABLED) return;
-  queue.push({
-    event_id: uuid(), // 补发可能重复，后端按它去重
-    event_name: eventName,
-    event_time: Date.now(),
-    session_id: safeGet(sessionStorage, KEY_SESSION), // 事件归哪个会话；队列会跨会话攒着，所以放事件上不放 header
-    params,
-  });
-  saveQueue();
-  if (isDebug) console.log("[Track Debug]", eventName, params, `(队列 ${queue.length})`);
-  // 正在退避重试时不插队，等重试定时器；否则攒够了立即发，没攒够等合并窗口；
-  // 低优先级事件不起定时器，只在攒满时发，其余时候等别的事件 / 关页捎带
-  if (failCount > 0) armTimer(retryDelay());
-  else if (queue.length >= FLUSH_MAX) void flush();
-  else if (!lowPriority) armTimer();
-}
-
-/** 把队列里的事件发出去。beacon=true 用 sendBeacon（页面关闭 / 隐藏时用，fetch 可能发不出去） */
-async function flush(beacon = false) {
-  if (!TRACK_ENABLED) return;
-  if (flushTimer != null) { clearTimeout(flushTimer); flushTimer = null; }
-  if (queue.length === 0 || flushing) return;
-  flushing = true;
-  const events = queue.slice(0, FLUSH_MAX);
-  try {
-    const body = JSON.stringify({ header: buildHeader(await getDeviceId()), events });
-    if (beacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
-      // sendBeacon 只能发简单类型，服务端要能接 text/plain 的 JSON 串。
-      // 它不返回结果，按已发出处理（发不出去也只是丢这一批）
-      navigator.sendBeacon(REPORT_URL, new Blob([body], { type: "text/plain" }));
-      queue = queue.slice(events.length);
-      saveQueue();
-      return;
-    }
-    const res = await fetch(REPORT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive: true,
-    });
-    if (res.ok) {
-      // 发成功才从本地队列里去掉，失败留着下一轮再发
-      queue = queue.slice(events.length);
-      saveQueue();
-      failCount = 0;
-      if (isDebug) console.log("[Track Debug] 已上报", events.length, "条");
-    } else {
-      failCount++;
-      if (isDebug) console.warn("[Track Debug] 上报失败 HTTP", res.status, "，", retryDelay() / 1000, "秒后重试");
-    }
-  } catch (err) {
-    failCount++;
-    if (isDebug) console.warn("[Track Debug] 上报失败", err, "，", retryDelay() / 1000, "秒后重试");
-  } finally {
-    flushing = false;
-    // 还有剩：发成功了接着发下一批；失败了按退避间隔再试，别把挂掉的接口打爆
-    if (queue.length > 0) {
-      if (failCount > 0) armTimer(retryDelay());
-      else if (queue.length >= FLUSH_MAX) void flush();
-      else armTimer();
-    }
-  }
-}
-
-/** 通用上报：事件名 + 业务参数（按《埋点字段定义.md》） */
-export function track(eventName: string, params: Record<string, unknown> = {}, opts: { lowPriority?: boolean } = {}) {
-  // 过滤掉 undefined / null / 空串，少传没意义的字段
-  const clean: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== "") clean[k] = v;
-  }
-  enqueue(eventName, clean, !!opts.lowPriority);
-}
-
-// ============================================================
-// 二、用户概况：first_open / session_end / page_view / user_identify
-// ============================================================
-
 /**
  * first_visit：这台设备（浏览器）第一次打开网站时报一次，带推广来源。
  * 判定靠 localStorage 标记；用户清缓存 / 无痕会再算一次，和 GA 的 first_visit 口径一致。
+ * referrer / device / os / browser 由 SDK 自动带，这里不传。
  */
 export function trackFirstVisit() {
+  if (!ready) return;
   if (safeGet(localStorage, KEY_FIRST_VISIT)) return;
   safeSet(localStorage, KEY_FIRST_VISIT, String(Date.now()));
   track("first_open", {
-    referrer: typeof document !== "undefined" ? document.referrer || "" : "",
     landing_page: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
     ...landingInfo(),
     ...utmParams(),
-    device: clientType(),
-    os: osName(),
-    browser: browserName(),
   });
-}
-
-/** session_end：带会话时长（给"会话>10s"用） */
-function flushSessionEnd(beacon = false) {
-  const sid = safeGet(sessionStorage, KEY_SESSION);
-  const start = Number(safeGet(sessionStorage, KEY_SESSION_START)) || 0;
-  if (!sid || !start) return;
-  const last = Number(safeGet(sessionStorage, KEY_SESSION_ACTIVE)) || Date.now();
-  const ended = safeGet(sessionStorage, "trk_session_ended");
-  if (ended === sid) return; // 同一会话只报一次结束
-  safeSet(sessionStorage, "trk_session_ended", sid);
-  enqueue("session_end", {
-    duration: Math.max(0, Math.round((last - start) / 1000)),
-    page_views: Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0,
-  });
-  if (beacon) void flush(true);
 }
 
 /**
  * page_view：路由切换时调，只报这几个页面：
  * home 首页 / generate 生成页（视频 / 图片）/ novel_generate 小说生成页（/novel/:id）/ user_home 个人主页 /
  * detail 作品详情 / collection_detail 合集详情 / search 搜索页 / publish 发布页。其它路由不报。
+ * SDK 会按 page_view 事件数算 session_end 的 page_views。
  */
 export function trackPageView(info: {
   path: string;
@@ -323,8 +179,6 @@ export function trackPageView(info: {
   params?: Record<string, any>;
   query?: Record<string, any>;
 }) {
-  currentSessionId(); // 刷新会话活动时间（超时会自动开新会话）
-  safeSet(sessionStorage, KEY_SESSION_PV, String((Number(safeGet(sessionStorage, KEY_SESSION_PV)) || 0) + 1));
   const p = info.params || {};
   const q = info.query || {};
   const path = info.path || "";
@@ -366,7 +220,7 @@ export function trackPageView(info: {
     if (q.id || q.post_id) extra.post_id = q.id || q.post_id; // 编辑作品时带
   }
   if (!page_name) return;
-  enqueue("page_view", { page_name, path, ...extra });
+  track("page_view", { page_name, path, ...extra });
 }
 
 export type LoginType = "email" | "google" | "phone" | "third_party" | "auto";
@@ -391,62 +245,28 @@ export function trackUserIdentify(userId: string | number, loginType: LoginType)
   if (!uid) return;
   track("user_identify", {
     user_id: uid,
-    anonymous_id: safeGet(localStorage, KEY_DEVICE),
+    anonymous_id: getDeviceId(),
     login_type: loginType,
     is_first_login: isFirstLoginOnDevice(uid),
   });
 }
 
-/** register：注册成功（邮箱 / Google …），同时报 user_identify 做身份缝合 */
+/** register：注册成功（邮箱 / Google …），同步登录态给 SDK，同时报 user_identify 做身份缝合 */
 export function trackRegisterSuccess(userId: string | number, loginType: LoginType) {
   const uid = String(userId || "");
   if (!uid) return;
-  track("register", { user_id: uid, anonymous_id: safeGet(localStorage, KEY_DEVICE), login_type: loginType });
+  setTrackUser(uid);
+  track("register", { user_id: uid, anonymous_id: getDeviceId(), login_type: loginType });
   trackUserIdentify(uid, loginType);
 }
 
-/** login：登录成功（邮箱 / Google …），同时报 user_identify 做身份缝合 */
+/** login：登录成功（邮箱 / Google …），同步登录态给 SDK，同时报 user_identify 做身份缝合 */
 export function trackLoginSuccess(userId: string | number, loginType: LoginType) {
   const uid = String(userId || "");
   if (!uid) return;
-  track("login", { user_id: uid, anonymous_id: safeGet(localStorage, KEY_DEVICE), login_type: loginType });
+  setTrackUser(uid);
+  track("login", { user_id: uid, anonymous_id: getDeviceId(), login_type: loginType });
   trackUserIdentify(uid, loginType);
-}
-
-/**
- * 应用启动时调一次：报 first_open（首次），开会话，
- * 并挂上页面隐藏 / 关闭时的 session_end + 批量兜底发送。
- */
-export function initTracking() {
-  if (typeof window === "undefined" || !TRACK_ENABLED) return;
-  // 上次没发完的先排上（满 50 立即发，否则 1 分钟后发）
-  if (queue.length >= FLUSH_MAX) void flush(); else if (queue.length > 0) armTimer();
-  // 冷启动 = 这个标签页还没有会话（刷新页面 sessionStorage 还在，不算）
-  const coldStart = !safeGet(sessionStorage, KEY_SESSION);
-  currentSessionId(); // 先开会话，后面的 first_open 等事件才带得上 session_id
-  trackFirstVisit();
-  // 已登录用户冷启动：报一次 user_identify(auto) 确认身份（文档 user_identify 触发时机）
-  if (coldStart) {
-    const uid = getUserId();
-    if (uid) trackUserIdentify(uid, "auto");
-  }
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      flushSessionEnd(true);
-      void flush(true);
-    } else {
-      // 回到前台：超过 30 分钟会在 currentSessionId 里开新会话（报 timeout_restart）；
-      // 没超时就是同一会话恢复：报一条 session_start(resume)，并允许它之后再报一次 session_end
-      const before = safeGet(sessionStorage, KEY_SESSION);
-      const sid = currentSessionId();
-      if (sid === before && safeGet(sessionStorage, "trk_session_ended") === sid) {
-        safeDel(sessionStorage, "trk_session_ended");
-        enqueue("session_start", { start_reason: "resume" });
-      }
-    }
-  });
-  window.addEventListener("pagehide", () => { flushSessionEnd(true); void flush(true); });
 }
 
 // ============================================================
@@ -457,7 +277,6 @@ export function initTracking() {
 let prevPagePath = "";
 let curPagePath = "";
 let lastChapterPostId = "";
-const KEY_VIEWED = "trk_viewed";
 
 /** 作品 type 数字 → 内容类型：1 漫画 / 2 小说 / 3 漫剧 / 4 图片 / 5 视频 */
 export function contentTypeOf(type: unknown): string {
@@ -467,7 +286,7 @@ export function contentTypeOf(type: unknown): string {
 
 /** 本会话里这个目标是否已经曝光过；没曝光过就记下来并返回 false */
 function viewedThisSession(key: string): boolean {
-  const sid = currentSessionId(false);
+  const sid = currentSessionId();
   let list: string[] = [];
   try { list = JSON.parse(safeGet(sessionStorage, KEY_VIEWED) || "[]"); } catch { list = []; }
   const k = sid + "|" + key;
