@@ -115,12 +115,14 @@
               :class="{ active: topTab === 'favorites' && viewMode === 'posts' }"
               @click="showFavorites()"
             >{{ t('userHome.contentType.myFavorites') }}</div>
+            <!-- 观看历史先隐藏（接口还没出），要放出来把这段注释去掉
             <div
               v-if="isSelf"
               class="main-tab"
               :class="{ active: topTab === 'history' && viewMode === 'posts' }"
               @click="showFavorites('history')"
             >{{ t('userHome.contentType.watchHistory') }}</div>
+            -->
           </div>
           <div class="stats-nums">
             <div
@@ -237,7 +239,7 @@
                     <div class="update-badge" v-if="activeContentType === 'history' && !isPostItem(collection) && (Number(collection.read_chapter_index) > 0 || collection.status == 2 || Number(collection.total_post_nums) > 0)">
                       <!-- 看到第几章是 0（接口给的 "0"）就不显示这一段 -->
                       <template v-if="Number(collection.read_chapter_index) > 0">{{ itemType(collection) === 2 ? t('detail.readToChapter', { count: collection.read_chapter_index }) : t('detail.readToEpisode', { count: collection.read_chapter_index }) }}</template>
-                      <template v-if="Number(collection.read_chapter_index) > 0 && (collection.status == 2 || Number(collection.total_post_nums) > 0)"> · </template>
+                      <span v-if="Number(collection.read_chapter_index) > 0 && (collection.status == 2 || Number(collection.total_post_nums) > 0)" class="chapter-divider">|</span>
                       <template v-if="collection.status == 2">{{ t('home.statusFinished') }}</template>
                       <template v-else-if="Number(collection.total_post_nums) > 0">{{ itemType(collection) === 2 ? t('home.totalChapterFormat', { chapter: collection.total_post_nums }) : t('home.totalEpisodeFormat', { episode: collection.total_post_nums }) }}</template>
                     </div>
@@ -1140,9 +1142,10 @@ async function fetchLikedBooks(reset = false) {
         is_top: '0',
         chapter_count: 0,
         latest_post_chapter_index: item.book_info?.latest_post_chapter_index,
-        // 观看历史用：看到第几章 = book_info.latest_post_chapter_index；合集总章数 total_post_nums；连载状态 status（2 = 已完结）
-        read_chapter_index: item.book_info?.latest_post_chapter_index ?? item.chapter_index,
-        total_post_nums: item.book_info?.total_post_nums,
+        // 观看历史用：看到第几章 = 历史记录上的 chapter_index / latest_read_chapter_index（历史接口出了再对字段名）；
+        // 合集总章数 = book_info.latest_post_chapter_index（最近更新到第几章）；连载状态 status（2 = 已完结）
+        read_chapter_index: item.chapter_index ?? item.latest_read_chapter_index ?? item.book_info?.latest_read_chapter_index,
+        total_post_nums: item.book_info?.latest_post_chapter_index,
         status: item.book_info?.status,
         session_id: item.book_info?.session_id,
         user_id: item.book_info?.user_id,
@@ -3847,6 +3850,12 @@ async function unpinCollection(collection: any) {
         color: #fff;
         font-weight: 700;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+
+        // 观看历史「看至第 X 章 | 共 N 章」中间的竖线，和首页卡片一样
+        .chapter-divider {
+          margin: 0 4px;
+          color: rgba(255, 255, 255, 0.5);
+        }
       }
 
       .make-btns-wrap {
