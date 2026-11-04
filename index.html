@@ -224,6 +224,18 @@
         gtag('config', GA_ID);
       }
     </script>
+    <script>
+      // 自家埋点 SDK（public/maidian-sdk.js，调用见 src/utils/maidian.ts）：先放预队列，SDK 加载前的调用先攒着，加载后按顺序补执行。
+      // SEO 预渲染（seo-server 注入 window.__SEO_PRERENDER__）时不加载：爬虫渲染一次不能算一次浏览
+      window.maidianQueue = window.maidianQueue || [];
+      function maidian(){ window.maidianQueue.push(arguments); }
+      if (window.__SEO_PRERENDER__ !== true) {
+        var mdSdk = document.createElement('script');
+        mdSdk.async = true;
+        mdSdk.src = '/maidian-sdk.js?v=1'; // 改了 public/maidian-sdk.js 就把 v 加 1：这个地址没有 hash，Cloudflare 会缓存 7 天
+        document.head.appendChild(mdSdk);
+      }
+    </script>
   </head>
 
   <body>

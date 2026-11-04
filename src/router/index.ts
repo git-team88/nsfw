@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteLocation } from "vue-router";
-import { trackPageView } from "@/utils/track";
+import { trackPageView } from "@/utils/maidian";
 import { applyRouteTitle, refreshRouteTexts } from "@/utils/pageTitle";
 import Home from "@/views/Home.vue";
 import Login from "@/views/login/Login.vue";

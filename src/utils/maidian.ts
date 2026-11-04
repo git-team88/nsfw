@@ -7,7 +7,6 @@
 // 后端接口：POST {trackUrl}/api/v1/track/batch，每条 { app_id, event, distinct_id, user_id, timestamp, extra_data }，
 // 这里的 params 原样进 extra_data。
 import { IS_TESTNET, trackUrl, trackAppId } from "@/util/config";
-import { getGaClientId } from "@/utils/analytics";
 
 // 上报总开关：先全部关掉（SDK enabled=false：不入队、不存本地、不请求）。要打开改成 true
 const TRACK_ENABLED = false;
@@ -19,7 +18,7 @@ const KEY_VIEWED = "trk_viewed"; // 本会话已曝光的目标（浏览去重�
 // 调试日志：本地和测试环境打。原来按域名结尾判断，wwwtest.fansfans.ai / wwwtest.blfans.ai 会被误当成正式环境
 const isDebug = IS_TESTNET;
 
-// initTracking 里 config 过 SDK 才为 true。config 要先等 GA client_id（最多 0.8s），这期间路由已经在报 page_view 了，
+// initTracking 里 config 过 SDK 才为 true。App.vue 调 initTracking 之前路由可能已经报了 page_view，
 // 所以 ready 之前的事件先攒在 pendingEvents 里，config 完了再按顺序交给 SDK；总开关关着 / 没 app_id 时直接丢
 let ready = false;
 let pendingEvents: Array<[string, Record<string, unknown>, boolean]> = [];
@@ -40,7 +39,7 @@ function getUserId(): string {
   return safeGet(localStorage, "uid");
 }
 
-/** 设备 id（= SDK 的 distinct_id，优先 GA client_id）；user_identify 的 anonymous_id 用 */
+/** 设备 id（= SDK 的 distinct_id：客户端生成的 uuid v4，存 localStorage）；user_identify 的 anonymous_id 用 */
 function getDeviceId(): string {
   const m = sdk();
   return m ? String(m("get_distinct_id") || "") : "";
@@ -97,12 +96,9 @@ export async function initTracking() {
   }
   // 冷启动 = 这个标签页还没有会话（刷新页面 sessionStorage 还在，不算）；要在 config 之前判，config 会开会话
   const coldStart = !safeGet(sessionStorage, "__maidian_session_id__");
-  // 设备 id 优先用 GA 的 client_id，和 GA 报表能对上；拿不到 SDK 自己生成一个存起来
-  let gaId = "";
-  try { gaId = await getGaClientId(800); } catch { gaId = ""; }
+  // 设备 id（distinct_id）不传，由 SDK 生成 uuid v4 存 localStorage（__maidian_distinct_id__），之后一直用这个
   m("config", trackAppId, {
     server_url: trackUrl.replace(/\/+$/, ""),
-    distinct_id: gaId || undefined,
     app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
     enabled: TRACK_ENABLED,
     debug: isDebug && TRACK_ENABLED,

@@ -1021,7 +1021,7 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
-import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/track";
+import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/maidian";
 
 const { t, locale } = useI18n();
 

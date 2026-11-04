@@ -107,7 +107,7 @@
 
 <script setup lang="ts" name="Login">
 import Header from "@/components/Header.vue";
-import { trackLoginSuccess } from "@/utils/track";
+import { trackLoginSuccess } from "@/utils/maidian";
 import Agree from "@/components/Agree.vue";
 import UploadMask from "@/components/UploadMask.vue";
 

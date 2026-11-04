@@ -232,7 +232,7 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
-import { trackCollectionView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/track';
+import { trackCollectionView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();

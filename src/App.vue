@@ -14,7 +14,7 @@ import { setLocale } from '@/lang/i18n';
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { useRoute, useRouter } from 'vue-router';
 import { pageSlideDir } from '@/util/pageSlide';
-import { initTracking } from '@/utils/track';
+import { initTracking } from '@/utils/maidian';
 import { applyRouteTitle } from '@/utils/pageTitle';
 
 const contentSwitch = useContentSwitchStore();

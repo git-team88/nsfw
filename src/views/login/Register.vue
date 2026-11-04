@@ -163,7 +163,7 @@
 
 <script setup lang="ts" name="Register">
 import Header from "@/components/Header.vue";
-import { trackRegisterSuccess } from "@/utils/track";
+import { trackRegisterSuccess } from "@/utils/maidian";
 import InviteCodeModal from "@/components/InviteCodeModal.vue";
 
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";

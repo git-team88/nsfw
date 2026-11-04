@@ -8,7 +8,8 @@
  *   - 每条事件带 event_id（uuid），后端按它去重（重发 / beacon 双发不会多算）
  *   - 关页 / 切后台用 sendBeacon（text/plain，跨域不用预检），不行再 fetch keepalive
  *   - 会话：sessionStorage 存 session_id，30 分钟无动作开新会话，自动报 session_start / session_end
- *   - 公共字段每条带：session_id / event_id / platform / device(pc|mobile|tablet) / os / browser / page_url / referrer …
+ *   - 公共字段每条带：session_id / event_id / page_url / page_title / referrer / language / screen_width / screen_height / user_agent
+ *     （不带 platform / device / os / browser / sdk_version / app_version：app_id 已区分站点和端，设备信息后端从 user_agent 解析）
  *   - 全链路 try/catch，上报域名不通、无痕模式禁 storage 都不影响业务页
  *
  * 接口（后端 Maidian API）：POST {server_url}/api/v1/track/batch
@@ -35,12 +36,12 @@
  *   batch_size      攒够多少条立即发（默认 20）
  *   queue_cap       本地最多攒多少条，超过丢最旧的（默认 500）
  *   session_timeout 会话超时 ms（默认 30 分钟）
- *   distinct_id     外部指定设备 id（比如传 GA client_id，和 GA 报表对得上）；不传自己生成并存 localStorage
- *   platform        端（默认 'web'；App 内嵌 H5 可传 'ios' / 'android'）
- *   app_version     应用版本，放进每条事件的 extra_data
+ *   distinct_id     外部指定设备 id；不传（默认）客户端生成 uuid v4 并存 localStorage，之后一直用这个
+ *   platform        端（默认 'web'）；目前不放进 extra_data（app_id 已区分站点和端）
+ *   app_version     应用版本；目前不放进 extra_data
  *   auto_pv         config 后自动报一条 page_view（默认 false，SPA 由路由自己报）
  *   auto_session    自动报 session_start / session_end（默认 true）
- *   send_user_agent extra_data 里带 user_agent（默认 false，后端从请求头取）
+ *   send_user_agent extra_data 里带 user_agent（默认 true，和示例 SDK 一致）
  *   enabled         总开关（默认 true；false 时不入队、不存、不发）
  *   debug           控制台打日志（默认 false）
  */
@@ -71,7 +72,7 @@
     app_version: '',
     auto_pv: false,
     auto_session: true,
-    send_user_agent: false,
+    send_user_agent: true,
     enabled: true,
     debug: false,
     storage_prefix: '__maidian_'
@@ -241,9 +242,6 @@
       if (eventName === 'page_view') { this.pageViews++; session.set(this.keys.pv, String(this.pageViews)); }
 
       var extra = assign({}, this._pageEnv(), this.env, {
-        sdk_version: SDK_VERSION,
-        platform: this.config.platform,
-        app_version: this.config.app_version || '',
         session_id: sid,
         event_id: uuid()
       }, this.common_props, (eventData && typeof eventData === 'object') ? eventData : {});
@@ -443,7 +441,7 @@
     if (!this.config.enabled) return;
     if (eventName === 'session_start') session.set(this.keys.session + 'start', String(now()));
     var extra = assign({}, this._pageEnv(), this.env, {
-      sdk_version: SDK_VERSION, platform: this.config.platform, app_version: this.config.app_version || '', event_id: uuid()
+      event_id: uuid()
     }, this.common_props, params);
     this._enqueue({
       app_id: this.app_id || 'unknown_app', event: eventName, distinct_id: this.distinct_id || null,
@@ -464,9 +462,6 @@
     var env = {};
     try {
       var ua = hasNavigator ? (navigator.userAgent || '') : '';
-      env.device = detectDevice(ua);
-      env.os = detectOS(ua);
-      env.browser = detectBrowser(ua);
       if (hasNavigator) env.language = navigator.language || '';
       if (hasWindow && window.screen) { env.screen_width = window.screen.width || 0; env.screen_height = window.screen.height || 0; }
       if (this.config.send_user_agent) env.user_agent = ua;

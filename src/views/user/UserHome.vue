@@ -508,7 +508,7 @@ import { useI18n } from "vue-i18n";
 import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta } from "@/utils/seoMeta";
 import { siteName } from "@/utils/pageTitle";
 import { trackSubscribeToCreator } from "@/utils/analytics";
-import { trackFollow } from "@/utils/track";
+import { trackFollow } from "@/utils/maidian";
 import { useRouter } from "vue-router";
 import { toast } from "@/util/toast";
 import { processImageUrl, initLanguage, formatTimestamp, apiErrorMessage } from '@/util/utils';

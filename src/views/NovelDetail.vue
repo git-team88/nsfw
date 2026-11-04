@@ -314,7 +314,7 @@ import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackShare, trackSubscribeToContent } from '@/utils/analytics';
-import { trackChapterView, trackCatalogChapterClick, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from '@/utils/track';
+import { trackChapterView, trackCatalogChapterClick, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from '@/utils/maidian';
 
 const { t, locale } = useI18n();
 const route = useRoute();

@@ -375,7 +375,7 @@ import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { trackShare } from '@/utils/analytics';
-import { contentTypeOf, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent } from '@/utils/track';
+import { contentTypeOf, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent } from '@/utils/maidian';
 import { baseUrl } from '@/util/config';
 import { uploadVideoFile, PartUploadError } from '@/util/uploadVideo';
 import { formatTimestamp, apiErrorMessage } from '@/util/utils';
