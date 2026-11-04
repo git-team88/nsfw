@@ -232,7 +232,7 @@
       if (window.__SEO_PRERENDER__ !== true) {
         var mdSdk = document.createElement('script');
         mdSdk.async = true;
-        mdSdk.src = '/maidian-sdk.js?v=1'; // 改了 public/maidian-sdk.js 就把 v 加 1：这个地址没有 hash，Cloudflare 会缓存 7 天
+        mdSdk.src = '/maidian-sdk.js?v=1'; // 这个地址没有 hash，Cloudflare 会缓存 7 天；v 由打包脚本（bump_sdk_ver.py）维护：SDK 内容变了自动加 1（sdk-md5:6a8145be）
         document.head.appendChild(mdSdk);
       }
     </script>
