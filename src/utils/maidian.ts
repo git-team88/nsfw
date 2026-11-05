@@ -9,7 +9,14 @@
 import { IS_TESTNET, trackUrl, trackAppId } from "@/util/config";
 
 // 上报总开关：先全部关掉（SDK enabled=false：不入队、不存本地、不请求）。要打开改成 true
-const TRACK_ENABLED = false;
+const TRACK_ENABLED = true;
+
+// 暂不上报的事件：代码和调用处都保留，要恢复把对应开关改成 true
+const FIRST_OPEN_ENABLED = false; // first_open（设备首次打开）
+// collection_view / chapter_view / work_view / catalog_chapter_click：浏览量改用 history_view（接口文档 4.4）
+const VIEW_EVENTS_ENABLED = false;
+// register / login / user_identify：不做身份绑定，登录前 user_id 传空、登录后传值，靠 distinct_id 关联（登录态照常同步给 SDK）
+const IDENTIFY_EVENTS_ENABLED = false;
 
 const KEY_FIRST_VISIT = "trk_first_visit_at";
 const KEY_LOGGED_USERS = "trk_logged_users"; // 这台设备登录过的账号（user_identify 的 is_first_login）
@@ -21,7 +28,7 @@ const isDebug = IS_TESTNET;
 // initTracking 里 config 过 SDK 才为 true。App.vue 调 initTracking 之前路由可能已经报了 page_view，
 // 所以 ready 之前的事件先攒在 pendingEvents 里，config 完了再按顺序交给 SDK；总开关关着 / 没 app_id 时直接丢
 let ready = false;
-let pendingEvents: Array<[string, Record<string, unknown>, boolean]> = [];
+let pendingEvents: Array<[string, Record<string, unknown>, { lowPriority?: boolean; keepEmpty?: boolean }]> = [];
 
 function safeGet(store: Storage, key: string): string {
   try { return store.getItem(key) || ""; } catch { return ""; }
@@ -59,15 +66,16 @@ function currentSessionId(): string {
  * 报一条事件。lowPriority=true 的高频事件（视频播放进度）只进队列不触发定时器，
  * 等别的事件发送时捎上、攒够一批或关页时才发。
  */
-export function track(eventName: string, params: Record<string, unknown> = {}, opts: { lowPriority?: boolean } = {}) {
+export function track(eventName: string, params: Record<string, unknown> = {}, opts: { lowPriority?: boolean; keepEmpty?: boolean } = {}) {
   if (!TRACK_ENABLED) return;
-  // 过滤掉 undefined / null / 空串，少传没意义的字段
+  // 默认过滤掉 undefined / null / 空串，少传没意义的字段；keepEmpty=true 时字段都保留，没值的传空串（字段固定的事件用）
   const clean: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null && v !== "") clean[k] = v;
+    if (opts.keepEmpty) clean[k] = v === undefined || v === null ? "" : v;
+    else if (v !== undefined && v !== null && v !== "") clean[k] = v;
   }
   if (!ready) {
-    pendingEvents.push([eventName, clean, !!opts.lowPriority]);
+    pendingEvents.push([eventName, clean, opts]);
     return;
   }
   const m = sdk();
@@ -112,7 +120,7 @@ export async function initTracking() {
   // config 之前攒下的事件（首个 page_view 等）按顺序补上
   const backlog = pendingEvents;
   pendingEvents = [];
-  for (const [name, params, lowPriority] of backlog) track(name, params, { lowPriority });
+  for (const [name, params, opts] of backlog) track(name, params, opts);
 }
 
 // ============================================================
@@ -156,6 +164,8 @@ export function trackFirstVisit() {
   if (!ready) return;
   if (safeGet(localStorage, KEY_FIRST_VISIT)) return;
   safeSet(localStorage, KEY_FIRST_VISIT, String(Date.now()));
+  // 关着时照样记「已打开过」，以后打开开关不会把老设备再算成首次
+  if (!FIRST_OPEN_ENABLED) return;
   track("first_open", {
     landing_page: typeof window !== "undefined" ? window.location.pathname + window.location.search : "",
     ...landingInfo(),
@@ -163,10 +173,24 @@ export function trackFirstVisit() {
   });
 }
 
+/** 营销参数（接口文档 4.3）：当前地址上的 utm_source / utm_medium / utm_campaign，有才带 */
+function utmFields(): Record<string, string> {
+  const out: Record<string, string> = {};
+  try {
+    const q = new URLSearchParams(window.location.search);
+    for (const k of ["utm_source", "utm_medium", "utm_campaign"]) {
+      const v = (q.get(k) || "").trim();
+      if (v) out[k] = v;
+    }
+  } catch { /* ignore */ }
+  return out;
+}
+
 /**
- * page_view：路由切换时调，只报这几个页面：
+ * page_view（接口文档 4.3）：每次路由切换都报（所有页面），页面分类放 page_type：
  * home 首页 / generate 生成页（视频 / 图片）/ novel_generate 小说生成页（/novel/:id）/ user_home 个人主页 /
- * detail 作品详情 / collection_detail 合集详情 / search 搜索页 / publish 发布页。其它路由不报。
+ * detail 作品详情 / collection_detail 合集详情 / search 搜索页 / publish 发布页；
+ * 其它页面按路径取名（/user-payment-history → user_payment_history，/publish/success → publish_success），404 记 not_found。
  * SDK 会按 page_view 事件数算 session_end 的 page_views。
  */
 export function trackPageView(info: {
@@ -174,6 +198,8 @@ export function trackPageView(info: {
   name?: string;
   params?: Record<string, any>;
   query?: Record<string, any>;
+  /** 上一个路由的完整地址（站内跳转才有），作 referrer */
+  from?: string;
 }) {
   const p = info.params || {};
   const q = info.query || {};
@@ -190,16 +216,12 @@ export function trackPageView(info: {
     page_name = "generate";
   } else if (/^\/novel\/[^/]+/.test(path)) {
     page_name = "novel_generate";
-    extra.gen_session_id = p.id;
   } else if (/^\/user-home/.test(path)) {
     page_name = "user_home";
-    extra.user_id = p.id || q.uid;
   } else if (/^\/detail/.test(path)) {
     page_name = "detail";
-    extra.post_id = p.id || q.id;
   } else if (/^\/collection\/[^/]+/.test(path)) {
     page_name = "collection_detail";
-    extra.book_id = p.id;
   } else if (/^\/search\/?$/.test(path)) {
     page_name = "search";
     extra.keyword = q.keyword;
@@ -213,10 +235,20 @@ export function trackPageView(info: {
     };
     page_name = "publish";
     extra.publish_type = publishType[m[1]] || m[1];
-    if (q.id || q.post_id) extra.post_id = q.id || q.post_id; // 编辑作品时带
   }
-  if (!page_name) return;
-  track("page_view", { page_name, path, ...extra });
+  if (!page_name) {
+    page_name = info.name === "NotFound"
+      ? "not_found"
+      : path.replace(/^\/+|\/+$/g, "").split("/").filter((seg) => seg && !/^\d+$/.test(seg)).join("_").replace(/-/g, "_") || "other";
+  }
+  track("page_view", {
+    page_type: page_name,
+    path,
+    // 站内跳转：来源 = 上一个路由的完整地址（接口文档 5.3 的 SPA 写法）；首次打开不传，用 SDK 默认的 document.referrer
+    referrer: info.from || undefined,
+    ...utmFields(),
+    ...extra,
+  });
 }
 
 export type LoginType = "email" | "google" | "phone" | "third_party" | "auto";
@@ -237,6 +269,7 @@ function isFirstLoginOnDevice(uid: string): boolean {
  * 已登录用户冷启动（initTracking）也报一次，login_type=auto。
  */
 export function trackUserIdentify(userId: string | number, loginType: LoginType) {
+  if (!IDENTIFY_EVENTS_ENABLED) return;
   const uid = String(userId || "");
   if (!uid) return;
   track("user_identify", {
@@ -252,6 +285,7 @@ export function trackRegisterSuccess(userId: string | number, loginType: LoginTy
   const uid = String(userId || "");
   if (!uid) return;
   setTrackUser(uid);
+  if (!IDENTIFY_EVENTS_ENABLED) return;
   track("register", { user_id: uid, anonymous_id: getDeviceId(), login_type: loginType });
   trackUserIdentify(uid, loginType);
 }
@@ -261,6 +295,7 @@ export function trackLoginSuccess(userId: string | number, loginType: LoginType)
   const uid = String(userId || "");
   if (!uid) return;
   setTrackUser(uid);
+  if (!IDENTIFY_EVENTS_ENABLED) return;
   track("login", { user_id: uid, anonymous_id: getDeviceId(), login_type: loginType });
   trackUserIdentify(uid, loginType);
 }
@@ -331,12 +366,14 @@ function entrySourceOf(forChapter = false): EntrySource {
 
 /** 9.1.1 合集详情页曝光（book_title = 文档的 collection_name） */
 export function trackCollectionView(p: { book_id: string | number; book_title?: string; content_type: string; user_id?: string | number; entry_post_id?: string | number }) {
+  if (!VIEW_EVENTS_ENABLED) return;
   if (!p.book_id || viewedThisSession("collection:" + p.book_id)) return;
   track("collection_view", { ...p, entry_source: entrySourceOf() });
 }
 
 /** 9.1.2 章节（小说 / 漫画 / 漫剧的作品详情页）曝光 */
 export function trackChapterView(p: { post_id: string | number; book_id: string | number; content_type: string; user_id?: string | number; chapter_index?: string | number }) {
+  if (!VIEW_EVENTS_ENABLED) return;
   if (!p.post_id) return;
   const prev = lastChapterPostId;
   lastChapterPostId = String(p.post_id);
@@ -350,14 +387,35 @@ export function trackChapterView(p: { post_id: string | number; book_id: string 
 
 /** 9.1.3 视频 / 图片作品详情页曝光 */
 export function trackWorkView(p: { post_id: string | number; content_type: string; user_id?: string | number; duration?: string | number }) {
+  if (!VIEW_EVENTS_ENABLED) return;
   if (!p.post_id || viewedThisSession("work:" + p.post_id)) return;
   track("work_view", { ...p, entry_source: entrySourceOf() });
 }
 
 /** 9.1.4 目录里点某一章 */
 export function trackCatalogChapterClick(p: { book_id: string | number; post_id: string | number; chapter_index?: string | number; content_type: string; user_id?: string | number }) {
+  if (!VIEW_EVENTS_ENABLED) return;
   markEntrySource("catalog"); // 接下来的 chapter_view 记目录进来
   track("catalog_chapter_click", p);
+}
+
+/**
+ * history_view（接口文档 4.4）：合集 & 作品的查看历史（观看历史、继续阅读用）。
+ * 进合集详情页报一次：book_id / book_name；打开章节或单篇作品报一次：再带 post_id / post_name / chapter_index。
+ * 不做会话去重：每次打开都是一条历史。单独的视频 / 图片不属于合集，book_id 传 0。
+ */
+export function trackHistoryView(p: { book_id: string | number; book_name?: string; post_id?: string | number; post_name?: string; chapter_index?: string | number }) {
+  if (p.book_id === undefined || p.book_id === null || p.book_id === "") return;
+  if (!p.post_id && !(Number(p.book_id) > 0)) return;
+  const idx = Number(p.chapter_index);
+  // 5 个字段固定都带：合集详情页没有作品 / 章节，post_id / post_name / chapter_index 传空串
+  track("history_view", {
+    book_id: p.book_id,
+    book_name: p.book_name || "",
+    post_id: p.post_id || "",
+    post_name: p.post_name || "",
+    chapter_index: Number.isFinite(idx) && idx > 0 ? idx : "",
+  }, { keepEmpty: true });
 }
 
 // ============================================================
@@ -387,18 +445,23 @@ export function workTarget(post: { id: string | number; type?: unknown; book_id?
   };
 }
 /** 9.2.2 点赞 */
-export function trackLike(t: InteractTarget) { track("like_click", t); }
+export function trackLike(t: InteractTarget) {
+  // 互动事件先不报，要恢复去掉注释
+  // track("like_click", t);
+}
 /** 9.2.3 取消点赞 */
-export function trackUnlike(t: InteractTarget) { track("unlike_click", t); }
+export function trackUnlike(t: InteractTarget) {
+  // track("unlike_click", t);
+}
 /** 9.2.4 发布评论成功 */
 export function trackCommentPublish(t: InteractTarget, p: { comment_id?: string | number; reply_to_comment_id?: string | number; content_length?: number }) {
-  track("comment_publish", { ...t, ...p });
+  // track("comment_publish", { ...t, ...p });
 }
 /** 9.2.5 分享（复制链接等） */
 export function trackShareEvent(t: InteractTarget, channel: "copy_link" | "whatsapp" | "x" | "facebook" | "instagram" | "telegram" | "other" = "copy_link") {
-  track("share", { ...t, share_channel: channel });
+  // track("share", { ...t, share_channel: channel });
 }
 /** 9.2.6 关注博主 */
 export function trackFollow(bloggerId: string | number) {
-  track("follow", { target_type: "blogger", target_id: bloggerId });
+  // track("follow", { target_type: "blogger", target_id: bloggerId });
 }

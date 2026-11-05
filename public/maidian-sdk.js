@@ -5,10 +5,10 @@
  *   - 队列存 localStorage：刷新 / 关页 / 发失败都不丢，下次打开接着发
  *   - 近实时小批量：事件触发后等 5 秒合并（期间的一起发），攒够 20 条立即发；低优先级事件只捎带不触发定时器
  *   - 失败按 2s → 4s → … → 60s 退避重试；4xx（除 429）是数据本身被拒，丢弃不重发
- *   - 每条事件带 event_id（uuid），后端按它去重（重发 / beacon 双发不会多算）
  *   - 关页 / 切后台用 sendBeacon（text/plain，跨域不用预检），不行再 fetch keepalive
  *   - 会话：sessionStorage 存 session_id，30 分钟无动作开新会话，自动报 session_start / session_end
- *   - 公共字段每条带：session_id / event_id / page_url / page_title / referrer / language / screen_width / screen_height / user_agent
+ *   - 环境字段 page_url / page_title / referrer / language / screen_width / screen_height / user_agent 只放进 page_view（接口文档 4.3），
+ *     其它事件只带自己的参数（config 的 env_events 可改哪些事件带）；session_id 只在 session_start / session_end 里带，不带 event_id
  *     （不带 platform / device / os / browser / sdk_version / app_version：app_id 已区分站点和端，设备信息后端从 user_agent 解析）
  *   - 全链路 try/catch，上报域名不通、无痕模式禁 storage 都不影响业务页
  *
@@ -23,7 +23,7 @@
  *   </script>
  *   <script async src="/maidian-sdk.js"></script>
  *
- *   maidian('set', { user_id: 10086 });                 // 登录后设置；退出登录 maidian('set', { user_id: null })
+ *   maidian('set', { user_id: 10086 });                 // 登录后设置（上报成字符串 "10086"）；退出登录 maidian('set', { user_id: null })，之后上报空字符串
  *   maidian('event', 'page_view', { page_name: 'home' }); // 报事件
  *   maidian('event', 'video_play_progress', {...}, { lowPriority: true }); // 高频事件，只捎带发
  *   maidian('flush');                                   // 立即发
@@ -73,6 +73,7 @@
     auto_pv: false,
     auto_session: true,
     send_user_agent: true,
+    env_events: ['page_view'], // 哪些事件的 extra_data 带环境字段（page_url / page_title / referrer / 屏幕 / 语言 / UA）
     enabled: true,
     debug: false,
     storage_prefix: '__maidian_'
@@ -131,12 +132,10 @@
   }
 
   function toUserId(v) {
-    // 后端 user_id 是数字；安全范围内的数字串转数字，其它原样给（空 / 非法 → null）
-    if (v === null || v === undefined || v === '') return null;
-    if (typeof v === 'number') return isFinite(v) ? v : null;
-    var s = String(v);
-    if (/^\d{1,15}$/.test(s)) return Number(s);
-    return s;
+    // user_id 统一传字符串（数字也转成字符串）；未登录 / 空 / 非法 → 空字符串
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'number') return isFinite(v) ? String(v) : '';
+    return String(v);
   }
 
   // 设备 / 系统 / 浏览器：前端判好，后端不用解析 UA
@@ -168,7 +167,7 @@
     this.config = assign({}, DEFAULT_CONFIG);
     this.app_id = '';
     this.distinct_id = '';
-    this.user_id = null;
+    this.user_id = ''; // 未登录为空字符串
     this.common_props = {};
     this.env = {};              // 一次算好的环境字段（device / os / browser / screen / language）
     this.queue = [];
@@ -241,10 +240,9 @@
       var sid = this.config.auto_session ? this._sessionId() : '';
       if (eventName === 'page_view') { this.pageViews++; session.set(this.keys.pv, String(this.pageViews)); }
 
-      var extra = assign({}, this._pageEnv(), this.env, {
-        session_id: sid,
-        event_id: uuid()
-      }, this.common_props, (eventData && typeof eventData === 'object') ? eventData : {});
+      // sid 只用来续会话（30 分钟无动作开新会话），不放进事件
+      void sid;
+      var extra = assign({}, this._envFor(eventName), this.common_props, (eventData && typeof eventData === 'object') ? eventData : {});
 
       var payload = {
         app_id: this.app_id || 'unknown_app',
@@ -440,9 +438,7 @@
   Client.prototype._emitRaw = function (eventName, params) {
     if (!this.config.enabled) return;
     if (eventName === 'session_start') session.set(this.keys.session + 'start', String(now()));
-    var extra = assign({}, this._pageEnv(), this.env, {
-      event_id: uuid()
-    }, this.common_props, params);
+    var extra = assign({}, this._envFor(eventName), this.common_props, params);
     this._enqueue({
       app_id: this.app_id || 'unknown_app', event: eventName, distinct_id: this.distinct_id || null,
       user_id: this.user_id, timestamp: now(), extra_data: extra
@@ -467,6 +463,13 @@
       if (this.config.send_user_agent) env.user_agent = ua;
     } catch (e) {}
     return env;
+  };
+
+  /** 这个事件要带的环境字段：在 env_events 里的才带，其它事件返回空对象 */
+  Client.prototype._envFor = function (eventName) {
+    var list = this.config.env_events;
+    if (!list || typeof list.indexOf !== 'function' || list.indexOf(eventName) < 0) return {};
+    return assign({}, this._pageEnv(), this.env);
   };
 
   Client.prototype._pageEnv = function () {

@@ -1021,7 +1021,7 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
-import { trackChapterView, trackWorkView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/maidian";
+import { trackChapterView, trackWorkView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/maidian";
 
 const { t, locale } = useI18n();
 
@@ -2929,8 +2929,10 @@ async function fetchDetail(newId: number) {
       // 埋点：详情页曝光（同一会话同一作品只记一次）。合集下的章节记 chapter_view，单独的视频 / 图片记 work_view
       if (detail.value.book_id && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
         trackChapterView({ post_id: detail.value.id, book_id: detail.value.book_id, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id, chapter_index: detail.value.chapter_index || undefined });
+        trackHistoryView({ book_id: detail.value.book_id, book_name: detail.value.book_title || undefined, post_id: detail.value.id, post_name: detail.value.title || undefined, chapter_index: detail.value.chapter_index || undefined });
       } else {
         trackWorkView({ post_id: detail.value.id, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id, duration: detail.value.duration || undefined });
+        trackHistoryView({ book_id: 0, post_id: detail.value.id, post_name: detail.value.title || undefined });
       }
 
       // Load chapters if it's part of a collection

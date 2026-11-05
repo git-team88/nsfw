@@ -474,7 +474,7 @@ router.beforeEach(async (to, from, next) => {
   next();
 });
 
-// 埋点：每次路由切换报一条 page_view（带页面名 / 作品 / 合集 / 博主 id）
+// 埋点：每次路由切换报一条 page_view（带页面分类 page_type；作品 / 合集 id 由 history_view 报）
 router.afterEach((to, from) => {
   // 浏览器标签标题：配了 meta.titleKey 的路由统一设成「页面名 - 站点名」
   applyRouteTitle(to, from);
@@ -485,7 +485,7 @@ router.afterEach((to, from) => {
       if (router.currentRoute.value.fullPath == to.fullPath) refreshRouteTexts(to);
     }).catch(() => {});
   }
-  trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any });
+  trackPageView({ path: to.path, name: to.name ? String(to.name) : "", params: to.params as any, query: to.query as any, from: from.matched.length ? window.location.origin + from.fullPath : "" });
 });
 
 export default router;

@@ -232,7 +232,7 @@ import defaultAvatar from '@/assets/images/base/avatar.png';
 import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
-import { trackCollectionView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
+import { trackCollectionView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -481,6 +481,8 @@ async function fetchCollectionDetail() {
 
         // 埋点：合集详情页曝光（同一会话同一合集只记一次）
         trackCollectionView({ book_id: collection.value.id, book_title: collection.value.title || undefined, content_type: contentTypeOf(collection.value.type), user_id: resolvedAuthorId || undefined, entry_post_id: (route.query.post_id as string) || undefined });
+        // 查看历史（每次进来都报）
+        trackHistoryView({ book_id: collection.value.id, book_name: collection.value.title || undefined });
 
         // 从 book_info 获取作者后，请求博主详情接口
         if (resolvedAuthorId) {

@@ -314,7 +314,7 @@ import collectActiveIcon from '@/assets/images/detail/collect_active.png';
 import defaultAvatar from '@/assets/images/base/avatar.png';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackShare, trackSubscribeToContent } from '@/utils/analytics';
-import { trackChapterView, trackCatalogChapterClick, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from '@/utils/maidian';
+import { trackChapterView, trackHistoryView, trackCatalogChapterClick, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from '@/utils/maidian';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -776,6 +776,7 @@ async function fetchDetail() {
 
       // 埋点：小说章节曝光（同一会话同一章只记一次）
       trackChapterView({ post_id: detail.value.id, book_id: detail.value.book_id, content_type: 'novel', user_id: detail.value.author?.id, chapter_index: detail.value.chapter_index || undefined });
+      trackHistoryView({ book_id: Number(detail.value.book_id) > 0 ? detail.value.book_id : 0, book_name: detail.value.book_title || undefined, post_id: detail.value.id, post_name: detail.value.title || undefined, chapter_index: detail.value.chapter_index || undefined });
 
       setSeoMeta();
 
