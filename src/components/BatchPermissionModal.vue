@@ -49,11 +49,18 @@
           </div>
           <!-- 漫剧合集：选「从第 N 集起付费」时列出合集的单部付费档位（和发布页一致） -->
           <div class="plan-list" v-if="showPlanList">
-            <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+            <div class="plan-list-head">
+            <span class="plan-list-label">{{ t('submit.dramaPriceSetting') }}</span>
+            <span class="plan-revenue" @click.stop="showRevenueInfo = true">{{ t('submit.revenueShare') }}<svg class="revenue-info-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span>
+            </div>
             <div class="plan-options">
               <div class="plan-option" v-for="plan in plans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
                 <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
                 <span>{{ planPriceText(plan, t('aiRecharge.unit')) }}/{{ t('submit.perSeries') }}</span>
+              </div>
+              <div class="plan-option" @click="selectedPlanId = MEMBER_ONLY">
+                <img :src="selectedPlanId === MEMBER_ONLY ? selectActive : select" alt="" />
+                <span>{{ t('submit.memberOnlyNoBuy') }}</span>
               </div>
             </div>
           </div>
@@ -75,11 +82,13 @@
         <button class="modal-btn confirm" @click="handleConfirm">{{ t('confirm') }}</button>
       </div>
     </div>
+    <TextInfoModal :visible="showRevenueInfo" :text="t('user.subscription.tip')" @close="showRevenueInfo = false" />
   </div>
 </template>
 
 <script setup lang="ts" name="BatchPermissionModal">
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+import TextInfoModal from '@/components/TextInfoModal.vue';
 import { useI18n } from 'vue-i18n';
 import select from '@/assets/images/publish/select.png';
 import selectActive from '@/assets/images/publish/select_active.png';
@@ -94,6 +103,8 @@ const props = defineProps<{
   currentPrice?: string | number;
   /** 合集当前档位 id，优先用它回显 */
   currentPlanId?: string | number;
+  /** 合集当前是否「仅会员可见」（字段名等后端定） */
+  currentMemberOnly?: boolean | number | string;
   chapters: Array<{
     id: string | number;
     title: string;
@@ -104,7 +115,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'confirm', type: number, startChapter?: number, plan?: BookRechargePlan): void;
+  (e: 'confirm', type: number, startChapter?: number, plan?: BookRechargePlan, memberOnly?: boolean): void;
 }>();
 
 // 合集设置页一进来就渲染这个弹窗，那时合集类型还没回来，所以必须是 computed 而不是只算一次
@@ -123,6 +134,9 @@ const showPartialDropdown = ref(false);
 // --- 漫剧合集的单部付费档位 ---
 const plans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref('');
+const showRevenueInfo = ref(false);
+/** 「仅会员可见（不支持单部付费）」：不设单部价格，合集标成漫剧会员可看 */
+const MEMBER_ONLY = 'member_only';
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 const showPlanList = computed(() => props.collectionType == '3' && selectedPerm.value === 'partial' && plans.value.length > 0);
 const selectedPlan = computed(() => plans.value.find((pl) => planKey(pl) === selectedPlanId.value));
@@ -135,7 +149,8 @@ function syncSelectedPlan() {
     ? plans.value.find((pl) => planKey(pl) === String(curId))
     : undefined;
   const hit = byId || findPlanByPrice(plans.value, props.currentPrice);
-  selectedPlanId.value = planKey(hit || plans.value[0]);
+  const memberOnly = props.currentMemberOnly === true || String(props.currentMemberOnly ?? '') === '1';
+  selectedPlanId.value = hit ? planKey(hit) : memberOnly ? MEMBER_ONLY : planKey(plans.value[0]);
 }
 
 async function loadPlans() {
@@ -205,7 +220,8 @@ function handleConfirm() {
   const typeMap: Record<string, number> = { public: 1, partial: 2, private: 3 };
   const type = typeMap[selectedPerm.value] || 1;
   if (type === 2) {
-    emit('confirm', type, partialStartChapter.value, showPlanList.value ? selectedPlan.value : undefined);
+    // 仅会员可见：plan 为空、memberOnly 为 true
+    emit('confirm', type, partialStartChapter.value, showPlanList.value ? selectedPlan.value : undefined, showPlanList.value && selectedPlanId.value === MEMBER_ONLY);
   } else {
     emit('confirm', type);
   }
@@ -298,6 +314,23 @@ function handleConfirm() {
         align-items: center;
         flex-wrap: wrap;
         gap: 20px;
+      }
+
+      // 收益分成说明：紧跟在「本漫剧价格设置」后面，和发布页一样可点开说明
+      // 标题在左、收益分成在右，占满一行
+      .plan-list-head {
+        flex-basis: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .plan-revenue {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        color: #ff4f9a;
+        cursor: pointer;
       }
 
       .plan-option {

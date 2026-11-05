@@ -47,7 +47,8 @@
             <div class="info-item" v-if="collection.type == '3'">
               <span class="info-label">{{ t('collectionSettings.paidSetting') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value price-value">
-                <template v-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
+                <template v-if="collection.is_member_only">{{ t('submit.memberOnly') }}</template>
+                <template v-else-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
                 <template v-else>{{ t('collectionSettings.priceOffShort') }}</template>
                 <button class="btn btn-modify-price" v-if="collection.status != '2'" @click="showPriceModal = true">{{ t('collectionSettings.modifyPrice') }}</button>
                 <span class="chapter-access" v-if="chapterAccessText">{{ chapterAccessText }}</span>
@@ -115,6 +116,7 @@
       :book-id="collection.id"
       :current-price="collection.price"
       :current-plan-id="collection.plan_id"
+      :current-member-only="collection.is_member_only"
       @close="showPriceModal = false"
       @saved="onPriceSaved"
     />
@@ -124,6 +126,7 @@
       :collection-type="collection.type"
       :current-price="collection.price"
       :current-plan-id="collection.plan_id"
+      :current-member-only="collection.is_member_only"
       :chapters="batchChapters"
       @close="showBatchPermission = false"
       @confirm="confirmBatchPermission"
@@ -193,6 +196,8 @@ const collection = ref({
   currency: '',
   /** 当前档位 id（修改价格时作为 old_plan_id）；空 = 未开启 */
   plan_id: '',
+  /** 仅会员可见（不可整部购买）；字段名等后端定（TODO），现在按 book_info.is_member_only 读 */
+  is_member_only: false,
   /** 按 access_rights 分组的章节数：1 公开 / 2 订阅可见 / 3 仅自己可见 */
   group: [] as { access_rights: string | number; num: string | number }[],
   chatpers: [] as any[]
@@ -275,6 +280,7 @@ onMounted(async () => {
           price: plan.price ?? '',
           currency: plan.currency || '',
           plan_id: planIdOf({ plan: data.plan, plan_id: bookInfo.plan_id }),
+          is_member_only: String(bookInfo.is_member_only ?? '') === '1',
           group: Array.isArray(data.group) ? data.group : [],
           chatpers: data.chatpers || [],
         };
@@ -426,6 +432,7 @@ async function onPriceSaved() {
       collection.value.price = plan.price ?? '';
       collection.value.currency = plan.currency || '';
       collection.value.plan_id = planIdOf({ plan: detailData.plan, plan_id: bookInfo.plan_id });
+      collection.value.is_member_only = String(bookInfo.is_member_only ?? '') === '1';
       collection.value.group = Array.isArray(detailData.group) ? detailData.group : [];
       collection.value.chatpers = detailData.chatpers || [];
       collection.value.chapter_count = bookInfo.chapter_count || '';
@@ -436,16 +443,19 @@ async function onPriceSaved() {
   }
 }
 
-async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan) {
+async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan, memberOnly = false) {
   showBatchPermission.value = false;
   try {
     // 漫剧合集选了「从第 N 集起付费」并带了档位：先把档位写到合集上（传新旧档位 id），档位没变就不用调
     const newPlanId = plan ? String(plan.plan_id ?? plan.id ?? '') : '';
-    if (plan && String(collection.value.plan_id || '') !== newPlanId) {
+    // 档位变了、或会员可看的标记变了才调修改合集
+    if ((plan && String(collection.value.plan_id || '') !== newPlanId) || (type === 2 && memberOnly !== !!collection.value.is_member_only)) {
       const planRes = await api.modifyCollection({
         book_id: collection.value.id,
         old_plan_id: collection.value.plan_id || 0,
-        new_plan_id: newPlanId,
+        new_plan_id: memberOnly ? 0 : newPlanId,
+        // 仅会员可见：字段名等后端定（TODO）
+        is_member_only: memberOnly ? 1 : 0,
       }) as any;
       if (!(planRes.code == 0 || planRes.code == 200)) {
         toast(apiErrorMessage(planRes) || t('fail'));

@@ -981,6 +981,19 @@ export default {
       url: "book/getBookRechargePlan",
       method: "GET"
     }),
+  // 漫剧会员（平台会员，有效期内看全站付费漫剧）：套餐列表
+  getDramaMemberPlans: () =>
+    axios.request({
+      url: "index/getMongaPlanListPublic",
+      method: "GET",
+    }),
+  // 漫剧会员下单：{ plan_id, client_id }，返回 Stripe 结账页地址 data.url.url
+  addDramaMemberOrder: (data: any) =>
+    axios.request({
+      url: "book/addMongaOrder",
+      data: data,
+      method: "POST",
+    }),
   recordHistory: (data: any) =>
     axios.request({
       url: "post/writeHistory",

@@ -291,6 +291,7 @@ const menuItems = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
+  { key: "drama-member", label: "user.sidebar.dramaMember", path: "/user-drama-member" },
   { key: "invite", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },
@@ -810,6 +811,8 @@ function getMenuIcon(key: string): string {
     account: svgShell + '<line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2"/></svg>',
     profile: svgShell + '<path d="M5 18h14"/><path d="M5 18 4 9l4.5 3.4L12 6l3.5 6.4L20 9l-1 9Z"/></svg>',
     subscription: svgShell + '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>',
+    // 漫剧订阅（平台会员）：皇冠
+    'drama-member': svgShell + '<path d="M4 18 2.8 7.5l4.7 3.7L12 5l4.5 6.2 4.7-3.7L19.5 18Z"/><path d="M5 21h14"/></svg>',
     invite: svgShell + '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/></svg>',
     revenue: svgShell + '<path d="M4 20h16"/><rect x="6" y="13" width="3" height="7" rx=".5"/><rect x="11" y="9" width="3" height="11" rx=".5"/><rect x="16" y="5" width="3" height="15" rx=".5"/></svg>',
     interactive: svgShell + '<path d="M4 16l5-5 4 4 7-8"/><path d="M15 7h5v5"/></svg>',

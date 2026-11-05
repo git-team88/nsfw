@@ -326,6 +326,13 @@ const routes = [
     component: () => import("@/views/user/Subscription.vue"),
   },
   {
+    // 漫剧会员（平台会员）：套餐购买 / 当前会员状态
+    path: "/user-drama-member",
+    name: "UserDramaMember",
+    meta: { titleKey: "pageTitle.dramaMember", noindex: true },
+    component: () => import("@/views/user/DramaMember.vue"),
+  },
+  {
     path: "/user-kyc",
     name: "UserKyc",
     meta: { titleKey: "pageTitle.kyc" },

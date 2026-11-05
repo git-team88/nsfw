@@ -21,6 +21,13 @@
               </div>
               <div
                 class="tab-item"
+                :class="{ active: activeSubTab == 'drama-member' }"
+                @click="switchTab('drama-member')"
+              >
+                {{ t("user.sidebar.dramaMember") }}
+              </div>
+              <div
+                class="tab-item"
                 :class="{ active: activeSubTab == 'subscribe' }"
                 @click="switchTab('subscribe')"
               >
@@ -144,6 +151,25 @@
                   </div>
                 </div>
                 <EmptyState v-if="!dramaUnlockList.length" />
+              </div>
+
+              <!-- 漫剧订阅（平台会员）的购买记录：月会员 / 季会员…，有效期、金额、续费状态 -->
+              <div class="list-area" v-else-if="activeSubTab === 'drama-member'">
+                <div class="sub-item" v-for="(item, idx) in dramaMemberList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
+                  <div class="left">
+                    <div class="plan-info">
+                      <div class="plan-name">{{ item.planName }}</div>
+                      <div class="compute-info">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
+                    </div>
+                  </div>
+                  <div class="right">
+                    <div class="price-info">
+                      <div class="price">{{ fiatPrefix(item.currency) }}{{ scaleFiatPrice(item.price, item.currency) }} {{ fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
+                      <div class="date">{{ item.autoRenew ? t('user.dramaMember.autoRenewOnShort') : t('user.dramaMember.autoRenewOffShort') }}</div>
+                    </div>
+                  </div>
+                </div>
+                <EmptyState v-if="!dramaMemberList.length" />
               </div>
 
               <div class="list-area" v-else-if="activeSubTab === 'recharge'">
@@ -330,7 +356,7 @@ const activeMainTab = ref<"processing" | "orderHistory">("processing");
 // 漫剧解锁 tab 的开关。nsfw 还没有漫剧这个内容类型，先关掉；
 // 功能补齐时改成 true，列表和路由都是现成的。
 const showDramaUnlockTab = false;
-const activeSubTab = ref<"subscribe" | "recharge" | "topup" | "unlocked">("subscribe");
+const activeSubTab = ref<"subscribe" | "recharge" | "topup" | "unlocked" | "drama-member">("subscribe");
 
 // 漫剧解锁记录，数据来自 book/getBookOrderList（我的合集购买订单）
 interface DramaUnlockItem {
@@ -344,6 +370,12 @@ interface DramaUnlockItem {
   web3Price?: string | number;
 }
 const dramaUnlockList = ref<DramaUnlockItem[]>([]);
+/** 漫剧订阅（平台会员）购买记录；列表接口还没定（TODO），fetchDramaMemberList 里先给空 */
+interface DramaMemberItem { id: string | number; planName: string; startTime: string | number; endTime: string | number; price: string | number; currency: string; autoRenew: boolean }
+const dramaMemberList = ref<DramaMemberItem[]>([]);
+async function fetchDramaMemberList() {
+  dramaMemberList.value = [];
+}
 
 /**
  * 我的漫剧合集购买订单。
@@ -441,6 +473,9 @@ const hasData = computed(() => {
     if (activeSubTab.value === 'unlocked') {
       return dramaUnlockList.value.length > 0;
     }
+    if (activeSubTab.value === 'drama-member') {
+      return dramaMemberList.value.length > 0;
+    }
     return processingList.value.length > 0;
   } else {
     return listData.value.length > 0;
@@ -459,7 +494,7 @@ function switchMainTab(tab: "processing" | "orderHistory") {
   else fetchData();
 }
 
-function switchTab(tab: "subscribe" | "recharge" | "topup" | "unlocked") {
+function switchTab(tab: "subscribe" | "recharge" | "topup" | "unlocked" | "drama-member") {
   router.replace({
     path: '/user-payment-history'
   });
@@ -480,6 +515,10 @@ async function fetchData() {
     let res;
     if (activeSubTab.value === "unlocked") {
       await fetchDramaUnlockList();
+      return;
+    }
+    if (activeSubTab.value === "drama-member") {
+      await fetchDramaMemberList();
       return;
     }
     if (activeSubTab.value === "subscribe") {
@@ -518,6 +557,11 @@ async function fetchData() {
 async function fetchProcessingData() {
   if (activeSubTab.value === 'unlocked') {
     await fetchDramaUnlockList();
+    loading.value = false;
+    return;
+  }
+  if (activeSubTab.value === 'drama-member') {
+    await fetchDramaMemberList();
     loading.value = false;
     return;
   }
@@ -840,6 +884,11 @@ onMounted(() => {
     fetchProcessingData();
   } else if (type == '3') {
     activeSubTab.value = 'topup';
+    page.value = 1;
+    fetchProcessingData();
+  } else if (route.query.tab === 'drama-member') {
+    // 漫剧订阅页点「管理」跳过来，直接锚到漫剧订阅 tab
+    activeSubTab.value = 'drama-member';
     page.value = 1;
     fetchProcessingData();
   } else if (showDramaUnlockTab && (type == '4' || route.query.tab === 'unlocked')) {

@@ -1068,10 +1068,26 @@
 
         .content-language {
           display: flex;
-          flex-direction: column;
+          flex-wrap: wrap;
+          align-items: flex-end;
           margin-top: 18px;
           width: 100%;
-          gap: 10px;
+          gap: 10px 16px;
+
+          // 语言 / 分类各一列：标题在上、下拉框在下
+          .lang-field {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            min-width: 180px;
+            max-width: 400px;
+
+            .lang-dropdown {
+              max-width: none;
+              width: 100%;
+            }
+          }
 
           // 下拉框 + 「修改合集信息」一行，链接靠右
           .lang-row {
@@ -1088,6 +1104,7 @@
             white-space: nowrap;
             cursor: pointer;
             margin-left: auto;
+            margin-bottom: 10px;
           }
 
           .lang-dropdown {
@@ -2201,11 +2218,12 @@
     .collection-section .form-item .collection-row .content-language {
       max-width: 100%;
 
-      // 窄屏：下拉框占一行，「修改合集信息」另起一行靠右
-      .lang-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
+      // 窄屏：语言、分类各占一行，「修改合集信息」另起一行靠右
+      flex-direction: column;
+      align-items: stretch;
+
+      .lang-field {
+        max-width: 100%;
       }
 
       .lang-dropdown {
