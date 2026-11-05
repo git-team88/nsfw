@@ -1127,7 +1127,6 @@ async function syncCollectionTag() {
     console.error('sync collection tag failed', e);
   }
 }
-watch(() => selectedCollection.value?.id, () => syncCollectionTag());
 onMounted(initBookTagOptions);
 async function handleCollectionTagChange(tagId: string | number) {
   tagDropdownOpen.value = false;
@@ -1322,6 +1321,8 @@ const previewProject = ref<any>(null);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string; plan_id?: string } | null>(null);
+// 合集换了就回显它的分类（要放在 selectedCollection 声明之后，不然 setup 时就报 TDZ）
+watch(() => selectedCollection.value?.id, () => syncCollectionTag());
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
 // 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
