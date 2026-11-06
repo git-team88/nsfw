@@ -23,7 +23,7 @@
  *   </script>
  *   <script async src="/maidian-sdk.js"></script>
  *
- *   maidian('set', { user_id: 10086 });                 // 登录后设置（上报成字符串 "10086"）；退出登录 maidian('set', { user_id: null })，之后上报空字符串
+ *   maidian('set', { user_id: 10086 });                 // 登录后设置（上报成数字 10086，数字串也会转成数字）；退出登录 maidian('set', { user_id: null })，之后上报 0
  *   maidian('event', 'page_view', { page_name: 'home' }); // 报事件
  *   maidian('event', 'video_play_progress', {...}, { lowPriority: true }); // 高频事件，只捎带发
  *   maidian('flush');                                   // 立即发
@@ -132,10 +132,11 @@
   }
 
   function toUserId(v) {
-    // user_id 统一传字符串（数字也转成字符串）；未登录 / 空 / 非法 → 空字符串
-    if (v === null || v === undefined || v === '') return '';
-    if (typeof v === 'number') return isFinite(v) ? String(v) : '';
-    return String(v);
+    // user_id 传数字（接口文档 3.1：64 位整数）；数字串转成数字，未登录 / 空 / 非数字 → 0
+    if (v === null || v === undefined || v === '') return 0;
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    var s = String(v).trim();
+    return /^-?\d{1,15}$/.test(s) ? Number(s) : 0;
   }
 
   // 设备 / 系统 / 浏览器：前端判好，后端不用解析 UA
@@ -167,7 +168,7 @@
     this.config = assign({}, DEFAULT_CONFIG);
     this.app_id = '';
     this.distinct_id = '';
-    this.user_id = ''; // 未登录为空字符串
+    this.user_id = 0; // 未登录为 0
     this.common_props = {};
     this.env = {};              // 一次算好的环境字段（device / os / browser / screen / language）
     this.queue = [];
