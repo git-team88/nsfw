@@ -3877,9 +3877,13 @@ const permText = computed(() => {
 });
 
 // --- Computed Properties for Logic ---
-/** 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品 */
+/**
+ * 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品。
+ * 例外：合集改成「仅会员可见」（plan_id = -1）后，以前的整部购买不再算解锁，付费章节照常锁住、只给会员入口。
+ */
 const hasBoughtBook = computed(
-  () => detail.value?.book_buy == 1 || detail.value?.book_buy === true,
+  () => (detail.value?.book_buy == 1 || detail.value?.book_buy === true)
+    && !isMemberOnlyPlanId(detail.value?.book_plan_id),
 );
 
 const isArticleLocked = computed(() => {

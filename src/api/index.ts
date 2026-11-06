@@ -993,7 +993,13 @@ export default {
       url: "book/getMyMongaSubList",
       method: "GET",
     }),
-  // 漫剧会员下单：{ plan_id, client_id, from(1 详情页 / 2 个人中心), post_id(from=1 时带，回跳用) }，返回 Stripe 结账页地址 data.url.url
+  // 我的漫剧订阅列表（全部，分页）：支付历史用。返回 data.data[]，总数 data.allnums
+  getMyDramaMemberAllList: (page: number, limit: number) =>
+    axios.request({
+      url: "book/getMyMongaSubAllList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  // 漫剧会员下单：{ plan_id, client_id, from(1 详情页 / 2 个人中心), post_id(详情页入口带作品 id，回跳用；个人中心入口传 0) }，返回 Stripe 结账页地址 data.url.url
   addDramaMemberOrder: (data: any) =>
     axios.request({
       url: "book/addMongaOrder",

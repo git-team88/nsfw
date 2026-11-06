@@ -309,7 +309,7 @@
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import EmptyState from "@/components/EmptyState.vue";
-import { fetchMyDramaMemberSubs } from "@/util/dramaMember";
+import { fetchMyDramaMemberSubsPaged } from "@/util/dramaMember";
 import Pagination from "@/components/Pagination.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
@@ -371,13 +371,16 @@ interface DramaUnlockItem {
   web3Price?: string | number;
 }
 const dramaUnlockList = ref<DramaUnlockItem[]>([]);
-/** 漫剧订阅（平台会员）购买记录：book/getMyMongaSubList，解析在 util/dramaMember.ts */
+/** 漫剧订阅（平台会员）购买记录：book/getMyMongaSubAllList（分页，总数 allnums），解析在 util/dramaMember.ts */
 interface DramaMemberItem { id: string | number; planName: string; startTime: string | number; endTime: string | number; price: string | number; currency: string; autoRenew: boolean; expired: boolean }
 const dramaMemberList = ref<DramaMemberItem[]>([]);
 async function fetchDramaMemberList() {
+  loading.value = true;
   try {
     // 订阅记录里只有 plan_id，套餐名 / 价格从套餐列表里按 id 取
-    const [subs, planRes] = await Promise.all([fetchMyDramaMemberSubs(), api.getDramaMemberPlans() as Promise<any>]);
+    const [paged, planRes] = await Promise.all([fetchMyDramaMemberSubsPaged(page.value, pageSize.value), api.getDramaMemberPlans() as Promise<any>]);
+    const subs = paged.list;
+    total.value = paged.total;
     const plans: any[] = (planRes?.code === 0 || planRes?.code === 200) ? (planRes.data?.plans || []) : [];
     dramaMemberList.value = subs.map((s) => {
       const plan = plans.find((p) => String(p.plan_id ?? p.id ?? '') === s.planId) || s.plan;
@@ -395,7 +398,10 @@ async function fetchDramaMemberList() {
   } catch (e) {
     console.error(e);
     dramaMemberList.value = [];
+    total.value = 0;
     toast(t('fail'));
+  } finally {
+    loading.value = false;
   }
 }
 /** 套餐名：plan 的 title_xx 按语言取，没填退回 title_en */

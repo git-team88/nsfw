@@ -57,6 +57,17 @@ export async function fetchMyDramaMemberSubs(): Promise<DramaMemberSub[]> {
   return (Array.isArray(list) ? list : []).map(normalizeDramaMemberSub);
 }
 
+/** 我的漫剧订阅全部记录（分页，支付历史用）：book/getMyMongaSubAllList，总数 allnums */
+export async function fetchMyDramaMemberSubsPaged(page: number, limit: number): Promise<{ list: DramaMemberSub[]; total: number }> {
+  const res = (await api.getMyDramaMemberAllList(page, limit)) as any;
+  if (!(res?.code === 0 || res?.code === 200)) throw new Error(res?.msg || "fail");
+  const list = res.data?.data || res.data?.list || [];
+  return {
+    list: (Array.isArray(list) ? list : []).map(normalizeDramaMemberSub),
+    total: Number(res.data?.allnums ?? res.data?.count ?? 0) || 0,
+  };
+}
+
 /** 当前生效的那条（有效期内、最晚到期的） */
 export function pickActiveDramaMemberSub(list: DramaMemberSub[]): DramaMemberSub | null {
   const active = list.filter((s) => s.active);

@@ -234,6 +234,7 @@ import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
 import { trackCollectionView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
 import { planIdOf, isMemberOnlyPlanId } from '@/util/bookRechargePlan';
+import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub } from '@/util/dramaMember';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -1005,10 +1006,24 @@ function getPermClass(accessRights?: string): string {
   return 'status-public';
 }
 
+// —— 漫剧会员（平台会员）：合集「仅会员可见」时，开通了会员的章节标「已购买」 ——
+const hasDramaMember = ref(false);
+async function loadDramaMember() {
+  hasDramaMember.value = false;
+  if (!localStorage.getItem('token')) return;
+  try {
+    hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
+  } catch (e) {
+    console.error('load drama member failed', e);
+  }
+}
+
 function getPermText(accessRights?: string): string {
-  // 漫剧合集的付费章节标「付费」；合集是「仅会员可见」（plan_id -1）标「会员可见」；其余类型仍然是「订阅」
+  // 漫剧合集的付费章节标「付费」；合集是「仅会员可见」（plan_id -1）标「会员可看」，开通了漫剧会员标「已购买」；其余类型仍然是「订阅」
   if (accessRights == '2') {
-    if (isDramaCollection.value && isMemberOnlyPlanId(collection.value?.plan_id)) return t('collectionDetail.statusMemberOnly');
+    if (isDramaCollection.value && isMemberOnlyPlanId(collection.value?.plan_id)) {
+      return hasDramaMember.value ? t('detail.bought') : t('collectionDetail.statusMemberOnly');
+    }
     return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
   }
   if (accessRights == '3') return t('submit.permPrivate');
@@ -1016,6 +1031,7 @@ function getPermText(accessRights?: string): string {
 }
 
 function onUserLoggedOut() {
+  hasDramaMember.value = false;
   authorInfo.value.isFollow = 0;
   authorInfo.value.isSubscribe = 0;
   if (!isOwn.value && authorInfo.value.id) {
@@ -1029,6 +1045,8 @@ onMounted(async () => {
   eventBus.on('userLoggedOut', onUserLoggedOut);
   // 先开加载态，免得等地区接口时页面一片空白
   loading.value = true;
+  // 漫剧会员状态和详情并行拉，不阻塞页面
+  loadDramaMember();
   // 地区、分类表、合集详情并行请求（以前串行：地区 → 详情 → 作者 → 分类，预渲染时可能还没拿全就被截图）
   loadBookTags();
   getCountry();

@@ -228,8 +228,8 @@ async function handlePay() {
   if (!plan || !agreeTerms.value || isPaying.value) return;
   isPaying.value = true;
   try {
-    // from=2：个人中心入口（详情页入口传 1），后端回跳成功 / 失败页时带回来
-    const res = (await api.addDramaMemberOrder({ plan_id: planKey(plan), client_id: await getGaClientId(), from: 2 })) as any;
+    // from=2：个人中心入口（详情页入口传 1），后端回跳成功 / 失败页时带回来；个人中心没有作品，post_id 传 0
+    const res = (await api.addDramaMemberOrder({ plan_id: planKey(plan), client_id: await getGaClientId(), from: 2, post_id: 0 })) as any;
     if (res.code === 0 || res.code === 200) {
       const url = res.data?.url?.url || res.data?.url;
       if (typeof url === "string" && url) {
