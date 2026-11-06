@@ -19,7 +19,7 @@
  *   <script>
  *     window.maidianQueue = window.maidianQueue || [];
  *     function maidian(){ window.maidianQueue.push(arguments); }
- *     maidian('config', 'web_xxxxxxxx', { server_url: 'https://track-test.blfans.ai' });
+ *     maidian('config', 'web_xxxxxxxx', { server_url: 'https://track.blfans.ai' });
  *   </script>
  *   <script async src="/maidian-sdk.js"></script>
  *
@@ -30,7 +30,7 @@
  *   maidian('get_distinct_id') / maidian('get_session_id')
  *
  * config 可选项（都有默认值）：
- *   server_url      上报服务根地址（默认 https://track-test.blfans.ai）
+ *   server_url      上报服务根地址（默认 https://track.blfans.ai）
  *   batch_path      批量上报路径（默认 /api/v1/track/batch）
  *   flush_delay     合并窗口 ms（默认 5000）
  *   batch_size      攒够多少条立即发（默认 20）
@@ -59,7 +59,7 @@
   var SDK_VERSION = '1.0.0';
 
   var DEFAULT_CONFIG = {
-    server_url: 'https://track-test.blfans.ai',
+    server_url: 'https://track.blfans.ai',
     batch_path: '/api/v1/track/batch',
     flush_delay: 5000,
     batch_size: 20,
