@@ -3948,12 +3948,13 @@ async function loadDramaMember() {
 onMounted(loadDramaMember);
 /**
  * 右侧目录付费章节的角标（和合集详情页同一套规则）：
- * 漫剧：作者本人「付费」/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「已购买」/ 都没有「待解锁」
+ * 漫剧：作者本人「付费」（合集仅会员可见时「仅会员可见」）/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「已购买」/ 都没有「待解锁」
  * 非漫剧：「订阅」（作者本人也显示）
  */
 const paidBadgeText = computed(() => {
   if (detail.value.type != '3') return t('detail.subscribe');
-  if (detail.value.author?.id && String(detail.value.author.id) === String(uid.value)) return t('detail.paid');
+  // 作者本人：合集仅会员可见（plan_id -1）标「仅会员可见」，否则「付费」
+  if (detail.value.author?.id && String(detail.value.author.id) === String(uid.value)) return isMemberOnlyPlanId(detail.value.book_plan_id) ? t('submit.memberOnly') : t('detail.paid');
   const bought = detail.value?.book_buy == 1 || detail.value?.book_buy === true;
   if (bought) {
     if (isMemberOnlyPlanId(detail.value.book_plan_id) && !hasDramaMember.value) return t('detail.memberOnly');

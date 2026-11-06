@@ -235,6 +235,7 @@ import { trackSubscribeToCreator } from '@/utils/analytics';
 import { trackCollectionView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
 import { planIdOf, isMemberOnlyPlanId } from '@/util/bookRechargePlan';
 import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub } from '@/util/dramaMember';
+import { fetchUserInfoOnce } from '@/util/userInfoOnce';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -406,7 +407,7 @@ async function fetchCollectionDetail() {
       return;
     }
 
-    const localUid = localStorage.getItem('uid');
+    const localUid = await getLoginUid();
     // 内容开关和合集详情并行：详情接口不依赖开关，showNsfw 只给后面的作者接口用
     const [, firstRes] = await Promise.all([contentSwitch.ensureLoaded(), api.getCollectionDetail(id)]);
     const showNsfw = contentSwitch.showNsfw;
@@ -514,9 +515,21 @@ async function fetchCollectionDetail() {
   }
 }
 
+/** 登录 uid：本地缓存没有（缓存被清、换浏览器刚登录）就拉一次个人信息补上并写回缓存；没登录返回空串 */
+async function getLoginUid(): Promise<string> {
+  const cached = localStorage.getItem('uid');
+  if (cached) return cached;
+  if (!localStorage.getItem('token')) return '';
+  const data = await fetchUserInfoOnce();
+  const id = data?.info?.id ?? data?.id;
+  if (id === undefined || id === null || id === '') return '';
+  localStorage.setItem('uid', String(id));
+  return String(id);
+}
+
 async function fetchAuthorInfo(authorId: string | number, showNsfw?: number) {
   try {
-    const localUid = localStorage.getItem('uid');
+    const localUid = await getLoginUid();
     const isSelf = String(localUid) === String(authorId);
 
     let res;
@@ -907,7 +920,7 @@ async function refreshChapters(bookIdParam?: typeof route.query.book_id | typeof
     const id = (Array.isArray(bookId) ? bookId[0] : bookId) as string;
     if (!id) return;
 
-    const localUid = localStorage.getItem('uid');
+    const localUid = await getLoginUid();
     await contentSwitch.ensureLoaded();
     const showNsfw = contentSwitch.showNsfw;
 
@@ -1029,14 +1042,14 @@ async function loadDramaMember() {
 
 function getPermText(accessRights?: string): string {
   // 漫剧合集的付费章节：
-  //   自己的合集 → 付费
+  //   自己的合集 → plan_id -1「仅会员可见」，否则「付费」
   //   买过整部（is_buy 1）→ 已购买；但合集是「仅会员可见」（plan_id -1）且没会员时，旧的购买不算 → 会员可看
   //   没买整部、有漫剧会员 → 已购买（会员全站付费漫剧都能看）
   //   都没有 → 待解锁
   // 其余类型仍然是「订阅」
   if (accessRights == '2') {
     if (isDramaCollection.value) {
-      if (isOwn.value) return t('collectionDetail.statusPaidOwn');
+      if (isOwn.value) return isMemberOnlyPlanId(collection.value?.plan_id) ? t('submit.memberOnly') : t('collectionDetail.statusPaidOwn');
       if (collection.value?.is_buy) {
         if (isMemberOnlyPlanId(collection.value?.plan_id) && !hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
         return t('detail.bought');
