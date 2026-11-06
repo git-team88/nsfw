@@ -146,7 +146,7 @@
               >
                 <div class="chapter-left">
                   <span
-                    v-if="chapter.accessRights && chapter.accessRights != '1' && (chapter.accessRights != '3' || isOwn)"
+                    v-if="chapter.accessRights && chapter.accessRights != '1' && (chapter.accessRights != '3' || isOwn) && (!isDramaCollection || chapter.accessRights != '2' || dramaMemberReady)"
                     class="chapter-status"
                     :class="getPermClass(chapter.accessRights)"
                   >{{ getPermText(chapter.accessRights) }}</span>
@@ -1012,13 +1012,18 @@ function getPermClass(accessRights?: string): string {
 
 // —— 漫剧会员（平台会员）：合集「仅会员可见」时，开通了会员的章节标「已购买」 ——
 const hasDramaMember = ref(false);
+/** 会员接口回来了（没登录直接算回来了）；漫剧章节的角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
+const dramaMemberReady = ref(false);
 async function loadDramaMember() {
   hasDramaMember.value = false;
-  if (!localStorage.getItem('token')) return;
+  dramaMemberReady.value = false;
+  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
   try {
     hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
   } catch (e) {
     console.error('load drama member failed', e);
+  } finally {
+    dramaMemberReady.value = true;
   }
 }
 

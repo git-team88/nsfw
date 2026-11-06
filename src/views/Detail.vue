@@ -846,7 +846,7 @@
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
                     <!-- 作者本人也显示，让作者知道这一集是不是付费的 -->
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2'">{{ paidBadgeText }}</div>
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && (detail.type != '3' || dramaMemberReady)">{{ paidBadgeText }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -1125,7 +1125,8 @@ const dramaUnlockPrice = computed(() => {
 const showDramaUnlock = computed(
   () => detail.value?.type == '3'
     && isPaidContentLocked.value
-    && !detail.value?.isSubscribed
+    // 博主订阅对漫剧无效（锁里已经不认了），这里不再排除
+    // && !detail.value?.isSubscribed
     && detail.value?.author?.id != uid
     // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
     && !hasBoughtBook.value,
@@ -3889,7 +3890,8 @@ const hasBoughtBook = computed(
 
 const isArticleLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
-  if (detail.value.isSubscribed) return false;
+  // 博主订阅只对非漫剧有效；漫剧只认整部购买 / 漫剧会员
+  if (detail.value.isSubscribed && detail.value.type != '3') return false;
   if (hasBoughtBook.value) return false;
   // If it's the author's own work, don't lock
   if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;
@@ -3899,15 +3901,20 @@ const isArticleLocked = computed(() => {
 
 // —— 漫剧会员（平台会员）：有效期内能看全站付费漫剧 ——
 const hasDramaMember = ref(false);
+/** 会员接口回来了（没登录直接算回来了）；角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
+const dramaMemberReady = ref(false);
 let dramaMemberLoaded = false;
 async function loadDramaMember() {
-  if (dramaMemberLoaded || !localStorage.getItem('token')) return;
+  if (dramaMemberLoaded) return;
+  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
   dramaMemberLoaded = true;
   try {
     hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
   } catch (e) {
     console.error('load drama member failed', e);
     hasDramaMember.value = false;
+  } finally {
+    dramaMemberReady.value = true;
   }
 }
 onMounted(loadDramaMember);
@@ -3939,7 +3946,8 @@ watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], 
 
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
-  if (detail.value.isSubscribed) return false;
+  // 博主订阅只对非漫剧有效；漫剧只认整部购买 / 漫剧会员
+  if (detail.value.isSubscribed && detail.value.type != '3') return false;
   // 漫剧会员：有效期内全站付费漫剧都能看
   if (detail.value.type == '3' && hasDramaMember.value) return false;
   // 合集已购：锁直接放开，不用再看有没有订阅博主
