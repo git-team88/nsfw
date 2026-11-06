@@ -110,6 +110,8 @@ export async function initTracking() {
     app_version: (import.meta as any).env?.VITE_APP_VERSION || "",
     enabled: TRACK_ENABLED,
     debug: isDebug && TRACK_ENABLED,
+    // 会话事件（session_start / session_end）不报了，只报 page_view / history_view
+    auto_session: false,
   });
   ready = TRACK_ENABLED;
   const uid = getUserId();
