@@ -55,6 +55,8 @@
             </template>
 
             <div v-if="detail.type == '3' || detail.type == '5'" class="video-wrapper" @mouseenter="isVideoHovered = true" @mouseleave="onVideoMouseLeave">
+              <!-- 解锁提示（会员 / 单部购买）：挂在视频区域顶部居中，不用全局 toast（那个在整页中间） -->
+              <div class="video-tip" v-if="videoTip">{{ videoTip }}</div>
               <!-- 漫剧（type 3）的「做同款」只放右侧合集信息栏里，左侧视频右上角不再显示 -->
               <div class="make-actions">
                 <div class="make-similar-btn" v-if="detail.type == '5' && detail.videoUrl && parseFloat(String(detail.duration)) <= 30" @click.stop="goMakeSimilarVideo()">
@@ -3963,6 +3965,14 @@ const paidBadgeText = computed(() => {
   if (hasDramaMember.value) return t('detail.bought');
   return t('collectionDetail.statusPaid');
 });
+// 视频区域顶部的提示条（解锁会员 / 单部购买）：2.5 秒后自动消失，再触发就重新计时
+const videoTip = ref('');
+let videoTipTimer: ReturnType<typeof setTimeout> | null = null;
+function showVideoTip(text: string) {
+  videoTip.value = text;
+  if (videoTipTimer) clearTimeout(videoTipTimer);
+  videoTipTimer = setTimeout(() => { videoTip.value = ''; videoTipTimer = null; }, 2500);
+}
 // 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
 let memberUnlockToastShown = false;
 watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
@@ -3970,7 +3980,7 @@ watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], 
   // 自己的作品不提示（isOwnPost：作者 id == 登录 uid）
   if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
     memberUnlockToastShown = true;
-    toast(t('detail.memberUnlockedTip'));
+    showVideoTip(t('detail.memberUnlockedTip'));
   }
 });
 // 单部买过的（没有会员）：每次进到付费章节都提示「您已解锁本漫剧观看权益」（切集也提示），同一集只提示一次
@@ -3981,7 +3991,7 @@ watch([hasBoughtBook, hasDramaMember, () => detail.value?.id, () => detail.value
   if (!postId || bookUnlockToastPostId === postId) return;
   if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
     bookUnlockToastPostId = postId;
-    toast(t('detail.bookUnlockedTip'));
+    showVideoTip(t('detail.bookUnlockedTip'));
   }
 });
 
