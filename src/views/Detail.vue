@@ -3973,13 +3973,15 @@ function showVideoTip(text: string) {
   if (videoTipTimer) clearTimeout(videoTipTimer);
   videoTipTimer = setTimeout(() => { videoTip.value = ''; videoTipTimer = null; }, 2500);
 }
-// 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
-let memberUnlockToastShown = false;
+// 已经是会员：每次进到付费漫剧章节都提示「您已解锁会员观看权益」（切集也提示），同一集只提示一次
+let memberUnlockToastPostId = '';
 watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
-  if (memberUnlockToastShown || !hasDramaMember.value) return;
+  if (!hasDramaMember.value) return;
+  const postId = String(detail.value?.id || '');
+  if (!postId || memberUnlockToastPostId === postId) return;
   // 自己的作品不提示（isOwnPost：作者 id == 登录 uid）
   if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
-    memberUnlockToastShown = true;
+    memberUnlockToastPostId = postId;
     showVideoTip(t('detail.memberUnlockedTip'));
   }
 });
