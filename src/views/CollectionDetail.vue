@@ -1026,7 +1026,7 @@ function getPermText(accessRights?: string): string {
   // 漫剧合集的付费章节：
   //   自己的合集 → 付费
   //   买过整部（is_buy 1）→ 已购买；但合集是「仅会员可见」（plan_id -1）且没会员时，旧的购买不算 → 会员可看
-  //   没买整部、有漫剧会员 → 会员可看
+  //   没买整部、有漫剧会员 → 已购买（会员全站付费漫剧都能看）
   //   都没有 → 待解锁
   // 其余类型仍然是「订阅」
   if (accessRights == '2') {
@@ -1036,7 +1036,7 @@ function getPermText(accessRights?: string): string {
         if (isMemberOnlyPlanId(collection.value?.plan_id) && !hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
         return t('detail.bought');
       }
-      if (hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
+      if (hasDramaMember.value) return t('detail.bought');
       return t('collectionDetail.statusPaid');
     }
     return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');

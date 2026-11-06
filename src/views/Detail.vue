@@ -3913,7 +3913,7 @@ async function loadDramaMember() {
 onMounted(loadDramaMember);
 /**
  * 右侧目录付费章节的角标（和合集详情页同一套规则）：
- * 漫剧：作者本人「付费」/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「会员可看」/ 都没有「待解锁」
+ * 漫剧：作者本人「付费」/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「已购买」/ 都没有「待解锁」
  * 非漫剧：「订阅」（作者本人也显示）
  */
 const paidBadgeText = computed(() => {
@@ -3924,7 +3924,7 @@ const paidBadgeText = computed(() => {
     if (isMemberOnlyPlanId(detail.value.book_plan_id) && !hasDramaMember.value) return t('detail.memberOnly');
     return t('detail.bought');
   }
-  if (hasDramaMember.value) return t('detail.memberOnly');
+  if (hasDramaMember.value) return t('detail.bought');
   return t('collectionDetail.statusPaid');
 });
 // 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
