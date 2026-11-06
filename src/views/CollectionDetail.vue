@@ -1347,6 +1347,8 @@ onBeforeUnmount(() => {
     .btn-row {
       display: flex;
       align-items: center;
+      // 小屏放不下时按钮整个换行，而不是把按钮文字挤成两行
+      flex-wrap: wrap;
       gap: 12px;
     }
 
@@ -1858,12 +1860,16 @@ onBeforeUnmount(() => {
       .continue-reading-btn {
         min-width: 9.4444vw;
         height: 3.3333vw;
+        min-height: 36px;
+        white-space: nowrap;
         padding: 0.5556vw 1.3889vw;
         font-size: 12px;
         border-radius: 0.5556vw;
       }
       .make-similar-btn {
         height: 3.3333vw;
+        min-height: 36px;
+        white-space: nowrap;
         padding: 0.5556vw 1.3889vw;
         font-size: 12px;
         border-radius: 0.5556vw;
@@ -1875,6 +1881,8 @@ onBeforeUnmount(() => {
       }
       .favorite-btn {
         height: 3.3333vw;
+        min-height: 36px;
+        white-space: nowrap;
         padding: 0.5556vw 1.3889vw;
         font-size: 12px;
         border-radius: 0.5556vw;
@@ -2043,15 +2051,17 @@ onBeforeUnmount(() => {
         font-size: 14px;
       }
       .continue-reading-btn {
-        min-width: 9.4444vw;
-        height: 4.5vw;
+        min-width: auto;
+        height: 36px;
         padding: 6px 14px;
         font-size: 12px;
+        white-space: nowrap;
       }
       .make-similar-btn {
-        height: 4.5vw;
+        height: 36px;
         padding: 6px 14px;
         font-size: 12px;
+        white-space: nowrap;
 
         .make-icon {
           width: 2.4vw;
@@ -2059,9 +2069,10 @@ onBeforeUnmount(() => {
         }
       }
       .favorite-btn {
-        height: 4.5vw;
+        height: 36px;
         padding: 6px 14px;
         font-size: 12px;
+        white-space: nowrap;
 
         img {
           width: 16px;
