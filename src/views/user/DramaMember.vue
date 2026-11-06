@@ -41,7 +41,7 @@
               <span class="radio"><span class="radio-inner"></span></span>
               <div class="plan-main">
                 <div class="plan-name">{{ planName(plan) }}</div>
-                <div class="plan-equiv" v-if="compareText(plan)">{{ compareText(plan) }}</div>
+                <div class="plan-equiv" v-if="planDesc(plan)">{{ planDesc(plan) }}</div>
               </div>
               <div class="plan-price">
                 <span class="plan-amount">{{ priceText(plan) }}</span>
@@ -88,7 +88,7 @@ import router from "@/router";
 import api from "@/api/index";
 import { toast } from "@/util/toast";
 import { apiErrorMessage } from "@/util/utils";
-import { fiatPrefix, fiatSuffix, scaleFiatPrice, isUsdDisplay } from "@/util/currency";
+import { fiatPrefix, fiatSuffix, scaleFiatPrice } from "@/util/currency";
 import { getGaClientId } from "@/utils/analytics";
 
 const { t, locale } = useI18n();
@@ -100,6 +100,8 @@ interface MemberPlan {
   currency?: string;
   valid_days?: string | number;
   sort_num?: string | number;
+  title_en?: string;
+  desc_en?: string;
   [k: string]: unknown;
 }
 
@@ -116,18 +118,22 @@ const planKey = (plan: MemberPlan) => String(plan.plan_id ?? plan.id ?? "");
 const selectedPlan = computed(() => plans.value.find(p => planKey(p) === selectedId.value) || null);
 const days = (plan: MemberPlan) => Number(plan.valid_days) || 0;
 
-/** 接口的 title_xx 按当前语言取；没填的按天数给默认名（30 月 / 90 季 / 180 半年 / 360 年） */
-function planName(plan: MemberPlan): string {
+/** 接口字段的语言后缀：title_cn / desc_ja … */
+function localeSuffix(): string {
   const l = String(locale.value || "");
-  const suffix = l.startsWith("zh") ? "cn" : l === "tc" ? "tc" : l === "jp" || l.startsWith("ja") ? "ja" : l === "ko" ? "kr" : l === "th" ? "th" : "en";
-  const titled = String(plan["title_" + suffix] || "").trim();
-  if (titled && suffix !== "en") return titled;
+  return l.startsWith("zh") ? "cn" : l === "tc" ? "tc" : l === "jp" || l.startsWith("ja") ? "ja" : l === "ko" ? "kr" : l === "th" ? "th" : "en";
+}
+/** 套餐名：接口的 title_xx 按当前语言取，没填的退回 title_en；都没有才按天数给默认名 */
+function planName(plan: MemberPlan): string {
+  const suffix = localeSuffix();
+  const titled = String(plan["title_" + suffix] || plan.title_en || "").trim();
+  if (titled) return titled;
   const d = days(plan);
   if (d === 30) return t("user.dramaMember.planMonth");
   if (d === 90) return t("user.dramaMember.planQuarter");
   if (d === 180) return t("user.dramaMember.planHalfYear");
   if (d === 360 || d === 365) return t("user.dramaMember.planYear");
-  return titled || t("user.dramaMember.planDays", { days: d });
+  return t("user.dramaMember.planDays", { days: d });
 }
 function periodText(plan: MemberPlan): string {
   const d = days(plan);
@@ -150,23 +156,10 @@ function periodName(plan: MemberPlan): string {
   if (d === 360 || d === 365) return t("user.dramaMember.periodYear");
   return t("user.dramaMember.periodDays", { days: d });
 }
-function fmt(amount: number, currency: string): string {
-  const text = isUsdDisplay(currency) ? amount.toFixed(2) : String(Math.round(amount));
-  return `${fiatPrefix(currency)}${text}${fiatSuffix(currency, t("aiRecharge.unit"))}`;
-}
-/** 和按月付比省多少：「连续月订 ¥11940 · 省 ¥660」= 月会员价 × 月数，减去本套餐总价；只给多于一个月、且比月付便宜的套餐显示 */
-function compareText(plan: MemberPlan): string {
-  const d = days(plan);
-  const monthly = plans.value.find(p => days(p) === 30);
-  if (d <= 30 || !monthly) return "";
-  const currency = plan.currency || "jpy";
-  const monthlyPrice = Number(scaleFiatPrice(monthly.price, monthly.currency || currency));
-  const total = Number(scaleFiatPrice(plan.price, currency));
-  if (!Number.isFinite(monthlyPrice) || !Number.isFinite(total)) return "";
-  const byMonth = monthlyPrice * (d / 30);
-  const save = byMonth - total;
-  if (save <= 0) return "";
-  return t("user.dramaMember.monthlyCompare", { total: fmt(byMonth, currency), save: fmt(save, currency) });
+/** 套餐名下面那行描述：接口的 desc_xx 按当前语言取，没填的退回 desc_en；都没有就不显示 */
+function planDesc(plan: MemberPlan): string {
+  const suffix = localeSuffix();
+  return String(plan["desc_" + suffix] || plan.desc_en || "").trim();
 }
 
 async function loadPlans() {
@@ -214,7 +207,8 @@ async function handlePay() {
   if (!plan || !agreeTerms.value || isPaying.value) return;
   isPaying.value = true;
   try {
-    const res = (await api.addDramaMemberOrder({ plan_id: planKey(plan), client_id: await getGaClientId() })) as any;
+    // from=2：个人中心入口（详情页入口传 1），后端回跳成功 / 失败页时带回来
+    const res = (await api.addDramaMemberOrder({ plan_id: planKey(plan), client_id: await getGaClientId(), from: 2 })) as any;
     if (res.code === 0 || res.code === 200) {
       const url = res.data?.url?.url || res.data?.url;
       if (typeof url === "string" && url) {

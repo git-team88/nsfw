@@ -987,7 +987,7 @@ export default {
       url: "index/getMongaPlanListPublic",
       method: "GET",
     }),
-  // 漫剧会员下单：{ plan_id, client_id }，返回 Stripe 结账页地址 data.url.url
+  // 漫剧会员下单：{ plan_id, client_id, from(1 详情页 / 2 个人中心) }，返回 Stripe 结账页地址 data.url.url
   addDramaMemberOrder: (data: any) =>
     axios.request({
       url: "book/addMongaOrder",
