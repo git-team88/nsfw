@@ -5,7 +5,7 @@ export {};
 
 declare global {
   interface MaidianConfigOptions {
-    /** 上报服务根地址，默认 https://track-test.blfans.ai */
+    /** 上报服务根地址，默认 https://track.blfans.ai */
     server_url?: string;
     /** 批量上报路径，默认 /api/v1/track/batch */
     batch_path?: string;
