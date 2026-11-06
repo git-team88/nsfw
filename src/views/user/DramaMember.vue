@@ -26,6 +26,7 @@
             </div>
             <div class="status-row"><span class="status-label">{{ t("user.dramaMember.currentPlan") }}</span><span class="status-value">{{ memberStatus.planName }}</span></div>
             <div class="status-row"><span class="status-label">{{ t("user.dramaMember.validUntil") }}</span><span class="status-value">{{ memberStatus.validUntil }}</span></div>
+            <div class="status-row"><span class="status-label">{{ t("user.dramaMember.autoRenew") }}</span><span class="status-value">{{ memberStatus.autoRenew ? t("user.dramaMember.on") : t("user.dramaMember.off") }}</span></div>
           </div>
           <!-- 没开通：权益横幅 -->
           <div class="banner" v-else>
@@ -382,7 +383,7 @@ onMounted(async () => {
 .status-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 4px;
   font-size: 14px;
   color: #f5f5f5;
   padding: 4px 0;
@@ -392,7 +393,6 @@ onMounted(async () => {
   color: #6A7282;
 }
 .status-value {
-  font-size: 16px;
   font-weight: 700;
 }
 .manage-link {
