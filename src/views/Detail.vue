@@ -2881,12 +2881,16 @@ async function fetchDetail(newId: number) {
       let bookIsNsfw = 0;
       let bookSessionId = '';
       seoBook.value = null;
+      // 合集的收费档位 id（-1 = 仅会员可见）：这里拉合集详情时顺手取，loadBookPlanId 就不用再请求一次
+      let bookPlanIdFromBook = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
           if (isStale()) return;
           if (bookRes.code === 0) {
             const bookData = bookRes.data?.book_info || bookRes.data;
+            bookPlanIdFromBook = planIdOf({ plan: bookRes.data?.plan, plan_id: bookData?.plan_id });
+            if (bookPlanIdFromBook) bookPlanIdCache.set(String(data.book_id), bookPlanIdFromBook);
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
               bookIsNsfw = 1;
             }
@@ -2933,7 +2937,7 @@ async function fetchDetail(newId: number) {
         book_currency: detailPlan.currency ?? '',
         book_web3_price: detailPlan.web3_price ?? '',
         // 作品详情只带价格档 plan；「仅会员可见」的 -1 在合集详情的 book_info.plan_id 里，loadBookPlanId 再补
-        book_plan_id: detailPlan.plan_id ?? detailPlan.id ?? '',
+        book_plan_id: bookPlanIdFromBook || (detailPlan.plan_id ?? detailPlan.id ?? ''),
         book_buy: data.book_buy ?? res.data?.book_buy ?? 0,
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
@@ -3938,7 +3942,8 @@ const paidBadgeText = computed(() => {
 let memberUnlockToastShown = false;
 watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
   if (memberUnlockToastShown || !hasDramaMember.value) return;
-  if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && detail.value.author.id != localStorage.getItem('uid')) {
+  // 自己的作品不提示（isOwnPost：作者 id == 登录 uid）
+  if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
     memberUnlockToastShown = true;
     toast(t('detail.memberUnlockedTip'));
   }

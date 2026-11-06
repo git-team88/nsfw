@@ -8,7 +8,13 @@
           <div class="panel-title">{{ t("user.dramaMember.title") }}</div>
         </div>
         <div class="content">
-          <!-- 当前会员状态：接口还没定，memberStatus 为空时整块不显示（见 loadMemberStatus） -->
+          <!-- 套餐和会员状态都回来再渲染，不然会先闪一下「未开通」的样子 -->
+          <div class="loading-state" v-if="pageLoading">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">{{ t('home.loading') }}</div>
+          </div>
+          <template v-else>
+          <!-- 当前会员状态：memberStatus 为空就是没开通（见 loadMemberStatus） -->
           <div class="status-card" v-if="memberStatus">
             <div class="status-head">
               <div class="status-title">
@@ -69,6 +75,7 @@
           <button class="confirm-btn" :disabled="!selectedPlan || !agreeTerms || isPaying" @click="handlePay">
             {{ t("user.dramaMember.confirm") }}<template v-if="selectedPlan"> · {{ priceText(selectedPlan) }}</template>
           </button>
+          </template>
           </template>
         </div>
       </div>
@@ -248,13 +255,47 @@ async function handlePay() {
   }
 }
 
+/** 页面加载态：套餐 + 会员状态都回来才渲染内容 */
+const pageLoading = ref(true);
 onMounted(async () => {
-  await loadPlans();
-  await loadMemberStatus();
+  try {
+    await loadPlans();
+    await loadMemberStatus();
+  } finally {
+    pageLoading.value = false;
+  }
 });
 </script>
 
 <style scoped lang="scss">
+// 加载中：和支付历史页同款转圈
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 320px;
+  gap: 12px;
+
+  .loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #2c2c2c;
+    border-top: 3px solid #f5f5f5;
+    border-radius: 50%;
+    animation: drama-member-spin 1s ease-in-out infinite;
+    box-sizing: border-box;
+  }
+
+  .loading-text {
+    font-size: 16px;
+    color: #f5f5f5;
+    font-weight: 700;
+  }
+}
+@keyframes drama-member-spin {
+  to { transform: rotate(360deg); }
+}
 .user-drama-member {
   width: 100%;
   min-height: 100vh;
@@ -360,16 +401,16 @@ onMounted(async () => {
 }
 .plan-card.readonly {
   cursor: default;
-  // 已开通后列表只是展示：非当前套餐压淡
-  opacity: 0.6;
+  // 已开通后列表只是展示：当前生效的（不能再选）压淡，其它档位正常
   &.current {
-    opacity: 1;
+    opacity: 0.6;
   }
 }
 .current-tag {
   flex: 0 0 auto;
   font-size: 13px;
-  color: #777;
+  font-weight: 700;
+  color: #ff4f9a;
 }
 .switch-note {
   margin: 16px 0 0;
