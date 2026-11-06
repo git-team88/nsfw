@@ -914,6 +914,8 @@ import {
   planCurrencyOf,
   planIdOf,
   type BookRechargePlan,
+  MEMBER_ONLY_PLAN_ID,
+  isMemberOnlyPlanId,
 } from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
 import router from "@/router";
@@ -1332,9 +1334,7 @@ watch(() => selectedCollection.value?.id, () => syncCollectionTag());
 const bookPlans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref<string>('');
 /** 价格列表里的「仅会员可见」选项（不设单部价格，合集标成漫剧会员可看）；默认不选，默认选第一档价格 */
-const MEMBER_ONLY = 'member_only';
-/** 修改合集时「仅会员可见」要传的字段，字段名等后端定（TODO）：选了传 1，选价格档位传 0 */
-const MEMBER_ONLY_PARAM = (on: boolean) => ({ is_member_only: on ? 1 : 0 });
+const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 const planLabel = (plan: BookRechargePlan) => `${planPriceText(plan, t('aiRecharge.unit'))}/${t('submit.perSeries')}`;
 async function loadBookPlans() {
@@ -1355,7 +1355,7 @@ function syncSelectedPlanFromCollection() {
     || (price !== undefined && price !== null && price !== ''
       ? plans.find(pl => String(pl.price) === String(price))
       : undefined);
-  selectedPlanId.value = planKey(hit || plans[0]);
+  selectedPlanId.value = hit ? planKey(hit) : isMemberOnlyPlanId(curId) ? MEMBER_ONLY : planKey(plans[0]);
 }
 watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection());
 /**
@@ -1364,8 +1364,7 @@ watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection()
  */
 async function syncCollectionPlan(permission: string) {
   if (permission !== 'partial' || !selectedCollection.value?.id) return;
-  // 「仅会员可见」：不设单部价格（new_plan_id 传 0），合集标成会员可看
-  // TODO 会员可看的字段名等后端定，先按 MEMBER_ONLY_PARAM 传
+  // 「仅会员可见」：new_plan_id 传 -1
   const memberOnly = selectedPlanId.value === MEMBER_ONLY;
   const plan = memberOnly ? null : bookPlans.value.find(pl => planKey(pl) === selectedPlanId.value);
   if (!memberOnly && !plan) return;
@@ -1374,11 +1373,10 @@ async function syncCollectionPlan(permission: string) {
     const res = await api.modifyCollection({
       book_id: selectedCollection.value.id,
       old_plan_id: selectedCollection.value.plan_id || 0,
-      new_plan_id: plan ? planKey(plan) : 0,
-      ...MEMBER_ONLY_PARAM(memberOnly),
+      new_plan_id: memberOnly ? MEMBER_ONLY_PLAN_ID : plan ? planKey(plan) : 0,
     }) as any;
     if (res.code == 0 || res.code == 200) {
-      selectedCollection.value.plan_id = plan ? planKey(plan) : '';
+      selectedCollection.value.plan_id = memberOnly ? MEMBER_ONLY_PLAN_ID : plan ? planKey(plan) : '';
       selectedCollection.value.price = plan ? plan.price : '';
       selectedCollection.value.currency = plan ? (plan.currency || selectedCollection.value.currency) : selectedCollection.value.currency;
     } else {

@@ -92,7 +92,7 @@ import TextInfoModal from '@/components/TextInfoModal.vue';
 import { useI18n } from 'vue-i18n';
 import select from '@/assets/images/publish/select.png';
 import selectActive from '@/assets/images/publish/select_active.png';
-import { fetchBookRechargePlans, findPlanByPrice, planPriceText, type BookRechargePlan } from '@/util/bookRechargePlan';
+import { fetchBookRechargePlans, findPlanByPrice, planPriceText, MEMBER_ONLY_PLAN_ID, isMemberOnlyPlanId, type BookRechargePlan } from '@/util/bookRechargePlan';
 
 const { t } = useI18n();
 
@@ -103,8 +103,6 @@ const props = defineProps<{
   currentPrice?: string | number;
   /** 合集当前档位 id，优先用它回显 */
   currentPlanId?: string | number;
-  /** 合集当前是否「仅会员可见」（字段名等后端定） */
-  currentMemberOnly?: boolean | number | string;
   chapters: Array<{
     id: string | number;
     title: string;
@@ -136,7 +134,7 @@ const plans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref('');
 const showRevenueInfo = ref(false);
 /** 「仅会员可见（不支持单部付费）」：不设单部价格，合集标成漫剧会员可看 */
-const MEMBER_ONLY = 'member_only';
+const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 const showPlanList = computed(() => props.collectionType == '3' && selectedPerm.value === 'partial' && plans.value.length > 0);
 const selectedPlan = computed(() => plans.value.find((pl) => planKey(pl) === selectedPlanId.value));
@@ -149,8 +147,8 @@ function syncSelectedPlan() {
     ? plans.value.find((pl) => planKey(pl) === String(curId))
     : undefined;
   const hit = byId || findPlanByPrice(plans.value, props.currentPrice);
-  const memberOnly = props.currentMemberOnly === true || String(props.currentMemberOnly ?? '') === '1';
-  selectedPlanId.value = hit ? planKey(hit) : memberOnly ? MEMBER_ONLY : planKey(plans.value[0]);
+  // plan_id = -1 就是「仅会员可见」
+  selectedPlanId.value = hit ? planKey(hit) : isMemberOnlyPlanId(props.currentPlanId) ? MEMBER_ONLY : planKey(plans.value[0]);
 }
 
 async function loadPlans() {

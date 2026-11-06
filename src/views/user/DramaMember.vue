@@ -10,16 +10,16 @@
         <div class="content">
           <!-- 当前会员状态：接口还没定，memberStatus 为空时整块不显示（见 loadMemberStatus） -->
           <div class="status-card" v-if="memberStatus">
-            <div class="status-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 2.8 7.5l4.7 3.7L12 5l4.5 6.2 4.7-3.7L19.5 18Z"/><path d="M5 21h14"/></svg>
-              {{ t("user.dramaMember.statusActive") }}
+            <div class="status-head">
+              <div class="status-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 2.8 7.5l4.7 3.7L12 5l4.5 6.2 4.7-3.7L19.5 18Z"/><path d="M5 21h14"/></svg>
+                {{ t("user.dramaMember.statusActive") }}
+              </div>
+              <!-- 续费管理：去支付记录的「漫剧订阅」tab -->
+              <span class="manage-link" @click="goManage">{{ t("user.dramaMember.manage") }}</span>
             </div>
             <div class="status-row"><span class="status-label">{{ t("user.dramaMember.currentPlan") }}</span><span class="status-value">{{ memberStatus.planName }}</span></div>
             <div class="status-row"><span class="status-label">{{ t("user.dramaMember.validUntil") }}</span><span class="status-value">{{ memberStatus.validUntil }}</span></div>
-            <div class="status-row">
-              <span class="status-label">{{ t("user.dramaMember.autoRenew") }}</span>
-              <span class="status-value">{{ memberStatus.autoRenew ? t("user.dramaMember.on") : t("user.dramaMember.off") }}<span class="manage-link" @click="goManage">{{ t("user.dramaMember.manage") }}</span></span>
-            </div>
           </div>
           <!-- 没开通：权益横幅 -->
           <div class="banner" v-else>
@@ -35,10 +35,12 @@
               class="plan-card"
               v-for="plan in plans"
               :key="planKey(plan)"
-              :class="{ active: selectedId === planKey(plan), readonly: !!memberStatus }"
+              :class="{ active: !memberStatus && selectedId === planKey(plan), readonly: !!memberStatus, current: !!memberStatus && memberStatus.planId === planKey(plan) }"
               @click="!memberStatus && (selectedId = planKey(plan))"
             >
-              <span class="radio"><span class="radio-inner"></span></span>
+              <!-- 已开通：不显示勾选，当前生效的套餐前面标「生效中」 -->
+              <span class="radio" v-if="!memberStatus"><span class="radio-inner"></span></span>
+              <span class="current-tag" v-else-if="memberStatus.planId === planKey(plan)">{{ t("user.dramaMember.inEffect") }}</span>
               <div class="plan-main">
                 <div class="plan-name">{{ planName(plan) }}</div>
                 <div class="plan-equiv" v-if="planDesc(plan)">{{ planDesc(plan) }}</div>
@@ -90,6 +92,7 @@ import { toast } from "@/util/toast";
 import { apiErrorMessage } from "@/util/utils";
 import { fiatPrefix, fiatSuffix, scaleFiatPrice } from "@/util/currency";
 import { getGaClientId } from "@/utils/analytics";
+import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub, formatDramaMemberDate } from "@/util/dramaMember";
 
 const { t, locale } = useI18n();
 
@@ -182,10 +185,28 @@ async function loadPlans() {
   }
 }
 
-/** 当前会员状态：后端接口还没定（TODO），先不请求。拿到后把 planId 选中，列表只读 */
+/**
+ * 当前会员状态：从「我的漫剧订阅列表」里取有效期内的那条。
+ * 没登录 / 没买过 / 接口失败 → null，页面按未开通显示。拿到后把当前套餐选中、列表只读。
+ */
 async function loadMemberStatus() {
   memberStatus.value = null;
-  if (memberStatus.value && (memberStatus.value as any).planId) selectedId.value = String((memberStatus.value as any).planId);
+  if (!localStorage.getItem("token")) return;
+  try {
+    const cur = pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
+    if (!cur) return;
+    // 套餐名优先用套餐列表里同 id 的（标题按语言），列表还没回来就先用订阅里带的 plan
+    const plan = plans.value.find(p => planKey(p) === cur.planId) || (cur.plan as MemberPlan | null);
+    memberStatus.value = {
+      planId: cur.planId,
+      planName: plan ? planName(plan) : "",
+      validUntil: formatDramaMemberDate(cur.endTime),
+      autoRenew: cur.autoRenew,
+    };
+    if (cur.planId) selectedId.value = cur.planId;
+  } catch (e) {
+    console.error("load drama member status failed", e);
+  }
 }
 
 /** 「管理」：去支付记录的「漫剧订阅」tab */
@@ -227,9 +248,9 @@ async function handlePay() {
   }
 }
 
-onMounted(() => {
-  loadPlans();
-  loadMemberStatus();
+onMounted(async () => {
+  await loadPlans();
+  await loadMemberStatus();
 });
 </script>
 
@@ -313,27 +334,42 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 800;
   color: #ff4f9a;
-  color: #f5f5f5;
+}
+.status-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
 }
 .status-row {
   display: flex;
-  justify-content: space-between;
+  gap: 8px;
   font-size: 14px;
   color: #f5f5f5;
   padding: 4px 0;
 }
 .status-label {
+  flex: 0 0 auto;
   color: #777;
 }
 .manage-link {
-  margin-left: 10px;
+  font-size: 13px;
   color: #ff4f9a;
   cursor: pointer;
   text-decoration: underline;
 }
 .plan-card.readonly {
   cursor: default;
+  // 已开通后列表只是展示：非当前套餐压淡
+  opacity: 0.6;
+  &.current {
+    opacity: 1;
+  }
+}
+.current-tag {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: #777;
 }
 .switch-note {
   margin: 16px 0 0;

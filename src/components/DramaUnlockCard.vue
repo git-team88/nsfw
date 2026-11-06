@@ -1,6 +1,7 @@
 <template>
-  <!-- 漫剧解锁全集。价格取不到就整张卡不渲染 —— 宁可不显示，也不给一个没有金额的付费入口 -->
-  <div class="drama-unlock-card" v-if="priceText">
+  <!-- 漫剧解锁：单部购买（合集设了价格）+ 解锁会员（会员套餐第一档）。两个都取不到就整张卡不渲染 —— 宁可不显示，也不给一个没有金额的付费入口 -->
+  <div class="drama-unlock-card" v-if="priceText || memberPlan">
+    <template v-if="priceText">
     <!-- 价格要单独上色，所以整句走 v-html；插进去的只有自己算出来的金额文案 -->
     <p class="unlock-tip" v-html="unlockTipHtml"></p>
 
@@ -23,6 +24,16 @@
     <button class="unlock-btn" @click="handleUnlock">
       {{ t('collection.unlockFullSeries') }}
     </button>
+    </template>
+
+    <!-- 解锁会员：只显示套餐列表的第一档，点了直接下单跳 Stripe（from=1，回跳到漫剧解锁的结果页） -->
+    <template v-if="memberPlan">
+      <p class="unlock-tip member-tip-top" v-if="!priceText">{{ t('collection.unlockAfterPay') }}</p>
+      <button class="unlock-btn member-btn" :class="{ 'has-single': !!priceText }" @click="handleMember">
+        {{ t('collection.unlockMember', { price: memberPriceText }) }}
+      </button>
+      <p class="member-tip">{{ t('user.dramaMember.banner') }}</p>
+    </template>
 
     <p class="pay-terms">
       {{ t('collection.payAgree') }}<span class="terms-link">{{ t('subscribe.paymentTerms') }}</span>
@@ -47,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { apiErrorMessage } from '@/util/utils';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -105,6 +116,63 @@ function resolvePlanId(): string {
 }
 const showWalletModal = ref(false);
 const isLoading = ref(false);
+
+// —— 解锁会员：会员套餐列表取第一档，只显示一个 ——
+const memberPlan = ref<any>(null);
+async function loadMemberPlan() {
+  try {
+    const res = (await api.getDramaMemberPlans()) as any;
+    const list = (res?.code === 0 || res?.code === 200) ? (res.data?.plans || []) : [];
+    memberPlan.value = Array.isArray(list) && list.length ? list[0] : null;
+  } catch {
+    memberPlan.value = null;
+  }
+}
+onMounted(loadMemberPlan);
+/** 「1000日元/月」：价格 + 周期（按 valid_days：30 月 / 90 三个月 / 180 半年 / 360 年） */
+const memberPriceText = computed(() => {
+  const p = memberPlan.value;
+  if (!p) return '';
+  const currency = p.currency || 'jpy';
+  const d = Number(p.valid_days) || 0;
+  const period = d === 30 ? t('user.dramaMember.perMonth')
+    : d === 90 ? t('user.dramaMember.perQuarter')
+    : d === 180 ? t('user.dramaMember.perHalfYear')
+    : d === 360 || d === 365 ? t('user.dramaMember.perYear')
+    : t('user.dramaMember.perDays', { days: d });
+  return `${fiatPrefix(currency)}${scaleFiatPrice(p.price, currency)}${fiatSuffix(currency, t('aiRecharge.unit'))}${period}`;
+});
+/** 下单：from=1 详情页入口，后端回跳漫剧解锁的成功 / 失败页（带 post_id） */
+async function handleMember() {
+  if (isLoading.value) return;
+  if (!checkLogin()) return;
+  const plan = memberPlan.value;
+  if (!plan) return;
+  isLoading.value = true;
+  try {
+    const res = (await api.addDramaMemberOrder({
+      plan_id: String(plan.plan_id ?? plan.id ?? ''),
+      client_id: await getGaClientId(),
+      from: 1,
+      post_id: props.postId,
+    })) as any;
+    if (res?.code === 0 || res?.code === 200) {
+      const url = res.data?.url?.url || res.data?.url;
+      if (typeof url === 'string' && url) {
+        window.location.href = url;
+        return;
+      }
+      toast(t('fail'));
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
+    }
+  } catch (e) {
+    console.error(e);
+    toast(t('fail'));
+  } finally {
+    isLoading.value = false;
+  }
+}
 
 // currency 缺省按日元，原值展示
 const payCurrency = computed(() => props.currency || 'jpy');
@@ -401,6 +469,20 @@ function handleNoWallet() {
     opacity: 0.6;
     cursor: default;
   }
+}
+
+// 解锁会员：在单部购买下面再放一个按钮，中间留空
+.member-btn.has-single {
+  margin-top: 14px;
+}
+.member-tip-top {
+  margin-bottom: 12px;
+}
+.member-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  text-align: center;
+  color: #999;
 }
 
 .pay-terms {

@@ -845,7 +845,7 @@
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id != uid">{{ t(detail.type == '3' ? 'detail.paid' : 'detail.subscribe') }}</div>
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id != uid">{{ paidBadgeText }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -994,7 +994,8 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue"
 import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-import { pickPlan } from "@/util/bookRechargePlan";
+import { pickPlan, planIdOf, isMemberOnlyPlanId } from "@/util/bookRechargePlan";
+import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub } from "@/util/dramaMember";
 import { formatTimestamp, initLanguage, processImageUrl, apiErrorMessage, apiLang } from '@/util/utils';
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
@@ -1967,11 +1968,38 @@ async function enterNextOrCurrentChapter() {
   }
 }
 
+// 合集的收费档位 id（-1 = 仅会员可见）只在合集详情接口里有（book_info.plan_id），作品详情不带：
+// 漫剧合集拉一次，按 book_id 缓存，切集不重复请求
+const bookPlanIdCache = new Map<string, string>();
+async function loadBookPlanId() {
+  const bookId = String(detail.value.book_id || '');
+  if (!bookId || Number(bookId) == 0 || detail.value.type != '3') return;
+  if (bookPlanIdCache.has(bookId)) {
+    detail.value.book_plan_id = bookPlanIdCache.get(bookId) || detail.value.book_plan_id;
+    return;
+  }
+  try {
+    const res = await api.getCollectionDetail(bookId) as any;
+    if (res?.code == 0) {
+      const data = res.data || {};
+      const info = data.book_info || data;
+      const planId = planIdOf({ plan: data.plan, plan_id: info.plan_id });
+      if (planId) {
+        bookPlanIdCache.set(bookId, planId);
+        if (String(detail.value.book_id || '') === bookId) detail.value.book_plan_id = planId;
+      }
+    }
+  } catch (e) {
+    console.error('load book plan id failed', e);
+  }
+}
+
 // Load chapters (collection episodes)
 async function loadChapters() {
   if (!detail.value.book_id || Number(detail.value.book_id) == 0) {
     return;
   }
+  loadBookPlanId();
 
   try {
     const response = await api.singleCollection(String(detail.value.book_id), 1, COLLECTION_PAGE_SIZE) as any;
@@ -2902,6 +2930,7 @@ async function fetchDetail(newId: number) {
         book_price: detailPlan.price ?? '',
         book_currency: detailPlan.currency ?? '',
         book_web3_price: detailPlan.web3_price ?? '',
+        // 作品详情只带价格档 plan；「仅会员可见」的 -1 在合集详情的 book_info.plan_id 里，loadBookPlanId 再补
         book_plan_id: detailPlan.plan_id ?? detailPlan.id ?? '',
         book_buy: data.book_buy ?? res.data?.book_buy ?? 0,
         book_is_nsfw: bookIsNsfw,
@@ -3863,9 +3892,42 @@ const isArticleLocked = computed(() => {
   return true;
 });
 
+// —— 漫剧会员（平台会员）：有效期内能看全站付费漫剧 ——
+const hasDramaMember = ref(false);
+let dramaMemberLoaded = false;
+async function loadDramaMember() {
+  if (dramaMemberLoaded || !localStorage.getItem('token')) return;
+  dramaMemberLoaded = true;
+  try {
+    hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
+  } catch (e) {
+    console.error('load drama member failed', e);
+    hasDramaMember.value = false;
+  }
+}
+onMounted(loadDramaMember);
+/** 右侧目录付费章节的角标：漫剧 → 已是会员「已购买」/ 合集仅会员可见「会员可见」/ 其它「付费」；非漫剧「订阅」 */
+const paidBadgeText = computed(() => {
+  if (detail.value.type != '3') return t('detail.subscribe');
+  if (hasDramaMember.value) return t('detail.bought');
+  if (isMemberOnlyPlanId(detail.value.book_plan_id)) return t('detail.memberOnly');
+  return t('detail.paid');
+});
+// 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
+let memberUnlockToastShown = false;
+watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
+  if (memberUnlockToastShown || !hasDramaMember.value) return;
+  if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && detail.value.author.id != localStorage.getItem('uid')) {
+    memberUnlockToastShown = true;
+    toast(t('detail.memberUnlockedTip'));
+  }
+});
+
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
   if (detail.value.isSubscribed) return false;
+  // 漫剧会员：有效期内全站付费漫剧都能看
+  if (detail.value.type == '3' && hasDramaMember.value) return false;
   // 合集已购：锁直接放开，不用再看有没有订阅博主
   if (hasBoughtBook.value) return false;
   if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;

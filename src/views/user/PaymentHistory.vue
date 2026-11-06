@@ -159,13 +159,13 @@
                   <div class="left">
                     <div class="plan-info">
                       <div class="plan-name">{{ item.planName }}</div>
-                      <div class="compute-info">{{ t('user.paymentHistory.valid') }} {{ formatTimestamp(item.startTime) }}-{{ formatTimestamp(item.endTime) }}</div>
+                      <div class="compute-info">{{ t('user.paymentHistory.valid') }} <template v-if="item.startTime">{{ formatTimestamp(item.startTime) }}-</template>{{ formatTimestamp(item.endTime) }}</div>
                     </div>
                   </div>
                   <div class="right">
                     <div class="price-info">
                       <div class="price">{{ fiatPrefix(item.currency) }}{{ scaleFiatPrice(item.price, item.currency) }} {{ fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
-                      <div class="date">{{ item.autoRenew ? t('user.dramaMember.autoRenewOnShort') : t('user.dramaMember.autoRenewOffShort') }}</div>
+                      <div class="date">{{ item.expired ? t('user.dramaMember.expired') : item.autoRenew ? t('user.dramaMember.autoRenewOnShort') : t('user.dramaMember.autoRenewOffShort') }}</div>
                     </div>
                   </div>
                 </div>
@@ -309,6 +309,7 @@
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import EmptyState from "@/components/EmptyState.vue";
+import { fetchMyDramaMemberSubs } from "@/util/dramaMember";
 import Pagination from "@/components/Pagination.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
@@ -370,11 +371,39 @@ interface DramaUnlockItem {
   web3Price?: string | number;
 }
 const dramaUnlockList = ref<DramaUnlockItem[]>([]);
-/** 漫剧订阅（平台会员）购买记录；列表接口还没定（TODO），fetchDramaMemberList 里先给空 */
-interface DramaMemberItem { id: string | number; planName: string; startTime: string | number; endTime: string | number; price: string | number; currency: string; autoRenew: boolean }
+/** 漫剧订阅（平台会员）购买记录：book/getMyMongaSubList，解析在 util/dramaMember.ts */
+interface DramaMemberItem { id: string | number; planName: string; startTime: string | number; endTime: string | number; price: string | number; currency: string; autoRenew: boolean; expired: boolean }
 const dramaMemberList = ref<DramaMemberItem[]>([]);
 async function fetchDramaMemberList() {
-  dramaMemberList.value = [];
+  try {
+    // 订阅记录里只有 plan_id，套餐名 / 价格从套餐列表里按 id 取
+    const [subs, planRes] = await Promise.all([fetchMyDramaMemberSubs(), api.getDramaMemberPlans() as Promise<any>]);
+    const plans: any[] = (planRes?.code === 0 || planRes?.code === 200) ? (planRes.data?.plans || []) : [];
+    dramaMemberList.value = subs.map((s) => {
+      const plan = plans.find((p) => String(p.plan_id ?? p.id ?? '') === s.planId) || s.plan;
+      return {
+        id: s.id,
+        planName: dramaMemberPlanName(plan),
+        startTime: s.startTime,
+        endTime: s.endTime,
+        price: s.price || plan?.price || '',
+        currency: s.currency || plan?.currency || 'jpy',
+        autoRenew: s.autoRenew,
+        expired: String(s.raw?.status ?? '') === '2',
+      };
+    });
+  } catch (e) {
+    console.error(e);
+    dramaMemberList.value = [];
+    toast(t('fail'));
+  }
+}
+/** 套餐名：plan 的 title_xx 按语言取，没填退回 title_en */
+function dramaMemberPlanName(plan: Record<string, unknown> | null): string {
+  if (!plan) return '';
+  const l = String(locale.value || '');
+  const suffix = l.startsWith('zh') ? 'cn' : l === 'tc' ? 'tc' : l === 'jp' || l.startsWith('ja') ? 'ja' : l === 'ko' ? 'kr' : l === 'th' ? 'th' : 'en';
+  return String(plan['title_' + suffix] || plan.title_en || '').trim();
 }
 
 /**

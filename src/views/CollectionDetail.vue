@@ -233,6 +233,7 @@ import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
 import { trackCollectionView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
+import { planIdOf, isMemberOnlyPlanId } from '@/util/bookRechargePlan';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -277,6 +278,8 @@ interface Collection {
   readIndexes: number[];
   history: CollectionHistory | null;
   session_id: string;
+  /** 合集的收费档位 id；-1 = 仅会员可见（不支持单部付费） */
+  plan_id: string;
 }
 
 interface BooksGroupItem {
@@ -474,7 +477,8 @@ async function fetchCollectionDetail() {
             title: finalData.history.title || '',
             cover: finalData.history.cover || ''
           } : null,
-          session_id: finalBookInfo.session_id || ''
+          session_id: finalBookInfo.session_id || '',
+          plan_id: planIdOf({ plan: finalData.plan, plan_id: finalBookInfo.plan_id }),
         };
         // 先按合集信息写一遍 SEO meta（标题/描述/og），拿到作者昵称后再补一遍
         applyCollectionSeo();
@@ -1002,8 +1006,11 @@ function getPermClass(accessRights?: string): string {
 }
 
 function getPermText(accessRights?: string): string {
-  // 漫剧合集的付费章节标「付费」，其余类型仍然是「订阅」
-  if (accessRights == '2') return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
+  // 漫剧合集的付费章节标「付费」；合集是「仅会员可见」（plan_id -1）标「会员可见」；其余类型仍然是「订阅」
+  if (accessRights == '2') {
+    if (isDramaCollection.value && isMemberOnlyPlanId(collection.value?.plan_id)) return t('collectionDetail.statusMemberOnly');
+    return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
+  }
   if (accessRights == '3') return t('submit.permPrivate');
   return t('submit.permPublic');
 }

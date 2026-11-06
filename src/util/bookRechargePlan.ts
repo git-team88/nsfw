@@ -102,6 +102,12 @@ export function planCurrencyOf(source: any): string {
 }
 
 /** 合集的档位 id，同样优先 plan */
+/** 「仅会员可见（不支持单部付费）」：修改合集时 new_plan_id 传 -1，合集详情的 plan_id 也是 -1 */
+export const MEMBER_ONLY_PLAN_ID = "-1";
+export function isMemberOnlyPlanId(id: unknown): boolean {
+  return String(id ?? "") === MEMBER_ONLY_PLAN_ID;
+}
+
 export function planIdOf(source: any): string {
   const plan = pickPlan(source?.plan);
   if (plan) return String(plan.plan_id ?? plan.id ?? "");
