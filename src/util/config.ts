@@ -4,7 +4,7 @@ export const aiUrl = "https://testapi.addaiaroot.com/";
 // 埋点上报域名
 export const trackUrl = "https://track-test.blfans.ai/";
 // 埋点应用 id（后端 Maidian 后台分配，web_ 开头；测试 / 正式同一个，不用跟着切）。空着时埋点不上报
-export const trackAppId = "app_web_appid"; // TODO 临时值，等后端给这个站测试环境的 app_id（每个站一个）
+export const trackAppId = "app_6b1e4c9f8a3d2e0f7b5c8d1e9f4a3b2c"; // 测试环境 app_id（后端 track_app 表：fansfans-web）；正式环境的待后端分配
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
 // export const baseUrl = "https://api.moegen.ai/";
