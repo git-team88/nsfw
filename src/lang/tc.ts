@@ -2824,6 +2824,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     memberOnly: "會員可看",
     bought: "已購買",
     memberUnlockedTip: "您已解鎖會員觀看權益",
+    bookUnlockedTip: "您已解鎖本漫劇觀看權益",
     subscribeToView: "訂閱用戶可查看完整內容",
     updatedToEpisode: "更新至第 {count} 集",
     readToEpisode: "看至第 {count} 集",

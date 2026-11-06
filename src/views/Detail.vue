@@ -3973,6 +3973,17 @@ watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], 
     toast(t('detail.memberUnlockedTip'));
   }
 });
+// 单部买过的（没有会员）：每次进到付费章节都提示「您已解锁本漫剧观看权益」（切集也提示），同一集只提示一次
+let bookUnlockToastPostId = '';
+watch([hasBoughtBook, hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
+  if (!hasBoughtBook.value || hasDramaMember.value) return;
+  const postId = String(detail.value?.id || '');
+  if (!postId || bookUnlockToastPostId === postId) return;
+  if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
+    bookUnlockToastPostId = postId;
+    toast(t('detail.bookUnlockedTip'));
+  }
+});
 
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;

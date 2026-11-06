@@ -2724,6 +2724,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     memberOnly: "Members",
     bought: "Purchased",
     memberUnlockedTip: "Your membership unlocks this drama",
+    bookUnlockedTip: "You have unlocked this drama",
     subscribeToView: "Subscribe to view full content",
     updatedToEpisode: "Updated to episode {count}",
     readToEpisode: "Read to episode {count}",

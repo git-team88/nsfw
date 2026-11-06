@@ -2305,6 +2305,7 @@ export default {
     memberOnly: "สมาชิก",
     bought: "ซื้อแล้ว",
     memberUnlockedTip: "คุณปลดล็อกสิทธิ์รับชมของสมาชิกแล้ว",
+    bookUnlockedTip: "คุณปลดล็อกสิทธิ์รับชมเรื่องนี้แล้ว",
     subscribeToView: "สมาชิกสามารถดูเนื้อหาทั้งหมดได้",
     updatedToEpisode: "อัปเดตถึงตอนที่ {count}",
     readToEpisode: "ดูถึงตอนที่ {count}",

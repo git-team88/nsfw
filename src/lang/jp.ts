@@ -2546,6 +2546,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     memberOnly: "会員限定",
     bought: "購入済み",
     memberUnlockedTip: "会員特典で視聴できます",
+    bookUnlockedTip: "この作品の視聴権を解除済みです",
     subscribeToView: "メンバーシップ者のみ全文を表示可能",
     updatedToEpisode: "第 {count} 話まで更新",
     readToEpisode: "第 {count} 話まで読了",

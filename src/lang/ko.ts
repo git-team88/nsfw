@@ -2305,6 +2305,7 @@ export default {
     memberOnly: "멤버 전용",
     bought: "구매 완료",
     memberUnlockedTip: "멤버십 시청 권한이 적용되었습니다",
+    bookUnlockedTip: "이 드라마의 시청 권한을 잠금 해제했습니다",
     subscribeToView: "구독자는 전체 콘텐츠를 볼 수 있습니다",
     updatedToEpisode: "{count}화까지 업데이트됨",
     readToEpisode: "{count}화까지 시청함",
