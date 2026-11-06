@@ -281,6 +281,8 @@ interface Collection {
   session_id: string;
   /** 合集的收费档位 id；-1 = 仅会员可见（不支持单部付费） */
   plan_id: string;
+  /** 整部买过（合集详情接口 is_buy） */
+  is_buy?: boolean;
 }
 
 interface BooksGroupItem {
@@ -480,6 +482,8 @@ async function fetchCollectionDetail() {
           } : null,
           session_id: finalBookInfo.session_id || '',
           plan_id: planIdOf({ plan: finalData.plan, plan_id: finalBookInfo.plan_id }),
+          // 整部买过（合集详情接口的 is_buy）
+          is_buy: String(finalData.is_buy ?? finalBookInfo.is_buy ?? '0') === '1',
         };
         // 先按合集信息写一遍 SEO meta（标题/描述/og），拿到作者昵称后再补一遍
         applyCollectionSeo();
@@ -1019,10 +1023,21 @@ async function loadDramaMember() {
 }
 
 function getPermText(accessRights?: string): string {
-  // 漫剧合集的付费章节标「付费」；合集是「仅会员可见」（plan_id -1）标「会员可看」，开通了漫剧会员标「已购买」；其余类型仍然是「订阅」
+  // 漫剧合集的付费章节：
+  //   自己的合集 → 付费
+  //   买过整部（is_buy 1）→ 已购买；但合集是「仅会员可见」（plan_id -1）且没会员时，旧的购买不算 → 会员可看
+  //   没买整部、有漫剧会员 → 会员可看
+  //   都没有 → 待解锁
+  // 其余类型仍然是「订阅」
   if (accessRights == '2') {
-    if (isDramaCollection.value && isMemberOnlyPlanId(collection.value?.plan_id)) {
-      return hasDramaMember.value ? t('detail.bought') : t('collectionDetail.statusMemberOnly');
+    if (isDramaCollection.value) {
+      if (isOwn.value) return t('collectionDetail.statusPaidOwn');
+      if (collection.value?.is_buy) {
+        if (isMemberOnlyPlanId(collection.value?.plan_id) && !hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
+        return t('detail.bought');
+      }
+      if (hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
+      return t('collectionDetail.statusPaid');
     }
     return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
   }

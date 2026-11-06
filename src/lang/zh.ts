@@ -1190,6 +1190,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
       statusActive: "会员有效",
       currentPlan: "当前套餐",
       validUntil: "权益有效至",
+      validRange: "有效期：",
+      nextRenew: "下期续费：",
       autoRenew: "自动续费",
       on: "已开启",
       off: "已关闭",
@@ -3537,7 +3539,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     statusPublished: "已发布",
     statusDraft: "草稿",
     statusSubscribed: "订阅",
-    statusPaid: "付费",
+    statusPaid: "待解锁",
+    statusPaidOwn: "付费",
     statusMemberOnly: "会员可看",
     statusPrivate: "仅自己可见",
     deleteChapterConfirm: {

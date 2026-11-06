@@ -650,6 +650,8 @@ export default {
       statusActive: "สมาชิกใช้งานอยู่",
       currentPlan: "แพ็กเกจปัจจุบัน",
       validUntil: "ใช้ได้ถึง",
+      validRange: "ใช้ได้ถึง: ",
+      nextRenew: "ต่ออายุครั้งถัดไป: ",
       autoRenew: "ต่ออายุอัตโนมัติ",
       on: "เปิด",
       off: "ปิด",
@@ -2899,7 +2901,8 @@ export default {
     statusPublished: "เผยแพร่แล้ว",
     statusDraft: "แบบร่าง",
     statusSubscribed: "สมัครสมาชิก",
-    statusPaid: "เสียเงิน",
+    statusPaid: "รอปลดล็อก",
+    statusPaidOwn: "เสียเงิน",
     statusMemberOnly: "สมาชิก",
     statusPrivate: "มองเห็นได้เฉพาะตัวเอง",
     deleteChapterConfirm: {

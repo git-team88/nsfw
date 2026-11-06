@@ -650,6 +650,8 @@ export default {
       statusActive: "멤버십 이용 중",
       currentPlan: "현재 플랜",
       validUntil: "유효 기간",
+      validRange: "유효기간: ",
+      nextRenew: "다음 갱신: ",
       autoRenew: "자동 갱신",
       on: "켜짐",
       off: "꺼짐",
@@ -2899,7 +2901,8 @@ export default {
     statusPublished: "게시됨",
     statusDraft: "초안",
     statusSubscribed: "구독",
-    statusPaid: "유료",
+    statusPaid: "잠금 해제 필요",
+    statusPaidOwn: "유료",
     statusMemberOnly: "멤버 전용",
     statusPrivate: "나만 보기",
     deleteChapterConfirm: {

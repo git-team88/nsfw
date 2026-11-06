@@ -801,6 +801,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       statusActive: "会員有効",
       currentPlan: "現在のプラン",
       validUntil: "有効期限",
+      validRange: "有効期間：",
+      nextRenew: "次回更新：",
       autoRenew: "自動更新",
       on: "オン",
       off: "オフ",
@@ -3489,7 +3491,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     statusPublished: "公開済み",
     statusDraft: "下書き",
     statusSubscribed: "メンバーシップ",
-    statusPaid: "有料",
+    statusPaid: "未解除",
+    statusPaidOwn: "有料",
     statusMemberOnly: "会員限定",
     statusPrivate: "非公開",
     deleteChapterConfirm: {

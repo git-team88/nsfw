@@ -154,18 +154,41 @@
               </div>
 
               <!-- 漫剧订阅（平台会员）的购买记录：月会员 / 季会员…，有效期、金额、续费状态 -->
+              <!-- 左：套餐名 / 价格；右：有效期 / 下期续费 + 续费操作（参考 H5） -->
               <div class="list-area" v-else-if="activeSubTab === 'drama-member'">
                 <div class="sub-item" v-for="(item, idx) in dramaMemberList" :key="item.id" :style="{ animationDelay: `${Math.min(idx, 10) * 45}ms` }">
                   <div class="left">
-                    <div class="plan-info">
-                      <div class="plan-name">{{ item.planName }}</div>
-                      <div class="compute-info">{{ t('user.paymentHistory.valid') }} <template v-if="item.startTime">{{ formatTimestamp(item.startTime) }}-</template>{{ formatTimestamp(item.endTime) }}</div>
+                    <div class="info">
+                      <div class="name">{{ item.planName }}</div>
+                      <div class="id">{{ fiatPrefix(item.currency) }}{{ scaleFiatPrice(item.price, item.currency) }}{{ fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
                     </div>
                   </div>
                   <div class="right">
                     <div class="price-info">
-                      <div class="price">{{ fiatPrefix(item.currency) }}{{ scaleFiatPrice(item.price, item.currency) }} {{ fiatSuffix(item.currency, t('aiRecharge.unit')) }}</div>
-                      <div class="date">{{ item.expired ? t('user.dramaMember.expired') : item.autoRenew ? t('user.dramaMember.autoRenewOnShort') : t('user.dramaMember.autoRenewOffShort') }}</div>
+                      <div class="date">{{ t('user.dramaMember.validRange') }}{{ item.startDate }}~{{ item.endDate }}</div>
+                      <!-- 自动续费中：下期续费日期 = 本期到期日；取消了 / 到期了：标状态 -->
+                      <div class="date">{{ t('user.dramaMember.nextRenew') }}{{ item.expired ? t('user.dramaMember.expired') : item.autoRenew ? item.endDay : t('user.dramaMember.autoRenewOffShort') }}</div>
+                    </div>
+
+                    <!-- 已到期：没操作；自动续费中：「…」里关闭；已取消续费：点「自动续费」重新打开 -->
+                    <div class="operate-box" v-if="!item.expired">
+                      <div class="more-box" v-if="item.autoRenew">
+                        <img
+                          class="more-icon"
+                          src="@/assets/images/detail/menu.png"
+                          alt=""
+                          @click="toggleMoreMenu(dramaMemberMenuKey(item.id), $event)"
+                        />
+                        <div class="more-menu" v-if="showMoreMenu[dramaMemberMenuKey(item.id)]" :style="menuStyle[dramaMemberMenuKey(item.id)]">
+                          <div class="menu-item" @click="turnOffAutoRenewal(dramaMemberMenuKey(item.id))">
+                            {{ t("user.myFollowsSubs.autoRenewOff") }}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="menu-auto" v-else @click="turnOnAutoRenewal(dramaMemberMenuKey(item.id), 3)">
+                        <b></b>
+                        {{ t("user.myFollowsSubs.autoRenewOn") }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -309,7 +332,7 @@
 import Header from "@/components/Header.vue";
 import UserSidebar from "@/components/UserSidebar.vue";
 import EmptyState from "@/components/EmptyState.vue";
-import { fetchMyDramaMemberSubsPaged } from "@/util/dramaMember";
+import { fetchMyDramaMemberSubsPaged, formatDramaMemberDateTime, formatDramaMemberDate } from "@/util/dramaMember";
 import Pagination from "@/components/Pagination.vue";
 import UploadMask from "@/components/UploadMask.vue";
 import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
@@ -372,23 +395,28 @@ interface DramaUnlockItem {
 }
 const dramaUnlockList = ref<DramaUnlockItem[]>([]);
 /** 漫剧订阅（平台会员）购买记录：book/getMyMongaSubAllList（分页，总数 allnums），解析在 util/dramaMember.ts */
-interface DramaMemberItem { id: string | number; planName: string; startTime: string | number; endTime: string | number; price: string | number; currency: string; autoRenew: boolean; expired: boolean }
+interface DramaMemberItem { id: string | number; planName: string; period: string; startTime: string | number; endTime: string | number; startDate: string; endDate: string; endDay: string; price: string | number; currency: string; autoRenew: boolean; expired: boolean }
 const dramaMemberList = ref<DramaMemberItem[]>([]);
 async function fetchDramaMemberList() {
   loading.value = true;
   try {
-    // 订阅记录里只有 plan_id，套餐名 / 价格从套餐列表里按 id 取
-    const [paged, planRes] = await Promise.all([fetchMyDramaMemberSubsPaged(page.value, pageSize.value), api.getDramaMemberPlans() as Promise<any>]);
+    // 订阅记录里自带 plan（套餐名 / 价格 / valid_days），不用再拉套餐列表
+    const paged = await fetchMyDramaMemberSubsPaged(page.value, pageSize.value);
     const subs = paged.list;
     total.value = paged.total;
-    const plans: any[] = (planRes?.code === 0 || planRes?.code === 200) ? (planRes.data?.plans || []) : [];
     dramaMemberList.value = subs.map((s) => {
-      const plan = plans.find((p) => String(p.plan_id ?? p.id ?? '') === s.planId) || s.plan;
+      const plan = s.plan;
       return {
         id: s.id,
         planName: dramaMemberPlanName(plan),
+        period: dramaMemberPeriod(plan),
         startTime: s.startTime,
         endTime: s.endTime,
+        // 有效期「2026.10.10~2026.11.10」：开始 updated_at、结束 current_period_end；万一开始时间为空就按到期日往前推 valid_days
+        startDate: dramaMemberDate(s.startTime || shiftDays(s.endTime, -(Number(plan?.valid_days) || 0))),
+        endDate: dramaMemberDate(s.endTime),
+        // 下期续费只要日期
+        endDay: formatDramaMemberDate(s.endTime).replace(/-/g, '.'),
         price: s.price || plan?.price || '',
         currency: s.currency || plan?.currency || 'jpy',
         autoRenew: s.autoRenew,
@@ -404,6 +432,39 @@ async function fetchDramaMemberList() {
     loading.value = false;
   }
 }
+/** 价格后面的周期「/月」「/3个月」…，按套餐的 valid_days */
+function dramaMemberPeriod(plan: Record<string, unknown> | null): string {
+  const d = Number(plan?.valid_days) || 0;
+  if (!d) return '';
+  if (d === 30) return t('user.dramaMember.perMonth');
+  if (d === 90) return t('user.dramaMember.perQuarter');
+  if (d === 180) return t('user.dramaMember.perHalfYear');
+  if (d === 360 || d === 365) return t('user.dramaMember.perYear');
+  return t('user.dramaMember.perDays', { days: d });
+}
+/** 时间显示成 2026.10.10 11:53:02（带时分秒） */
+function dramaMemberDate(v: unknown): string {
+  return formatDramaMemberDateTime(v).replace(/-/g, '.');
+}
+/** 日期串往前 / 后推 N 天，返回时间戳（毫秒）；推不了（空 / 非法）返回空串 */
+function shiftDays(v: unknown, days: number): number | string {
+  if (!v || !days) return '';
+  const ms = new Date(String(v).replace(/-/g, '/')).getTime();
+  return Number.isFinite(ms) ? ms + days * 86400000 : '';
+}
+/** 「…」菜单 / 开关续费按 id 记状态，加前缀避免和博主订阅的 id 撞上 */
+function dramaMemberMenuKey(id: string | number): string {
+  return 'dm-' + String(id);
+}
+// 列表左侧头像（改成套餐名 / 价格后不再显示）
+// const myAvatar = (() => {
+//   try {
+//     const info = JSON.parse(localStorage.getItem('userInfo') || 'null');
+//     return String(info?.avatar || '');
+//   } catch {
+//     return '';
+//   }
+// })();
 /** 套餐名：plan 的 title_xx 按语言取，没填退回 title_en */
 function dramaMemberPlanName(plan: Record<string, unknown> | null): string {
   if (!plan) return '';
@@ -843,6 +904,7 @@ function toggleMoreMenu(itemId: string, event: MouseEvent) {
   }
 }
 
+// 漫剧会员（itemId 带 dm- 前缀）和博主订阅一样跳 Stripe 客户门户管理续费；后端给单独接口后在这里按前缀分开（TODO）
 async function turnOffAutoRenewal(itemId: string) {
   showMoreMenu.value[itemId] = false;
   autoRenewLoading.value = true;
@@ -1183,6 +1245,9 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  // 5 个 tab + 右侧按钮一行放不下时整体换行（不折 tab 文字）
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 24px;
   padding-bottom: 12px;
   border-bottom: 1px solid #303030;
@@ -1194,6 +1259,7 @@ onBeforeUnmount(() => {
   background: transparent;
 }
 .tab-item {
+  white-space: nowrap;
   position: relative;
   display: flex;
   align-items: center;
@@ -1232,6 +1298,7 @@ onBeforeUnmount(() => {
 .actions-right {
   display: flex;
   align-items: center;
+  margin-left: auto;
   gap: 10px;
 }
 
@@ -1574,6 +1641,10 @@ onBeforeUnmount(() => {
         }
       }
 
+      .menu-auto.expired-tag {
+        cursor: default;
+        opacity: 0.6;
+      }
       .menu-auto {
         display: flex;
         align-items: center;
@@ -1668,6 +1739,10 @@ onBeforeUnmount(() => {
         }
       }
 
+      .menu-auto.expired-tag {
+        cursor: default;
+        opacity: 0.6;
+      }
       .menu-auto {
         display: flex;
         align-items: center;

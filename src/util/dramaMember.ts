@@ -40,7 +40,8 @@ export function normalizeDramaMemberSub(item: any): DramaMemberSub {
     plan,
     price: item?.price ?? plan?.price ?? "",
     currency: item?.currency || plan?.currency || "jpy",
-    startTime: item?.created_at ?? item?.start_at ?? "",
+    // 开始时间：created_at 为空时按 updated_at（后端确认：updated_at 开始、current_period_end 结束）
+    startTime: item?.created_at ?? item?.start_at ?? item?.updated_at ?? "",
     endTime,
     // 1 = 自动续费中；0 = 已取消续费（到期前还能看）；2 = 已到期
     autoRenew: status === "1",
@@ -73,6 +74,15 @@ export function pickActiveDramaMemberSub(list: DramaMemberSub[]): DramaMemberSub
   const active = list.filter((s) => s.active);
   if (!active.length) return null;
   return active.sort((a, b) => toMs(b.endTime) - toMs(a.endTime))[0];
+}
+
+/** 完整时间显示：YYYY-MM-DD HH:mm:ss */
+export function formatDramaMemberDateTime(v: unknown): string {
+  const ms = toMs(v);
+  if (!ms) return String(v ?? "");
+  const d = new Date(ms);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
 /** 到期时间显示：YYYY-MM-DD */

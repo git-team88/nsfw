@@ -1084,6 +1084,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
       statusActive: "Membership active",
       currentPlan: "Current plan",
       validUntil: "Valid until",
+      validRange: "Valid: ",
+      nextRenew: "Next renewal: ",
       autoRenew: "Auto-renewal",
       on: "On",
       off: "Off",
@@ -3428,7 +3430,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     statusPublished: "Published",
     statusDraft: "Draft",
     statusSubscribed: "Subscribed",
-    statusPaid: "Paid",
+    statusPaid: "Locked",
+    statusPaidOwn: "Paid",
     statusMemberOnly: "Members",
     statusPrivate: "Private",
     deleteChapterConfirm: {

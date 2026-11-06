@@ -845,7 +845,8 @@
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id != uid">{{ paidBadgeText }}</div>
+                    <!-- 作者本人也显示，让作者知道这一集是不是付费的 -->
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2'">{{ paidBadgeText }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -3910,12 +3911,21 @@ async function loadDramaMember() {
   }
 }
 onMounted(loadDramaMember);
-/** 右侧目录付费章节的角标：漫剧 → 已是会员「已购买」/ 合集仅会员可见「会员可见」/ 其它「付费」；非漫剧「订阅」 */
+/**
+ * 右侧目录付费章节的角标（和合集详情页同一套规则）：
+ * 漫剧：作者本人「付费」/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「会员可看」/ 都没有「待解锁」
+ * 非漫剧：「订阅」（作者本人也显示）
+ */
 const paidBadgeText = computed(() => {
   if (detail.value.type != '3') return t('detail.subscribe');
-  if (hasDramaMember.value) return t('detail.bought');
-  if (isMemberOnlyPlanId(detail.value.book_plan_id)) return t('detail.memberOnly');
-  return t('detail.paid');
+  if (detail.value.author?.id && String(detail.value.author.id) === String(uid)) return t('detail.paid');
+  const bought = detail.value?.book_buy == 1 || detail.value?.book_buy === true;
+  if (bought) {
+    if (isMemberOnlyPlanId(detail.value.book_plan_id) && !hasDramaMember.value) return t('detail.memberOnly');
+    return t('detail.bought');
+  }
+  if (hasDramaMember.value) return t('detail.memberOnly');
+  return t('collectionDetail.statusPaid');
 });
 // 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
 let memberUnlockToastShown = false;
