@@ -43,9 +43,9 @@ export function normalizeDramaMemberSub(item: any): DramaMemberSub {
     // 开始时间：created_at 为空时按 updated_at（后端确认：updated_at 开始、current_period_end 结束）
     startTime: item?.created_at ?? item?.start_at ?? item?.updated_at ?? "",
     endTime,
-    // 1 = 自动续费中；0 = 已取消续费（到期前还能看）；2 = 已到期
-    autoRenew: status === "1",
-    active: status !== "2" && (status === "1" || status === "0") && (toMs(endTime) === 0 || toMs(endTime) > Date.now()),
+    // status：1 = 正常（有效期内）、2 = 已到期；是否自动续费看 cancel_at_period_end（1 = 已取消续费，到期前还能看）
+    autoRenew: status === "1" && String(item?.cancel_at_period_end ?? "0") !== "1",
+    active: status === "1" && (toMs(endTime) === 0 || toMs(endTime) > Date.now()),
     raw: item,
   };
 }

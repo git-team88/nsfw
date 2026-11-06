@@ -340,9 +340,6 @@ onMounted(async () => {
   border-radius: 2px;
   background: #ff4f9a;
 }
-.content {
-  max-width: 640px;
-}
 .banner {
   padding: 20px 24px;
   margin-bottom: 24px;
@@ -384,6 +381,7 @@ onMounted(async () => {
 }
 .status-row {
   display: flex;
+  align-items: baseline;
   gap: 8px;
   font-size: 14px;
   color: #f5f5f5;
@@ -391,13 +389,24 @@ onMounted(async () => {
 }
 .status-label {
   flex: 0 0 auto;
-  color: #777;
+  color: #6A7282;
+}
+.status-value {
+  font-size: 16px;
+  font-weight: 700;
 }
 .manage-link {
   font-size: 13px;
   color: #ff4f9a;
   cursor: pointer;
-  text-decoration: underline;
+  font-weight: 700;
+  // 站内文字链接的习惯（支付结果页的联系客服链接）：平时不带下划线，悬浮时出下划线
+  text-decoration: none;
+  transition: opacity 0.15s;
+  &:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
 }
 .plan-card.readonly {
   cursor: default;
@@ -485,7 +494,7 @@ onMounted(async () => {
 .plan-equiv {
   margin-top: 4px;
   font-size: 12px;
-  color: #777;
+  color: #ddd;
 }
 .plan-price {
   flex: 0 0 auto;
@@ -499,7 +508,7 @@ onMounted(async () => {
 .plan-period {
   font-size: 13px;
   margin-left: 2px;
-  color: #777;
+  color: #ddd;
 }
 .renew-note {
   margin: 16px 0 0;
@@ -508,7 +517,7 @@ onMounted(async () => {
   padding: 12px 16px;
   border-radius: 14px;
   background: rgba(255,79,154,0.12);
-  color: #777;
+  color: #ddd;
 }
 .agreement-row {
   display: flex;
