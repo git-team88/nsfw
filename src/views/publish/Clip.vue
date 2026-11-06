@@ -1065,19 +1065,27 @@ function updateDropdownPosition() {
 
   const range = selection.getRangeAt(0).cloneRange();
 
+  // 不改 DOM 直接量光标位置。原来往光标处插一个临时 span 再删，会把文本节点拆开、
+  // 光标落到容器元素上，输入 # 后输入法的 composition 就提交不进去（中文打不出来）。
   let rect: DOMRect;
-  if (range.collapsed) {
-    const marker = document.createElement('span');
-    marker.textContent = '\u200B';
-    range.insertNode(marker);
-    rect = marker.getBoundingClientRect();
-    marker.parentNode?.removeChild(marker);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
+  const caretRects = range.getClientRects();
+  if (caretRects.length > 0) {
+    rect = caretRects[caretRects.length - 1];
   } else {
     rect = range.getBoundingClientRect();
   }
+  // if (range.collapsed) {
+  //   const marker = document.createElement('span');
+  //   marker.textContent = '\u200B';
+  //   range.insertNode(marker);
+  //   rect = marker.getBoundingClientRect();
+  //   marker.parentNode?.removeChild(marker);
+  //   range.collapse(false);
+  //   selection.removeAllRanges();
+  //   selection.addRange(range);
+  // } else {
+  //   rect = range.getBoundingClientRect();
+  // }
 
   let absTop = rect.bottom + 5;
   let absLeft = rect.left;
@@ -1238,7 +1246,11 @@ function handleCaptionClick() {
     return;
   }
 
-  const textBefore = range.startContainer.textContent?.substring(0, range.startOffset) || "";
+  // 光标先落到真正的文本节点上再取前面的文本（光标可能停在容器元素上）
+  const caretPos = resolveCaretPosition(range);
+  const textBefore = caretPos
+    ? (caretPos.node.textContent || "").substring(0, caretPos.offset)
+    : (range.startContainer.textContent?.substring(0, range.startOffset) || "");
 
   if (textBefore.endsWith('#') || textBefore.endsWith('@')) {
     const trigger = textBefore.endsWith('#') ? '#' : '@';
