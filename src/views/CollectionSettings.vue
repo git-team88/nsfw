@@ -47,7 +47,8 @@
             <div class="info-item" v-if="collection.type == '3'">
               <span class="info-label">{{ t('collectionSettings.paidSetting') }}{{ t('collectionSettings.labelColon') }}</span>
               <span class="info-value price-value">
-                <template v-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
+                <template v-if="isMemberOnlyPlanId(collection.plan_id)">{{ t('submit.memberOnly') }}</template>
+                <template v-else-if="collectionPriceText">{{ collectionPriceText }}<span class="price-unit">/{{ t('submit.perSeries') }}</span></template>
                 <template v-else>{{ t('collectionSettings.priceOffShort') }}</template>
                 <button class="btn btn-modify-price" v-if="collection.status != '2'" @click="showPriceModal = true">{{ t('collectionSettings.modifyPrice') }}</button>
                 <span class="chapter-access" v-if="chapterAccessText">{{ chapterAccessText }}</span>
@@ -141,7 +142,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { toast } from '@/util/toast';
 import { formatTimestamp, processImageUrl, apiErrorMessage } from '@/util/utils';
 import api from '@/api/index';
-import { planPriceText, planIdOf, type BookRechargePlan } from '@/util/bookRechargePlan';
+import { planPriceText, planIdOf, MEMBER_ONLY_PLAN_ID, isMemberOnlyPlanId, type BookRechargePlan } from '@/util/bookRechargePlan';
 import FinishNoticeModal from '@/components/FinishNoticeModal.vue';
 import ConfirmFinishModal from '@/components/ConfirmFinishModal.vue';
 import DeleteNoticeModal from '@/components/DeleteNoticeModal.vue';
@@ -436,16 +437,19 @@ async function onPriceSaved() {
   }
 }
 
-async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan) {
+async function confirmBatchPermission(type: number, startChapter?: number, plan?: BookRechargePlan, memberOnly = false) {
   showBatchPermission.value = false;
   try {
     // 漫剧合集选了「从第 N 集起付费」并带了档位：先把档位写到合集上（传新旧档位 id），档位没变就不用调
     const newPlanId = plan ? String(plan.plan_id ?? plan.id ?? '') : '';
-    if (plan && String(collection.value.plan_id || '') !== newPlanId) {
+    // 档位变了、或会员可看的标记变了才调修改合集
+    // 仅会员可见 = plan_id -1；档位（含 -1）变了才调修改合集
+    const targetPlanId = memberOnly ? MEMBER_ONLY_PLAN_ID : newPlanId;
+    if (type === 2 && targetPlanId && String(collection.value.plan_id || '') !== targetPlanId) {
       const planRes = await api.modifyCollection({
         book_id: collection.value.id,
         old_plan_id: collection.value.plan_id || 0,
-        new_plan_id: newPlanId,
+        new_plan_id: targetPlanId,
       }) as any;
       if (!(planRes.code == 0 || planRes.code == 200)) {
         toast(apiErrorMessage(planRes) || t('fail'));

@@ -266,6 +266,21 @@ const routes = [
     meta: { titleKey: "pageTitle.payFailed" },
     component: () => import("@/views/user/DramaUnlockFailed.vue"),
   },
+  // 漫剧会员（平台会员）的支付结果页，后端按下单时的 from 回跳到不同地址：
+  //   详情页入口（from=1）→ 上面漫剧解锁的 /drama-unlock-success、/drama-unlock-fail（带 post_id，「观看作品」回作品）
+  //   个人中心入口（from=2）→ /drama-member-success、/drama-member-fail：会员自己的结果页（返回首页 / 返回支付页）
+  {
+    path: "/drama-member-success",
+    name: "DramaMemberSuccess",
+    meta: { titleKey: "pageTitle.paySuccess", noindex: true },
+    component: () => import("@/views/user/DramaMemberSuccess.vue"),
+  },
+  {
+    path: "/drama-member-fail",
+    name: "DramaMemberFailed",
+    meta: { titleKey: "pageTitle.payFailed", noindex: true },
+    component: () => import("@/views/user/DramaMemberFailed.vue"),
+  },
   {
     path: "/aitool-payment-success",
     name: "AIToolPaymentSuccess",
@@ -324,6 +339,13 @@ const routes = [
     name: "UserSubscription",
     meta: { titleKey: "pageTitle.subscription" },
     component: () => import("@/views/user/Subscription.vue"),
+  },
+  {
+    // 漫剧会员（平台会员）：套餐购买 / 当前会员状态
+    path: "/user-drama-member",
+    name: "UserDramaMember",
+    meta: { titleKey: "pageTitle.dramaMember", noindex: true },
+    component: () => import("@/views/user/DramaMember.vue"),
   },
   {
     path: "/user-kyc",

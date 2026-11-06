@@ -146,7 +146,7 @@
               >
                 <div class="chapter-left">
                   <span
-                    v-if="chapter.accessRights && chapter.accessRights != '1' && (chapter.accessRights != '3' || isOwn)"
+                    v-if="chapter.accessRights && chapter.accessRights != '1' && (chapter.accessRights != '3' || isOwn) && (!isDramaCollection || chapter.accessRights != '2' || dramaMemberReady)"
                     class="chapter-status"
                     :class="getPermClass(chapter.accessRights)"
                   >{{ getPermText(chapter.accessRights) }}</span>
@@ -233,6 +233,8 @@ import UploadMask from '@/components/UploadMask.vue';
 import makeIcon from '@/assets/images/base/make.png';
 import { trackSubscribeToCreator } from '@/utils/analytics';
 import { trackCollectionView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, trackLike, trackUnlike, trackFollow } from '@/utils/maidian';
+import { planIdOf, isMemberOnlyPlanId } from '@/util/bookRechargePlan';
+import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub } from '@/util/dramaMember';
 
 const { t } = useI18n();
 const contentSwitch = useContentSwitchStore();
@@ -277,6 +279,10 @@ interface Collection {
   readIndexes: number[];
   history: CollectionHistory | null;
   session_id: string;
+  /** 合集的收费档位 id；-1 = 仅会员可见（不支持单部付费） */
+  plan_id: string;
+  /** 整部买过（合集详情接口 is_buy） */
+  is_buy?: boolean;
 }
 
 interface BooksGroupItem {
@@ -474,7 +480,10 @@ async function fetchCollectionDetail() {
             title: finalData.history.title || '',
             cover: finalData.history.cover || ''
           } : null,
-          session_id: finalBookInfo.session_id || ''
+          session_id: finalBookInfo.session_id || '',
+          plan_id: planIdOf({ plan: finalData.plan, plan_id: finalBookInfo.plan_id }),
+          // 整部买过（合集详情接口的 is_buy）
+          is_buy: String(finalData.is_buy ?? finalBookInfo.is_buy ?? '0') === '1',
         };
         // 先按合集信息写一遍 SEO meta（标题/描述/og），拿到作者昵称后再补一遍
         applyCollectionSeo();
@@ -1001,14 +1010,48 @@ function getPermClass(accessRights?: string): string {
   return 'status-public';
 }
 
+// —— 漫剧会员（平台会员）：合集「仅会员可见」时，开通了会员的章节标「已购买」 ——
+const hasDramaMember = ref(false);
+/** 会员接口回来了（没登录直接算回来了）；漫剧章节的角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
+const dramaMemberReady = ref(false);
+async function loadDramaMember() {
+  hasDramaMember.value = false;
+  dramaMemberReady.value = false;
+  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
+  try {
+    hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
+  } catch (e) {
+    console.error('load drama member failed', e);
+  } finally {
+    dramaMemberReady.value = true;
+  }
+}
+
 function getPermText(accessRights?: string): string {
-  // 漫剧合集的付费章节标「付费」，其余类型仍然是「订阅」
-  if (accessRights == '2') return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
+  // 漫剧合集的付费章节：
+  //   自己的合集 → 付费
+  //   买过整部（is_buy 1）→ 已购买；但合集是「仅会员可见」（plan_id -1）且没会员时，旧的购买不算 → 会员可看
+  //   没买整部、有漫剧会员 → 已购买（会员全站付费漫剧都能看）
+  //   都没有 → 待解锁
+  // 其余类型仍然是「订阅」
+  if (accessRights == '2') {
+    if (isDramaCollection.value) {
+      if (isOwn.value) return t('collectionDetail.statusPaidOwn');
+      if (collection.value?.is_buy) {
+        if (isMemberOnlyPlanId(collection.value?.plan_id) && !hasDramaMember.value) return t('collectionDetail.statusMemberOnly');
+        return t('detail.bought');
+      }
+      if (hasDramaMember.value) return t('detail.bought');
+      return t('collectionDetail.statusPaid');
+    }
+    return t(isDramaCollection.value ? 'collectionDetail.statusPaid' : 'collectionDetail.statusSubscribed');
+  }
   if (accessRights == '3') return t('submit.permPrivate');
   return t('submit.permPublic');
 }
 
 function onUserLoggedOut() {
+  hasDramaMember.value = false;
   authorInfo.value.isFollow = 0;
   authorInfo.value.isSubscribe = 0;
   if (!isOwn.value && authorInfo.value.id) {
@@ -1022,6 +1065,8 @@ onMounted(async () => {
   eventBus.on('userLoggedOut', onUserLoggedOut);
   // 先开加载态，免得等地区接口时页面一片空白
   loading.value = true;
+  // 漫剧会员状态和详情并行拉，不阻塞页面
+  loadDramaMember();
   // 地区、分类表、合集详情并行请求（以前串行：地区 → 详情 → 作者 → 分类，预渲染时可能还没拿全就被截图）
   loadBookTags();
   getCountry();

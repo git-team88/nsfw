@@ -981,6 +981,31 @@ export default {
       url: "book/getBookRechargePlan",
       method: "GET"
     }),
+  // 漫剧会员（平台会员，有效期内看全站付费漫剧）：套餐列表
+  getDramaMemberPlans: () =>
+    axios.request({
+      url: "index/getMongaPlanListPublic",
+      method: "GET",
+    }),
+  // 我的漫剧订阅列表（当前会员状态 + 购买记录）：data.list[]
+  getMyDramaMemberList: () =>
+    axios.request({
+      url: "book/getMyMongaSubList",
+      method: "GET",
+    }),
+  // 我的漫剧订阅列表（全部，分页）：支付历史用。返回 data.data[]，总数 data.allnums
+  getMyDramaMemberAllList: (page: number, limit: number) =>
+    axios.request({
+      url: "book/getMyMongaSubAllList?page=" + page + "&limit=" + limit,
+      method: "GET",
+    }),
+  // 漫剧会员下单：{ plan_id, client_id, from(1 详情页 / 2 个人中心), post_id(详情页入口带作品 id，回跳用；个人中心入口传 0) }，返回 Stripe 结账页地址 data.url.url
+  addDramaMemberOrder: (data: any) =>
+    axios.request({
+      url: "book/addMongaOrder",
+      data: data,
+      method: "POST",
+    }),
   recordHistory: (data: any) =>
     axios.request({
       url: "post/writeHistory",

@@ -1,8 +1,10 @@
 <template>
-  <!-- 漫剧解锁全集。价格取不到就整张卡不渲染 —— 宁可不显示，也不给一个没有金额的付费入口 -->
-  <div class="drama-unlock-card" v-if="priceText">
-    <!-- 价格要单独上色，所以整句走 v-html；插进去的只有自己算出来的金额文案 -->
-    <p class="unlock-tip" v-html="unlockTipHtml"></p>
+  <!-- 漫剧解锁：单部购买（合集设了价格）+ 解锁会员（会员套餐第一档）。两个都取不到就整张卡不渲染 —— 宁可不显示，也不给一个没有金额的付费入口 -->
+  <div class="drama-unlock-card" v-if="priceText || memberPlan">
+    <p class="unlock-title">{{ t('collection.unlockAfterPay') }}</p>
+    <template v-if="priceText">
+    <!-- 旧版：一句「解锁漫剧全集仅需 xx」的提示，改版后按钮上直接带价格，不再显示 -->
+    <!-- <p class="unlock-tip" v-html="unlockTipHtml"></p> -->
 
     <!-- 只剩现金一种支付方式时，整行选项没有意义，跟着 showUsdt 一起隐藏 -->
     <div class="pay-methods" v-if="showUsdt">
@@ -19,10 +21,22 @@
       </label>
     </div>
 
-    <!-- 加载态只靠整页遮罩表现，按钮文案和样式不跟着变 -->
-    <button class="unlock-btn" @click="handleUnlock">
-      {{ t('collection.unlockFullSeries') }}
+    <!-- 购买整部：价格直接在按钮上，颜色和会员按钮一致；加载态只靠整页遮罩表现，按钮文案和样式不跟着变 -->
+    <button class="unlock-btn single-btn" @click="handleUnlock">
+      {{ t('collection.buyWhole', { price: priceText }) }}
     </button>
+    <p class="btn-tip">{{ t('collection.permanentUnlock') }}</p>
+    </template>
+
+    <!-- 解锁会员：只显示套餐列表的第一档，点了直接下单跳 Stripe（from=1，回跳到漫剧解锁的结果页）。
+         第二行「首月 X 折，次月起 xx/月」只在套餐有首期折扣价时显示 -->
+    <template v-if="memberPlan">
+      <button class="unlock-btn member-btn" :class="{ 'has-single': !!priceText }" @click="handleMember">
+        <span class="btn-main">{{ t('collection.unlockMember', { price: memberPriceText }) }}</span>
+        <span class="btn-sub" v-if="memberDiscountText">{{ memberDiscountText }}</span>
+      </button>
+      <p class="btn-tip">{{ t('user.dramaMember.banner') }}</p>
+    </template>
 
     <p class="pay-terms">
       {{ t('collection.payAgree') }}<span class="terms-link">{{ t('subscribe.paymentTerms') }}</span>
@@ -47,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { apiErrorMessage } from '@/util/utils';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -63,6 +77,7 @@ import { USDT_CONTRACT_ADDRESS, SUBSCRIPTION_RECEIVER_ADDRESS } from '@/util/con
 import { connectWalletConnect, getWalletConnectProvider } from '@/util/walletconnect';
 import { getWalletProvider, ensureChain, checkUsdtBalance } from '@/util/wallet';
 import { fiatPrefix, fiatSuffix, scaleFiatPrice, trimTrailingZeros } from '@/util/currency';
+import { isMemberOnlyPlanId } from '@/util/bookRechargePlan';
 
 const props = defineProps<{
   /** 合集 id */
@@ -106,6 +121,82 @@ function resolvePlanId(): string {
 const showWalletModal = ref(false);
 const isLoading = ref(false);
 
+// —— 解锁会员：会员套餐列表取第一档，只显示一个 ——
+const memberPlan = ref<any>(null);
+async function loadMemberPlan() {
+  try {
+    const res = (await api.getDramaMemberPlans()) as any;
+    const list = (res?.code === 0 || res?.code === 200) ? (res.data?.plans || []) : [];
+    memberPlan.value = Array.isArray(list) && list.length ? list[0] : null;
+  } catch {
+    memberPlan.value = null;
+  }
+}
+onMounted(loadMemberPlan);
+/**
+ * 首月折扣：套餐里有首期折扣价（TODO 字段名等后端定，先按 first_price / discount_price / first_month_price 读）
+ * 且低于正常价时，显示「首月 X 折，次月起 xx/月」；没有就不显示第二行。
+ */
+const memberDiscountText = computed(() => {
+  const p = memberPlan.value;
+  if (!p) return '';
+  const firstRaw = p.first_price ?? p.discount_price ?? p.first_month_price;
+  const first = Number(firstRaw);
+  const normal = Number(p.price);
+  if (firstRaw === undefined || firstRaw === null || firstRaw === '' || !Number.isFinite(first) || !Number.isFinite(normal) || normal <= 0 || first >= normal) return '';
+  const ratio = first / normal;
+  return t('collection.memberFirstDiscount', {
+    // 中文「5折」= 打 5 折；英文「50% off」
+    discount: trimTrailingZeros((ratio * 10).toFixed(1)),
+    off: Math.round((1 - ratio) * 100),
+    price: memberPriceText.value,
+  });
+});
+/** 「1000日元/月」：价格 + 周期（按 valid_days：30 月 / 90 三个月 / 180 半年 / 360 年） */
+const memberPriceText = computed(() => {
+  const p = memberPlan.value;
+  if (!p) return '';
+  const currency = p.currency || 'jpy';
+  const d = Number(p.valid_days) || 0;
+  const period = d === 30 ? t('user.dramaMember.perMonth')
+    : d === 90 ? t('user.dramaMember.perQuarter')
+    : d === 180 ? t('user.dramaMember.perHalfYear')
+    : d === 360 || d === 365 ? t('user.dramaMember.perYear')
+    : t('user.dramaMember.perDays', { days: d });
+  return `${fiatPrefix(currency)}${scaleFiatPrice(p.price, currency)}${fiatSuffix(currency, t('aiRecharge.unit'))}${period}`;
+});
+/** 下单：from=1 详情页入口，后端回跳漫剧解锁的成功 / 失败页（带 post_id） */
+async function handleMember() {
+  if (isLoading.value) return;
+  if (!checkLogin()) return;
+  const plan = memberPlan.value;
+  if (!plan) return;
+  isLoading.value = true;
+  try {
+    const res = (await api.addDramaMemberOrder({
+      plan_id: String(plan.plan_id ?? plan.id ?? ''),
+      client_id: await getGaClientId(),
+      from: 1,
+      post_id: props.postId || 0,
+    })) as any;
+    if (res?.code === 0 || res?.code === 200) {
+      const url = res.data?.url?.url || res.data?.url;
+      if (typeof url === 'string' && url) {
+        window.location.href = url;
+        return;
+      }
+      toast(t('fail'));
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
+    }
+  } catch (e) {
+    console.error(e);
+    toast(t('fail'));
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 // currency 缺省按日元，原值展示
 const payCurrency = computed(() => props.currency || 'jpy');
 
@@ -115,6 +206,8 @@ const unlockTipHtml = computed(() =>
 );
 
 const priceText = computed(() => {
+  // 合集「仅会员可见」（plan_id = -1）：不支持单部付费，只给会员入口
+  if (isMemberOnlyPlanId(props.planId)) return '';
   const raw = props.price;
   if (raw === undefined || raw === null || raw === '') return '';
   const n = Number(raw);
@@ -401,6 +494,56 @@ function handleNoWallet() {
     opacity: 0.6;
     cursor: default;
   }
+}
+
+// 标题「解锁后观看」
+.unlock-title {
+  margin: 0 0 18px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #161122;
+}
+
+// 购买整部：和会员按钮同色（主色）；灰底方案先留着
+// .single-btn {
+//   background: #E5E7EB;
+//   color: #333;
+//   border: none;
+//   box-shadow: none;
+// }
+
+// 解锁会员：两行（价格 + 套餐描述），高度按内容撑开；在单部购买下面再放时中间留空
+.member-btn {
+  height: auto;
+  min-height: 44px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  .btn-main {
+    line-height: 1.3;
+  }
+  .btn-sub {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.3;
+    opacity: 0.9;
+  }
+}
+.member-btn.has-single {
+  margin-top: 16px;
+}
+
+// 按钮下面的说明：永久解锁本合集 / 会员有效期内畅看全部付费漫剧
+.btn-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  text-align: center;
+  color: #999;
 }
 
 .pay-terms {

@@ -1239,6 +1239,7 @@ import UnreferencedFilesModal from '@/components/UnreferencedFilesModal.vue';
 import router from '@/router';
 import { useRoute, useRouter } from 'vue-router';
 import api from '@/api/index';
+import { fetchUserInfoOnce } from "@/util/userInfoOnce";
 import { useContentSwitchStore } from '@/stores/contentSwitch';
 import { trackClickContentCover, trackClickPromptBox, trackContentPublished, trackClickGenerateButton } from '@/utils/analytics';
 import { aiUrl, baseUrl } from '@/util/config';
@@ -8184,9 +8185,10 @@ onMounted(async () => {
   // 宿主页面没有 Header 可以喂数据时（详情页这类），自己拉一次
   if (localStorage.getItem('token')) {
     if (!props.userInfo) {
-      api.userInfo().then((r: any) => {
-        if (r.code == 200 || r.code == 0) userInfo.value = r.data;
-      }).catch(() => {});
+      // 走去重：详情页两个 PromptComposer 同时挂载只发一次 user/getInfo
+      fetchUserInfoOnce().then((d: any) => {
+        if (d) userInfo.value = d;
+      });
     }
     if (!props.balanceInfo) {
       api.userBalance().then((r: any) => {

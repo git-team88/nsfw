@@ -845,7 +845,8 @@
                 <div class="collection-content">
                   <div class="collection-cover-wrapper" :class="{ 'playing': isCollectionItemPlaying(index) }">
                     <img class="collection-cover" :src="processImageUrl(item.cover) || ''" alt="" />
-                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && detail.author && detail.author.id != uid">{{ t(detail.type == '3' ? 'detail.paid' : 'detail.subscribe') }}</div>
+                    <!-- 作者本人也显示，让作者知道这一集是不是付费的 -->
+                    <div class="collection-subscribe-badge" v-if="item.access_rights == '2' && (detail.type != '3' || dramaMemberReady)">{{ paidBadgeText }}</div>
                     <div class="collection-duration" v-if="item.type == '3' && item.duration && !isCollectionItemPlaying(index)">
                       {{ item.duration }}
                     </div>
@@ -994,11 +995,13 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from "vue"
 import { pageSlideDir } from '@/util/pageSlide';
 import { useI18n } from "vue-i18n";
 import { toast } from "@/util/toast";
-import { pickPlan } from "@/util/bookRechargePlan";
+import { pickPlan, planIdOf, isMemberOnlyPlanId } from "@/util/bookRechargePlan";
+import { fetchMyDramaMemberSubs, pickActiveDramaMemberSub } from "@/util/dramaMember";
 import { formatTimestamp, initLanguage, processImageUrl, apiErrorMessage, apiLang } from '@/util/utils';
 import collapseIcon from "@/assets/images/detail/show.png";
 import expandIcon from "@/assets/images/detail/hide.png";
 import api from "@/api/index";
+import { fetchUserInfoOnce } from "@/util/userInfoOnce";
 import { useContentSwitchStore } from "@/stores/contentSwitch";
 
 const composerRef = ref<InstanceType<typeof PromptComposer> | null>(null);
@@ -1123,8 +1126,9 @@ const dramaUnlockPrice = computed(() => {
 const showDramaUnlock = computed(
   () => detail.value?.type == '3'
     && isPaidContentLocked.value
-    && !detail.value?.isSubscribed
-    && detail.value?.author?.id != uid
+    // 博主订阅对漫剧无效（锁里已经不认了），这里不再排除
+    // && !detail.value?.isSubscribed
+    && detail.value?.author?.id != uid.value
     // 已经买过整个合集的不再给解锁入口（这时 isPaidContentLocked 本来也是 false）
     && !hasBoughtBook.value,
 );
@@ -1412,7 +1416,27 @@ const previewFiles = ref<any[]>([]);
 const currentPreviewIndex = ref(0);
 const curVideoUrl = ref('')
 
-const uid = localStorage.getItem('uid');
+// 登录 uid。本地缓存没有（比如换了浏览器刚登录、缓存被清）就拉一次个人信息补上，不然「自己的作品」判断全错
+const uid = ref<string>(localStorage.getItem('uid') || '');
+/** 给函数里要用普通字符串的地方取当前 uid */
+function loginUid(): string {
+  return uid.value;
+}
+async function ensureUid() {
+  if (uid.value || !localStorage.getItem('token')) return;
+  try {
+    // 和页面里 PromptComposer 的那次 user/getInfo 合并，不多发
+    const data = await fetchUserInfoOnce();
+    const id = data?.info?.id ?? data?.id;
+    if (id !== undefined && id !== null && id !== '') {
+      uid.value = String(id);
+      localStorage.setItem('uid', uid.value);
+    }
+  } catch (e) {
+    console.error('load uid failed', e);
+  }
+}
+onMounted(ensureUid);
 
 // 未登录时跳转到注册页，并记录当前作品详情页地址，注册/登录成功后回跳
 function goAuth() {
@@ -1775,7 +1799,7 @@ async function goMakeSimilarVideo() {
 
     const data = detailRes.data.post || detailRes.data;
     const authorId = detailRes.data.author?.id || data.author_id || '';
-    const uid = localStorage.getItem('uid');
+    const uid = loginUid();
     const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
@@ -1844,7 +1868,7 @@ async function goMakeSequel() {
 
     const data = detailRes.data.post || detailRes.data;
     const authorId = detailRes.data.author?.id || data.author_id || '';
-    const uid = localStorage.getItem('uid');
+    const uid = loginUid();
     const needsSubscription = (!token) ? (data.access_rights == '2' && authorId) : (data.access_rights == '2' && data.is_subscribed != 1 && authorId && authorId != uid);
     if (needsSubscription) {
       makeSequelAuthorId.value = String(authorId);
@@ -1967,11 +1991,38 @@ async function enterNextOrCurrentChapter() {
   }
 }
 
+// 合集的收费档位 id（-1 = 仅会员可见）只在合集详情接口里有（book_info.plan_id），作品详情不带：
+// 漫剧合集拉一次，按 book_id 缓存，切集不重复请求
+const bookPlanIdCache = new Map<string, string>();
+async function loadBookPlanId() {
+  const bookId = String(detail.value.book_id || '');
+  if (!bookId || Number(bookId) == 0 || detail.value.type != '3') return;
+  if (bookPlanIdCache.has(bookId)) {
+    detail.value.book_plan_id = bookPlanIdCache.get(bookId) || detail.value.book_plan_id;
+    return;
+  }
+  try {
+    const res = await api.getCollectionDetail(bookId) as any;
+    if (res?.code == 0) {
+      const data = res.data || {};
+      const info = data.book_info || data;
+      const planId = planIdOf({ plan: data.plan, plan_id: info.plan_id });
+      if (planId) {
+        bookPlanIdCache.set(bookId, planId);
+        if (String(detail.value.book_id || '') === bookId) detail.value.book_plan_id = planId;
+      }
+    }
+  } catch (e) {
+    console.error('load book plan id failed', e);
+  }
+}
+
 // Load chapters (collection episodes)
 async function loadChapters() {
   if (!detail.value.book_id || Number(detail.value.book_id) == 0) {
     return;
   }
+  loadBookPlanId();
 
   try {
     const response = await api.singleCollection(String(detail.value.book_id), 1, COLLECTION_PAGE_SIZE) as any;
@@ -2002,7 +2053,7 @@ async function navigateToChapter(chapter: any, source: 'catalog' | 'auto_play' =
   else trackCatalogChapterClick({ book_id: detail.value.book_id, post_id: chapter.post_id, chapter_index: chapter.chapter_index ?? chapter.index ?? undefined, content_type: contentTypeOf(detail.value.type), user_id: detail.value.author?.id });
 
   if (isSensitiveContent.value) {
-    if (detail.value.author.id && detail.value.author.id == uid) {
+    if (detail.value.author.id && detail.value.author.id == uid.value) {
       // author bypass
     } else {
       const token = localStorage.getItem('token');
@@ -2851,12 +2902,16 @@ async function fetchDetail(newId: number) {
       let bookIsNsfw = 0;
       let bookSessionId = '';
       seoBook.value = null;
+      // 合集的收费档位 id（-1 = 仅会员可见）：这里拉合集详情时顺手取，loadBookPlanId 就不用再请求一次
+      let bookPlanIdFromBook = '';
       if (data.book_id && Number(data.book_id) > 0) {
         try {
           const bookRes = await api.getCollectionDetail(String(data.book_id)) as any;
           if (isStale()) return;
           if (bookRes.code === 0) {
             const bookData = bookRes.data?.book_info || bookRes.data;
+            bookPlanIdFromBook = planIdOf({ plan: bookRes.data?.plan, plan_id: bookData?.plan_id });
+            if (bookPlanIdFromBook) bookPlanIdCache.set(String(data.book_id), bookPlanIdFromBook);
             if (bookData && (bookData.is_nsfw == 1 || bookData.is_nsfw == '1')) {
               bookIsNsfw = 1;
             }
@@ -2902,7 +2957,8 @@ async function fetchDetail(newId: number) {
         book_price: detailPlan.price ?? '',
         book_currency: detailPlan.currency ?? '',
         book_web3_price: detailPlan.web3_price ?? '',
-        book_plan_id: detailPlan.plan_id ?? detailPlan.id ?? '',
+        // 作品详情只带价格档 plan；「仅会员可见」的 -1 在合集详情的 book_info.plan_id 里，loadBookPlanId 再补
+        book_plan_id: bookPlanIdFromBook || (detailPlan.plan_id ?? detailPlan.id ?? ''),
         book_buy: data.book_buy ?? res.data?.book_buy ?? 0,
         book_is_nsfw: bookIsNsfw,
         book_id: data.book_id || '',
@@ -3365,7 +3421,9 @@ async function loadCollections(append: boolean = false) {
           type: String(detail.value.type),
           duration: chapter.duration,
           isSubscribed: detail.value.isSubscribed,
-          requiresSubscription: chapter.access_rights == '2' || false
+          requiresSubscription: chapter.access_rights == '2' || false,
+          // 封面左上角的付费 / 订阅角标按这个字段显示；loadChapters 是整条展开的有这个字段，这里之前漏了，切到合集 tab 重新拉列表后角标就没了
+          access_rights: chapter.access_rights
         }));
 
         if (append) {
@@ -3842,33 +3900,88 @@ const isLast = computed(() => {
 });
 
 const permText = computed(() => {
-  if (detail.value.permission == "partial") return t("detail.permissionText.partial");
+  // 漫剧的付费章节是「付费用户可见」（单部购买 / 漫剧会员），不是订阅博主
+  if (detail.value.permission == "partial") return t(detail.value.type == '3' ? "submit.permPaid" : "detail.permissionText.partial");
   if (detail.value.permission == "private") return t("detail.permissionText.private");
   return t("detail.permissionText.public");
 });
 
 // --- Computed Properties for Logic ---
-/** 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品 */
+/**
+ * 买过整个合集 —— 没订阅博主也照样能看这个合集里的作品。
+ * 例外：合集改成「仅会员可见」（plan_id = -1）后，以前的整部购买不再算解锁，付费章节照常锁住、只给会员入口。
+ */
 const hasBoughtBook = computed(
-  () => detail.value?.book_buy == 1 || detail.value?.book_buy === true,
+  () => (detail.value?.book_buy == 1 || detail.value?.book_buy === true)
+    && !isMemberOnlyPlanId(detail.value?.book_plan_id),
 );
 
 const isArticleLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
-  if (detail.value.isSubscribed) return false;
+  // 博主订阅只对非漫剧有效；漫剧只认整部购买 / 漫剧会员
+  if (detail.value.isSubscribed && detail.value.type != '3') return false;
   if (hasBoughtBook.value) return false;
   // If it's the author's own work, don't lock
-  if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;
+  if (detail.value.author.id && detail.value.author.id == uid.value) return false;
   // If paid and not subscribed, show lock
   return true;
 });
 
+// —— 漫剧会员（平台会员）：有效期内能看全站付费漫剧 ——
+const hasDramaMember = ref(false);
+/** 会员接口回来了（没登录直接算回来了）；角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
+const dramaMemberReady = ref(false);
+let dramaMemberLoaded = false;
+async function loadDramaMember() {
+  if (dramaMemberLoaded) return;
+  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
+  dramaMemberLoaded = true;
+  try {
+    hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
+  } catch (e) {
+    console.error('load drama member failed', e);
+    hasDramaMember.value = false;
+  } finally {
+    dramaMemberReady.value = true;
+  }
+}
+onMounted(loadDramaMember);
+/**
+ * 右侧目录付费章节的角标（和合集详情页同一套规则）：
+ * 漫剧：作者本人「付费」/ 买过整部「已购买」（合集仅会员可见且没会员时旧购买不算 →「会员可看」）/ 没买整部、有漫剧会员「已购买」/ 都没有「待解锁」
+ * 非漫剧：「订阅」（作者本人也显示）
+ */
+const paidBadgeText = computed(() => {
+  if (detail.value.type != '3') return t('detail.subscribe');
+  if (detail.value.author?.id && String(detail.value.author.id) === String(uid.value)) return t('detail.paid');
+  const bought = detail.value?.book_buy == 1 || detail.value?.book_buy === true;
+  if (bought) {
+    if (isMemberOnlyPlanId(detail.value.book_plan_id) && !hasDramaMember.value) return t('detail.memberOnly');
+    return t('detail.bought');
+  }
+  if (hasDramaMember.value) return t('detail.bought');
+  return t('collectionDetail.statusPaid');
+});
+// 第一次打开付费漫剧、已经是会员：提示一次「您已解锁会员观看权益」（切集不再提示）
+let memberUnlockToastShown = false;
+watch([hasDramaMember, () => detail.value?.id, () => detail.value?.permission], () => {
+  if (memberUnlockToastShown || !hasDramaMember.value) return;
+  // 自己的作品不提示（isOwnPost：作者 id == 登录 uid）
+  if (detail.value?.type == '3' && detail.value?.permission === 'partial' && detail.value?.author?.id && !isOwnPost.value) {
+    memberUnlockToastShown = true;
+    toast(t('detail.memberUnlockedTip'));
+  }
+});
+
 const isPaidContentLocked = computed(() => {
   if (detail.value.permission !== "partial") return false;
-  if (detail.value.isSubscribed) return false;
+  // 博主订阅只对非漫剧有效；漫剧只认整部购买 / 漫剧会员
+  if (detail.value.isSubscribed && detail.value.type != '3') return false;
+  // 漫剧会员：有效期内全站付费漫剧都能看
+  if (detail.value.type == '3' && hasDramaMember.value) return false;
   // 合集已购：锁直接放开，不用再看有没有订阅博主
   if (hasBoughtBook.value) return false;
-  if (detail.value.author.id && detail.value.author.id == localStorage.getItem('uid')) return false;
+  if (detail.value.author.id && detail.value.author.id == uid.value) return false;
   return true;
 });
 
@@ -3894,7 +4007,7 @@ const checkSensitiveContentBeforeAction = (action: () => void): boolean => {
     return true;
   }
   const authorId = detail.value.author?.id;
-  const uid = localStorage.getItem('uid');
+  const uid = loginUid();
   if (authorId && authorId == uid) {
     action();
     return true;
@@ -6233,8 +6346,8 @@ function stopDragTracking() {
   window.removeEventListener('click', swallowClickOnce, true);
 }
 
-/** 当前作品是不是自己的（本地 uid == 作者 id） */
-const isOwnPost = computed(() => !!uid && detail.value?.author?.id != null && detail.value.author.id == uid);
+/** 当前作品是不是自己的（本地 uid.value == 作者 id） */
+const isOwnPost = computed(() => !!uid.value && detail.value?.author?.id != null && detail.value.author.id == uid.value);
 
 function handleKeyDown(e: KeyboardEvent) {
   // 小说由 NovelDetail 自己处理（它知道作者是谁），这里不重复拦，不然作者看自己的小说也被拦

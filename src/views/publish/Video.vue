@@ -325,9 +325,8 @@
                           </div>
                         </div>
                         <div class="content-language">
-                          <label class="form-label">{{ t('submit.language') }}</label>
-                          <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
-                          <div class="lang-row">
+                          <div class="lang-field">
+                            <label class="form-label">{{ t('submit.language') }}</label>
                             <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
                               <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
                                 <span>{{ currentLangLabel }}</span>
@@ -343,8 +342,27 @@
                                 >{{ t(opt.labelKey) }}</div>
                               </div>
                             </div>
-                            <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                           </div>
+                          <!-- 分类：和创建合集页同一套标签列表；已选合集时改分类直接调修改合集接口 -->
+                          <div class="lang-field">
+                            <label class="form-label">{{ t('collectionSettings.category') }}</label>
+                            <div class="lang-dropdown" :class="{ open: tagDropdownOpen }" ref="tagDropdownRef">
+                              <div class="lang-dropdown-trigger" @click="toggleTagDropdown">
+                                <span>{{ currentTagLabel }}</span>
+                                <svg class="lang-arrow" :class="{ rotated: tagDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                              </div>
+                              <div class="lang-dropdown-menu" v-if="tagDropdownOpen">
+                                <div
+                                  class="lang-dropdown-item"
+                                  v-for="tag in bookTags"
+                                  :key="tag.tag_id"
+                                  :class="{ active: String(collectionTagId) === String(tag.tag_id) }"
+                                  @click="handleCollectionTagChange(tag.tag_id)"
+                                >{{ bookTagLabel(tag) }}</div>
+                              </div>
+                            </div>
+                          </div>
+                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
                       </div>
                     </div>
@@ -399,11 +417,15 @@
             </div>
             <!-- 选了「付费用户可见」：列出合集的付费档位，发布时同步到合集 -->
             <div class="plan-list" v-if="batchPermission === 'partial' && bookPlans.length">
-              <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+              <span class="plan-list-label">{{ t('submit.dramaPriceSetting') }}</span>
               <div class="plan-options">
                 <div class="plan-option" v-for="plan in bookPlans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
                   <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
                   <span>{{ planLabel(plan) }}</span>
+                </div>
+                <div class="plan-option" @click="selectedPlanId = MEMBER_ONLY">
+                  <img :src="selectedPlanId === MEMBER_ONLY ? selectActive : select" alt="" />
+                  <span>{{ t('submit.memberOnlyNoBuy') }}</span>
                 </div>
               </div>
               <!-- 右侧：收益分成说明，点图标弹说明弹窗 -->
@@ -598,9 +620,8 @@
                         </div>
                       </div>
                       <div class="content-language">
-                        <label class="form-label">{{ t('submit.language') }}</label>
-                        <!-- 下拉框和「修改合集信息」同一行；窄屏下换成两行 -->
-                        <div class="lang-row">
+                        <div class="lang-field">
+                          <label class="form-label">{{ t('submit.language') }}</label>
                           <div class="lang-dropdown" :class="{ open: langDropdownOpen, up: langDropdownUp }" ref="langDropdownRef">
                             <div class="lang-dropdown-trigger" @click="toggleLangDropdown">
                               <span>{{ currentLangLabel }}</span>
@@ -616,8 +637,27 @@
                               >{{ t(opt.labelKey) }}</div>
                             </div>
                           </div>
-                          <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                         </div>
+                        <!-- 分类：和创建合集页同一套标签列表；已选合集时改分类直接调修改合集接口 -->
+                        <div class="lang-field">
+                          <label class="form-label">{{ t('collectionSettings.category') }}</label>
+                          <div class="lang-dropdown" :class="{ open: tagDropdownOpen }" ref="tagDropdownRef">
+                            <div class="lang-dropdown-trigger" @click="toggleTagDropdown">
+                              <span>{{ currentTagLabel }}</span>
+                              <svg class="lang-arrow" :class="{ rotated: tagDropdownOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                            <div class="lang-dropdown-menu" v-if="tagDropdownOpen">
+                              <div
+                                class="lang-dropdown-item"
+                                v-for="tag in bookTags"
+                                :key="tag.tag_id"
+                                :class="{ active: String(collectionTagId) === String(tag.tag_id) }"
+                                @click="handleCollectionTagChange(tag.tag_id)"
+                              >{{ bookTagLabel(tag) }}</div>
+                            </div>
+                          </div>
+                        </div>
+                        <span class="modify-link" v-if="selectedCollection" @click="handleEditCollection">{{ t('collection.modifyCollection') }}</span>
                       </div>
                     </div>
                   </div>
@@ -692,11 +732,15 @@
 
               <!-- 选了「付费用户可见」：列出合集的付费档位，发布时同步到合集 -->
               <div class="plan-list" v-if="form.permission === 'partial' && bookPlans.length">
-                <span class="plan-list-label">{{ t('submit.singlePrice') }}</span>
+                <span class="plan-list-label">{{ t('submit.dramaPriceSetting') }}</span>
                 <div class="plan-options">
                   <div class="plan-option" v-for="plan in bookPlans" :key="planKey(plan)" @click="selectedPlanId = planKey(plan)">
-                    <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
-                    <span>{{ planLabel(plan) }}</span>
+                      <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
+                      <span>{{ planLabel(plan) }}</span>
+                  </div>
+                  <div class="plan-option" @click="selectedPlanId = MEMBER_ONLY">
+                    <img :src="selectedPlanId === MEMBER_ONLY ? selectActive : select" alt="" />
+                    <span>{{ t('submit.memberOnlyNoBuy') }}</span>
                   </div>
                 </div>
               </div>
@@ -870,10 +914,13 @@ import {
   planCurrencyOf,
   planIdOf,
   type BookRechargePlan,
+  MEMBER_ONLY_PLAN_ID,
+  isMemberOnlyPlanId,
 } from "@/util/bookRechargePlan";
 import { trackClickPublishButton } from "@/utils/analytics";
 import router from "@/router";
 import { processImageUrl, apiErrorMessage } from '@/util/utils';
+import { loadBookTags, bookTagLabel, type BookTag } from '@/util/bookTags';
 
 import select from "@/assets/images/publish/select.png";
 import selectActive from "@/assets/images/publish/select_active.png";
@@ -893,6 +940,8 @@ const { t, locale } = useI18n();
 //   2. 项目大纲 result_async.generate_manju_outline.tag_id
 // 都没有就不传，api.addCollection 会自动取分类列表的第一个
 function outlineTagPayload(...projects: any[]): { tag_id?: string | number } {
+  // 用户在页面上手动选过分类：优先用它
+  if (userPickedTag && collectionTagId.value !== '') return { tag_id: collectionTagId.value };
   const urlTag = String(route.query.tag ?? '').trim();
   if (urlTag) return { tag_id: urlTag };
   for (const p of projects) {
@@ -1053,6 +1102,54 @@ const langOptions = [
 const langDropdownOpen = ref(false);
 const langDropdownUp = ref(false);
 const langDropdownRef = ref<HTMLElement | null>(null);
+
+// —— 分类（标签）下拉：列表和创建合集页同一套（loadBookTags 有缓存）。
+// 已选了合集：按合集详情回显，改了直接调修改合集接口；还没合集：先记着，自动建合集时带上 ——
+const bookTags = ref<BookTag[]>([]);
+const collectionTagId = ref<string | number>('');
+/** 用户在还没有合集时手动选过分类：自动建合集时优先用它 */
+let userPickedTag = false;
+const tagDropdownOpen = ref(false);
+const tagDropdownRef = ref<HTMLElement | null>(null);
+const currentTagLabel = computed(() => bookTagLabel(bookTags.value.find(tg => String(tg.tag_id) === String(collectionTagId.value))) || '');
+function toggleTagDropdown() { tagDropdownOpen.value = !tagDropdownOpen.value; }
+async function initBookTagOptions() {
+  try { bookTags.value = await loadBookTags(); } catch { bookTags.value = []; }
+  if ((collectionTagId.value === '' || collectionTagId.value === undefined) && bookTags.value[0]) collectionTagId.value = bookTags.value[0].tag_id;
+}
+/** 合集换了 / 编辑弹窗保存后：拉一次合集详情，把分类回显出来 */
+async function syncCollectionTag() {
+  const id = selectedCollection.value?.id;
+  if (!id) return;
+  try {
+    const res = await api.getSelfCollectionDetail(id) as any;
+    const info = res?.data?.book_info || res?.data || {};
+    if ((res?.code === 0 || res?.code === 200) && info.tag_id !== undefined && info.tag_id !== null && String(info.tag_id) !== '') collectionTagId.value = info.tag_id;
+  } catch (e) {
+    console.error('sync collection tag failed', e);
+  }
+}
+onMounted(initBookTagOptions);
+async function handleCollectionTagChange(tagId: string | number) {
+  tagDropdownOpen.value = false;
+  if (String(tagId) === String(collectionTagId.value)) return;
+  if (!selectedCollection.value) {
+    collectionTagId.value = tagId;
+    userPickedTag = true;
+    return;
+  }
+  // 已选了合集：先改接口，成功了再切过去；失败提示并保持原值（和语言一样）
+  try {
+    const res = await api.modifyCollection({ is_bl: 1, book_id: selectedCollection.value.id, tag_id: tagId }) as any;
+    if (res?.code === 0 || res?.code === 200) {
+      collectionTagId.value = tagId;
+    } else {
+      toast(apiErrorMessage(res) || t('fail'));
+    }
+  } catch (e) {
+    toast(t('fail'));
+  }
+}
 const collectionLanguage = ref(defaultLang);
 
 function toggleLangDropdown() {
@@ -1226,6 +1323,8 @@ const previewProject = ref<any>(null);
 
 // Collection
 const selectedCollection = ref<{ id: string | number; name: string; cover?: string; description?: string; is_nsfw?: number; language?: string; price?: string | number; currency?: string; plan_id?: string } | null>(null);
+// 合集换了就回显它的分类（要放在 selectedCollection 声明之后，不然 setup 时就报 TDZ）
+watch(() => selectedCollection.value?.id, () => syncCollectionTag());
 
 // --- 漫剧合集的收费档 -------------------------------------------------------
 // 页面本身不拉档位列表：合集的 price / currency 都由接口（或编辑弹窗）直接给，
@@ -1234,6 +1333,8 @@ const selectedCollection = ref<{ id: string | number; name: string; cover?: stri
 // 「付费用户可见」下面的合集付费档位列表。页面加载时拉一次（fetch 内部有缓存）。
 const bookPlans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref<string>('');
+/** 价格列表里的「仅会员可见」选项（不设单部价格，合集标成漫剧会员可看）；默认不选，默认选第一档价格 */
+const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 const planLabel = (plan: BookRechargePlan) => `${planPriceText(plan, t('aiRecharge.unit'))}/${t('submit.perSeries')}`;
 async function loadBookPlans() {
@@ -1254,7 +1355,7 @@ function syncSelectedPlanFromCollection() {
     || (price !== undefined && price !== null && price !== ''
       ? plans.find(pl => String(pl.price) === String(price))
       : undefined);
-  selectedPlanId.value = planKey(hit || plans[0]);
+  selectedPlanId.value = hit ? planKey(hit) : isMemberOnlyPlanId(curId) ? MEMBER_ONLY : planKey(plans[0]);
 }
 watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection());
 /**
@@ -1263,19 +1364,21 @@ watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection()
  */
 async function syncCollectionPlan(permission: string) {
   if (permission !== 'partial' || !selectedCollection.value?.id) return;
-  const plan = bookPlans.value.find(pl => planKey(pl) === selectedPlanId.value);
-  if (!plan) return;
+  // 「仅会员可见」：new_plan_id 传 -1
+  const memberOnly = selectedPlanId.value === MEMBER_ONLY;
+  const plan = memberOnly ? null : bookPlans.value.find(pl => planKey(pl) === selectedPlanId.value);
+  if (!memberOnly && !plan) return;
   // 每次发布都把选中的档位写到合集上：old_plan_id = 合集当前档位（没设过传 0），new_plan_id = 选中的档位
   try {
     const res = await api.modifyCollection({
       book_id: selectedCollection.value.id,
       old_plan_id: selectedCollection.value.plan_id || 0,
-      new_plan_id: planKey(plan),
+      new_plan_id: memberOnly ? MEMBER_ONLY_PLAN_ID : plan ? planKey(plan) : 0,
     }) as any;
     if (res.code == 0 || res.code == 200) {
-      selectedCollection.value.plan_id = planKey(plan);
-      selectedCollection.value.price = plan.price;
-      selectedCollection.value.currency = plan.currency || selectedCollection.value.currency;
+      selectedCollection.value.plan_id = memberOnly ? MEMBER_ONLY_PLAN_ID : plan ? planKey(plan) : '';
+      selectedCollection.value.price = plan ? plan.price : '';
+      selectedCollection.value.currency = plan ? (plan.currency || selectedCollection.value.currency) : selectedCollection.value.currency;
     } else {
       toast(apiErrorMessage(res) || t('fail'));
     }
@@ -2280,6 +2383,8 @@ async function handleSaveCollection(collection: { id: string | number; name: str
   // 弹窗里可能改过语言，同步回页面的语言下拉，否则下拉一直显示旧值，
   // 之后再触发自动创建还会拿这个过期的值去建合集
   if (collection.language) collectionLanguage.value = collection.language;
+  // 弹窗里可能改过分类，重新拉一次回显
+  syncCollectionTag();
 
   if (editingCollectionId.value === null) {
     selectedCollection.value = {
@@ -4218,6 +4323,9 @@ function handleClickOutside(event: MouseEvent) {
   // 语言下拉框：点到外面就收起
   if (langDropdownOpen.value && !langDropdownRef.value?.contains(target)) {
     langDropdownOpen.value = false;
+  }
+  if (tagDropdownOpen.value && !tagDropdownRef.value?.contains(target)) {
+    tagDropdownOpen.value = false;
   }
 }
 

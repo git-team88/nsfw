@@ -7,7 +7,6 @@
 
       <div class="modal-body">
         <div class="perm-section">
-          <div class="section-label">{{ t('collectionSettings.paidSetting') }}</div>
           <div class="perm-options" v-if="plansReady">
             <div class="perm-option" :class="{ selected: selectedId === OFF }" @click="selectedId = OFF">
               <img :src="selectedId === OFF ? selectActive : select" alt="" />
@@ -22,6 +21,10 @@
             >
               <img :src="selectedId === planKey(plan) ? selectActive : select" alt="" />
               <span>{{ planPriceText(plan, t('aiRecharge.unit')) }}/{{ t('submit.perSeries') }}</span>
+            </div>
+            <div class="perm-option" :class="{ selected: selectedId === MEMBER_ONLY }" @click="selectedId = MEMBER_ONLY">
+              <img :src="selectedId === MEMBER_ONLY ? selectActive : select" alt="" />
+              <span>{{ t('submit.memberOnlyNoBuy') }}</span>
             </div>
           </div>
         </div>
@@ -43,7 +46,7 @@ import { useI18n } from 'vue-i18n';
 import api from '@/api/index';
 import { toast } from '@/util/toast';
 import { apiErrorMessage } from '@/util/utils';
-import { fetchBookRechargePlans, planPriceText, type BookRechargePlan } from '@/util/bookRechargePlan';
+import { fetchBookRechargePlans, planPriceText, MEMBER_ONLY_PLAN_ID, isMemberOnlyPlanId, type BookRechargePlan } from '@/util/bookRechargePlan';
 import select from '@/assets/images/publish/select.png';
 import selectActive from '@/assets/images/publish/select_active.png';
 const { t } = useI18n();
@@ -59,10 +62,12 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'saved', payload: { plan: BookRechargePlan | null }): void;
+  (e: 'saved', payload: { plan: BookRechargePlan | null; memberOnly: boolean }): void;
 }>();
 
 const OFF = 'off';
+/** 仅会员可见（不可整部购买）：不设单部价格，合集标成漫剧会员可看 */
+const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
 const plans = ref<BookRechargePlan[]>([]);
 const selectedId = ref<string>(OFF);
 const saving = ref(false);
@@ -81,7 +86,8 @@ function syncSelected() {
     || (cur !== undefined && cur !== null && cur !== ''
       ? plans.value.find(pl => String(pl.price) === String(cur))
       : undefined);
-  selectedId.value = hit ? planKey(hit) : OFF;
+  // plan_id = -1 就是「仅会员可见」
+  selectedId.value = hit ? planKey(hit) : isMemberOnlyPlanId(props.currentPlanId) ? MEMBER_ONLY : OFF;
 }
 
 async function loadPlans() {
@@ -111,19 +117,21 @@ async function handleSave() {
   if (saving.value) return;
   saving.value = true;
   try {
-    const plan = plans.value.find(pl => planKey(pl) === selectedId.value) || null;
+    const memberOnly = selectedId.value === MEMBER_ONLY;
+    const plan = memberOnly ? null : plans.value.find(pl => planKey(pl) === selectedId.value) || null;
     const res = await api.modifyCollection({
       book_id: props.bookId,
       // 改价格只传新旧档位 id：old_plan_id = 合集当前档位（没设过传 0），new_plan_id = 选中的档位（不开启传 0）
-      old_plan_id: props.currentPlanId ? String(props.currentPlanId) : 0,
-      new_plan_id: plan ? planKey(plan) : 0,
+      old_plan_id: props.currentPlanId ? String(props.currentPlanId) : 0, // 当前是仅会员可见就是 -1
+      // 仅会员可见传 -1，不开启传 0
+      new_plan_id: memberOnly ? MEMBER_ONLY_PLAN_ID : plan ? planKey(plan) : 0,
     }) as any;
     if (!(res.code == 0 || res.code == 200)) {
       toast(apiErrorMessage(res) || t('fail'));
       return;
     }
     toast(t('success'));
-    emit('saved', { plan });
+    emit('saved', { plan, memberOnly });
     emit('close');
   } catch (e) {
     console.error(e);

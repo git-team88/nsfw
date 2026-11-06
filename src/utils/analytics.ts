@@ -111,7 +111,7 @@ function markPurchaseReported(transactionId: string) {
 }
 
 export function trackPurchase(params: {
-  paymentType: "1" | "2" | "3" | "4";
+  paymentType: "1" | "2" | "3" | "4" | "5";
   value: number;
   currency: string;
   /**
