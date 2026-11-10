@@ -32,7 +32,8 @@
           <div class="cre-avatar" :style="{ background: c.avatar }">
             <img v-if="c.avatarImg" :src="c.avatarImg" alt="" draggable="false" class="mg-avimg" @error="onAvatarErr" />
           </div>
-          <div class="cre-name">{{ c.name }}</div>
+          <!-- 作者名用真实 <a href>（爬虫顺着进创作者页）；点击只拦默认跳转，冒泡到卡片的 @click 走 goUser -->
+          <a class="cre-name" :href="`/user-home/${c.id}`" @click.prevent>{{ c.name }}</a>
           <div class="cre-meta">{{ t('home.fansLabel') }} {{ c.fans }} · {{ t('home.worksLabel') }} {{ c.works }}</div>
           <button
             class="cre-follow"
@@ -636,7 +637,7 @@ onBeforeUnmount(() => {
     border-radius: 999px; border: 1px solid #3d3d3d; overflow: hidden;
     img { width: 100%; height: 100%; object-fit: cover; }
   }
-  .cre-name { font-size: 19px; font-weight: 800; color: #f5f5f5; }
+  .cre-name { display: block; font-size: 19px; font-weight: 800; color: #f5f5f5; text-decoration: none; }
   .cre-meta { font-size: 12px; font-weight: 600; opacity: 0.55; margin: 3px 0 14px; }
   .cre-follow {
     width: 100%; padding: 10px; border: none; border-radius: 18px;

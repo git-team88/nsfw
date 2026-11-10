@@ -30,7 +30,7 @@ Disallow: /aitool-payment-fail
 Disallow: /token-withdraw-success
 Disallow: /account-success
 Disallow: /account-fail
-Disallow: /user-home
+# /user-home（创作者页）2026-11-10 起放开：空壳页（无作品）由页面级 <meta name="robots" content="noindex, follow"> 剔除，有作品的进 sitemap
 Disallow: /user-personal
 Disallow: /user-personal-edit
 Disallow: /user-interactive

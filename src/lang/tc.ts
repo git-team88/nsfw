@@ -3483,6 +3483,9 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     },
     userHome: {
       title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇 {'|'} FansFans",
+      creatorRole: "漫劇創作者",
+      worksCount: "[[n]]部作品",
+      bioSupplement: "[[author]]是 [[site]] 的漫劇創作者，已發布 [[n]] 部作品，擁有 [[fans]] 位粉絲。在這裡可以瀏覽 TA 創作的全部漫劇、小說與漫畫，追蹤後第一時間收到更新提醒，也可以訂閱解鎖付費章節。",
       keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
       description: "在 FansFans中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。",
       descriptionFallback: "歡迎來到[[author]]的個人主頁，在 [[site]] 瀏覽其發布的作品與合集，發現你感興趣的內容。",

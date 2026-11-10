@@ -3499,6 +3499,9 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     },
     userHome: {
       title: "我的作品 - 管理我的 AI 小说、漫画、漫剧 {'|'} FansFans",
+      creatorRole: "漫剧创作者",
+      worksCount: "[[n]]部作品",
+      bioSupplement: "[[author]]是 [[site]] 的漫剧创作者，已发布 [[n]] 部作品，拥有 [[fans]] 位粉丝。在这里可以浏览 TA 创作的全部漫剧、小说与漫画，关注后第一时间收到更新提醒，也可以订阅解锁付费章节。",
       keywords: "我的作品,AI小说,漫画,漫剧,作品管理,创作管理,FansFans",
       description: "在 FansFans中管理你的 AI 小说、漫画、漫剧作品，追踪粉丝、收藏与互动数据。",
       descriptionFallback: "欢迎来到[[author]]的个人主页，在 [[site]] 浏览其发布的作品与合集，发现你感兴趣的内容。",

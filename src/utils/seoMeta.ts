@@ -115,6 +115,15 @@ export function applySeoMeta(input: SeoMetaInput) {
 }
 
 /**
+ * 页面级 robots（index / noindex）。走 setNamed 记录原值，restoreSeoMeta() 时还原或删掉，
+ * 不会把一个页面的 noindex 带到下一个页面。seo-server 预渲染会把它原样带给爬虫。
+ */
+export function setRobots(content: 'index, follow' | 'noindex, follow' | 'noindex, nofollow') {
+  if (typeof document === 'undefined') return;
+  setNamed('robots', content);
+}
+
+/**
  * 页面级 JSON-LD（T10）：一个页面一个 <script type="application/ld+json" data-seo-page>，
  * 重复调用就替换；restoreSeoMeta() 时删掉。
  */

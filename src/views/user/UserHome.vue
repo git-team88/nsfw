@@ -18,7 +18,8 @@
           <div class="text-inner">
             <div class="text-info">
               <div class="name-row">
-                <span class="nickname">{{ userInfo.nickname }}</span>
+                <!-- 创作者页唯一的 h1：作者名（SEO） -->
+                <h1 class="nickname">{{ userInfo.nickname }}</h1>
               </div>
               <div class="kyc-row" v-if="userInfo.kyc_status == 1">
                 <span>{{ t("userHome.verified") }}</span>
@@ -96,6 +97,8 @@
               <img src="@/assets/images/detail/hide.png" v-else />
               <span>{{ isDescExpanded ? t("userHome.showLess") : t("userHome.showMore") }}</span>
             </div>
+            <!-- 简介不足 80 字时补一段作者 / 作品数 / 粉丝的说明（SEO：创作者页要有足够正文），对所有访客可见 -->
+            <p class="seo-bio" v-if="seoBioText">{{ seoBioText }}</p>
           </div>
         </div>
       </div>
@@ -226,7 +229,10 @@
                 :style="{ animationDelay: `${Math.min(index * 35, 300)}ms` }"
               >
                   <div class="card-cover" :style="isMasonryList && (activeContentType == 4 || collection.type == '4') ? { aspectRatio: coverAspect(processImageUrl(collection.cover)) } : undefined" @click="isPostItem(collection) ? goDetail(collection.id, collection.user_id, itemType(collection)) : goCollectionDetail(collection.id)">
-                    <img :src="processImageUrl(collection.cover) || defaultCover" alt="" class="cover-img" />
+                    <!-- 封面图包一层真实 <a href>（爬虫顺着进详情 / 合集页）；点击只拦默认跳转，冒泡到外层 card-cover 的 @click 走原来的 goDetail -->
+                    <a class="cover-link" :href="itemHref(collection)" @click.prevent>
+                      <img :src="processImageUrl(collection.cover) || defaultCover" :alt="collection.title || ''" class="cover-img" />
+                    </a>
                     <div class="r18-overlay" v-if="collection.is_nsfw == 1">
                       <span class="r18-text">R18</span>
                     </div>
@@ -299,7 +305,7 @@
                 </div>
 
                 <div class="card-info">
-                  <div class="card-desc">{{ collection.description ? collection.description : collection.title ? collection.title : '' }}</div>
+                  <a class="card-desc" :href="itemHref(collection)" @click.prevent="isPostItem(collection) ? goDetail(collection.id, collection.user_id, itemType(collection)) : goCollectionDetail(collection.id)">{{ collection.description ? collection.description : collection.title ? collection.title : '' }}</a>
                 </div>
               </div>
             </div>
@@ -505,7 +511,7 @@ import {
 import { useMasonry } from "@/util/masonry";
 import { coverAspect } from "@/util/coverRatio";
 import { useI18n } from "vue-i18n";
-import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta } from "@/utils/seoMeta";
+import { safeJoin, clamp, setMetaKeywords, TITLE_SEP, applySeoMeta, restoreSeoMeta, setRobots, applyJsonLd, canonicalUrl, goNotFoundIfMissing } from "@/utils/seoMeta";
 import { siteName } from "@/utils/pageTitle";
 import { trackSubscribeToCreator } from "@/utils/analytics";
 import { trackFollow } from "@/utils/maidian";
@@ -1276,6 +1282,11 @@ async function fetchUserInfo() {
     }
 
     const data = res as any;
+    // 用户不存在：接口会回 code 0 但没有 user（昵称 / id 都空）→ 切 404 页（SEO：不留「200 + 空壳」的软 404）
+    if (!isSelf && (data.code === 200 || data.code === 0) && !(data.data?.user?.id || data.data?.id || data.data?.user?.nickname || data.data?.nickname)) {
+      goNotFoundIfMissing(router, route, { code: 0, data: null });
+      return;
+    }
     if (data.code === 200 || data.code === 0) {
       const following = parseInt(data.data?.user?.following_count ?? data.data?.user?.follow_count ?? data.data?.following_count ?? data.data?.follow_count ?? '0');
       const fans = parseInt(data.data?.user?.follower_count ?? data.data?.user?.fans_count ?? data.data?.follower_count ?? data.data?.fans_count ?? '0');
@@ -1366,23 +1377,93 @@ function showToast(msg: string, icon = successIcon) {
   }, 3000);
 }
 
+/** 公开作品数（接口 total_posts）；0 = 空壳页 */
+const seoWorksCount = computed(() => Number(userInfo.value?.posts || userInfo.value?.total_posts || 0) || 0);
+
+/** 把文案模板里的 [[author]] / [[site]] / [[n]] / [[fans]] 填进去（seo.* 文案用 [[ ]] 占位，避开 i18n 的 {} 转义） */
+function fillSeo(tpl: string, extra: Record<string, string | number> = {}): string {
+  const vars: Record<string, string | number> = { author: clamp(userInfo.value?.nickname, 40), site: siteName(), n: seoWorksCount.value, fans: Number(userInfo.value?.fans || 0), ...extra };
+  return Object.entries(vars).reduce((acc, [k, v]) => acc.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), String(v)), tpl);
+}
+
 /**
- * 标题（UGC 规则）：作者 | 用户社区 | 品牌；用户信息还没到时先显示「用户社区 | 品牌」。
- * description：优先用户社区描述（主页简介），没有用固定文案。
+ * 简介补充描述：原简介不足 80 字时，按模板补一段「作者 / 作品数 / 粉丝」说明；够长就不补。
+ * 用户信息没回来、或是空壳页（没作品）不补。
+ */
+const seoBioText = computed(() => {
+  if (!userInfo.value?.nickname || seoWorksCount.value <= 0) return '';
+  if (clamp(userInfo.value?.description, 1000).length >= 80) return '';
+  return fillSeo(t('seo.userHome.bioSupplement'));
+});
+
+/**
+ * 标题：有作品 →「作者｜BL短剧作者｜N部作品」；没作品 / 昵称没回来 → 旧的「作者 | 用户社区 | 品牌」兜底。
+ * description：优先简介（截 110 字），不够就用补充描述，再没有用固定文案。
+ * robots：有作品 index，空壳 noindex,follow（robots.txt 不再挡 /user-home，交给页面级标记）。
+ * JSON-LD：有作品时注入 ProfilePage + Person + 面包屑。
  */
 function setSeoMeta() {
   const author = clamp(userInfo.value?.nickname, 40);
   const site = siteName();
-  // 昵称还没回来时先显示「用户社区 | 站点名」，拿到后补上昵称
   const community = t('seo.parts.community');
-  const pageTitle = community
-    ? safeJoin([author, community, site], TITLE_SEP)
-    : author ? t('seo.userHome.titleFallback').replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site) : site;
-  setMetaKeywords(author ? [author, t('seo.parts.community'), site] : '');
-  const fill = (tpl: string) => tpl.replace(/\[\[author\]\]/g, author).replace(/\[\[site\]\]/g, site);
-  const pageDescription = clamp(userInfo.value?.description, 110) || (author ? fill(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
+  const hasWorks = !!author && seoWorksCount.value > 0;
+  const pageTitle = hasWorks
+    ? safeJoin([author, t('seo.userHome.creatorRole'), fillSeo(t('seo.userHome.worksCount'))], '｜')
+    : community
+      ? safeJoin([author, community, site], TITLE_SEP)
+      : author ? fillSeo(t('seo.userHome.titleFallback')) : site;
+  setMetaKeywords(author ? [author, t('seo.userHome.creatorRole'), community, site] : '');
+  // description：简介 + 补充描述拼在一起截 160 字（简介太短时只靠它没信息量）；都没有用固定文案
+  const pageDescription = clamp([clamp(userInfo.value?.description, 110), seoBioText.value].filter(Boolean).join(' '), 160)
+    || (author ? fillSeo(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
+  const image = userInfo.value?.avatar || undefined;
   // 走 applySeoMeta 记录原值，离开页面时 restoreSeoMeta() 还原，不把博主简介带到下一个页面
-  applySeoMeta({ title: pageTitle, description: pageDescription, type: 'profile' });
+  applySeoMeta({ title: pageTitle, description: pageDescription, type: 'profile', image });
+
+  // 用户信息还没回来时不写 robots（避免先 noindex 再 index 抖动）
+  if (author) {
+    setRobots(hasWorks ? 'index, follow' : 'noindex, follow');
+  }
+
+  if (hasWorks) {
+    const url = canonicalUrl();
+    const u = userInfo.value;
+    applyJsonLd([
+      {
+        '@type': 'ProfilePage',
+        '@id': `${url}#profile`,
+        url,
+        name: pageTitle,
+        description: pageDescription,
+        mainEntity: {
+          '@type': 'Person',
+          '@id': `${url}#person`,
+          name: author,
+          url,
+          ...(image ? { image } : {}),
+          description: pageDescription,
+          identifier: String(u.id || ''),
+          interactionStatistic: [
+            { '@type': 'InteractionCounter', interactionType: 'https://schema.org/FollowAction', userInteractionCount: Number(u.fans || 0) },
+            { '@type': 'InteractionCounter', interactionType: 'https://schema.org/LikeAction', userInteractionCount: Number(u.likes || 0) },
+          ],
+          agentInteractionStatistic: { '@type': 'InteractionCounter', interactionType: 'https://schema.org/WriteAction', userInteractionCount: seoWorksCount.value },
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: site, item: `${window.location.origin}/` },
+          { '@type': 'ListItem', position: 2, name: author, item: url },
+        ],
+      },
+    ]);
+  }
+}
+
+/** 作品卡片的真实地址：单篇 → /detail/{id}，合集 → /collection/{id}（给 <a href>，爬虫顺着进详情页） */
+function itemHref(item: any): string {
+  return isPostItem(item) ? `/detail/${item.id}` : `/collection/${item.id}`;
 }
 
 // Get user region
@@ -2667,6 +2748,7 @@ async function unpinCollection(collection: any) {
           display: flex;
           align-items: center;
           .nickname {
+            margin: 0;
             font-size: 26px;
             font-weight: 800;
             color: #f5f5f5;
@@ -2878,6 +2960,14 @@ async function unpinCollection(collection: any) {
     .desc-box {
       position: relative;
       margin-top: 20px;
+
+      // SEO 补充描述（简介不足 80 字时）
+      .seo-bio {
+        margin: 8px 0 0;
+        font-size: 13px;
+        line-height: 20px;
+        color: #7A8699;
+      }
 
       .desc-text {
         font-size: 14px;
@@ -3273,6 +3363,8 @@ async function unpinCollection(collection: any) {
         color: #f5f5f5;
         margin-bottom: 12px;
         line-height: 20px;
+        text-decoration: none;
+        cursor: pointer;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         line-clamp: 2;
@@ -4731,5 +4823,13 @@ async function unpinCollection(collection: any) {
       }
     }
   }
+}
+
+// 封面图外层的 <a>（SEO 真实链接）：撑满 card-cover，不改变原来 img 的布局
+.collection-card .card-cover .cover-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  line-height: 0;
 }
 </style>
