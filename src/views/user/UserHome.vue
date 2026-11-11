@@ -1492,6 +1492,7 @@ function showToast(msg: string, icon = successIcon) {
 }
 
 /** 公开作品数（接口 total_posts）；0 = 空壳页 */
+/** 公开作品数：接口的 total_posts（全部作品数；books_group 是按合集统计的，口径不同，不拿来兜底） */
 const seoWorksCount = computed(() => Number(userInfo.value?.posts || userInfo.value?.total_posts || 0) || 0);
 
 /** 把文案模板里的 [[author]] / [[site]] / [[n]] / [[fans]] 填进去（seo.* 文案用 [[ ]] 占位，避开 i18n 的 {} 转义） */
