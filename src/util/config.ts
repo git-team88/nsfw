@@ -3,14 +3,14 @@ export const redirectUrl = "https://wwwtest.fansfans.ai";
 export const aiUrl = "https://testapi.addaiaroot.com/";
 // 埋点上报域名（测试 / 正式同一个，不用跟着环境切）
 export const trackUrl = "https://track.blfans.ai/";
-// 埋点应用 id（后端 track_app 表 fansfans-web，app_env dev / prod 各一个，跟着 baseUrl 一起切）。空着时埋点不上报
-export const trackAppId = "app_6b1e4c9f8a3d2e0f7b5c8d1e9f4a3b2c"; // 测试环境（dev）
+// 埋点应用 id（后端 track_app 表 fansfans-web，app_env prod / dev 各一个；两个都放这儿，用哪个解开哪个）。空着时埋点不上报
+export const trackAppId = "app_6b1e4c9f8a3d2e0f7b5c8d1e9f4a3b23"; // 正式环境（prod）
+// export const trackAppId = "app_6b1e4c9f8a3d2e0f7b5c8d1e9f4a3b2c"; // 测试环境（dev）
 export const siteKey = "6LdALkssAAAAAAB9dLSGTM-vNEyMAMEXLEfi-UhF";
 
 // export const baseUrl = "https://api.moegen.ai/";
 // export const redirectUrl = "https://www.fansfans.ai";
 // export const aiUrl = "https://api2.moegen.ai/";
-// export const trackAppId = "app_6b1e4c9f8a3d2e0f7b5c8d1e9f4a3b23"; // 正式环境（prod）
 
 // Chain environment: true = testnet, false = mainnet
 export const IS_TESTNET = true;

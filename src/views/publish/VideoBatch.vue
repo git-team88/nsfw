@@ -260,7 +260,7 @@
                   <img :src="selectedPlanId === planKey(plan) ? selectActive : select" alt="" />
                   <span>{{ planLabel(plan) }}</span>
                 </div>
-                <div class="plan-option" @click="selectedPlanId = MEMBER_ONLY">
+                <div v-if="MEMBER_ONLY_OPTION_ENABLED" class="plan-option" @click="selectedPlanId = MEMBER_ONLY">
                   <img :src="selectedPlanId === MEMBER_ONLY ? selectActive : select" alt="" />
                   <span>{{ t('submit.memberOnlyNoBuy') }}</span>
                 </div>
@@ -700,6 +700,8 @@ const bookPlans = ref<BookRechargePlan[]>([]);
 const selectedPlanId = ref<string>('');
 /** 价格列表里的「仅会员可见」选项（不设单部价格，合集标成漫剧会员可看）；默认不选，默认选第一档价格 */
 const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
+// 「仅会员可见」选项：本站没有漫剧会员功能，先不给选（已设成 -1 的合集回显时退回第一档）；要启用改成 true
+const MEMBER_ONLY_OPTION_ENABLED = false;
 const planKey = (plan: BookRechargePlan) => String(plan.plan_id ?? plan.id ?? '');
 const planLabel = (plan: BookRechargePlan) => `${planPriceText(plan, t('aiRecharge.unit'))}/${t('submit.perSeries')}`;
 async function loadBookPlans() {
@@ -720,7 +722,7 @@ function syncSelectedPlanFromCollection() {
     || (price !== undefined && price !== null && price !== ''
       ? plans.find(pl => String(pl.price) === String(price))
       : undefined);
-  selectedPlanId.value = hit ? planKey(hit) : isMemberOnlyPlanId(curId) ? MEMBER_ONLY : planKey(plans[0]);
+  selectedPlanId.value = hit ? planKey(hit) : isMemberOnlyPlanId(curId) && MEMBER_ONLY_OPTION_ENABLED ? MEMBER_ONLY : planKey(plans[0]);
 }
 watch(() => selectedCollection.value?.id, () => syncSelectedPlanFromCollection());
 /**

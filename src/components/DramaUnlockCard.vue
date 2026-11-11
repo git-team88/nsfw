@@ -30,7 +30,8 @@
 
     <!-- 解锁会员：只显示套餐列表的第一档，点了直接下单跳 Stripe（from=1，回跳到漫剧解锁的结果页）。
          第二行「首月 X 折，次月起 xx/月」只在套餐有首期折扣价时显示 -->
-    <template v-if="memberPlan">
+    <!-- 漫剧会员本站不启用（DRAMA_MEMBER_ENABLED = false）：不显示会员按钮，只保留单部购买 -->
+    <template v-if="DRAMA_MEMBER_ENABLED && memberPlan">
       <button class="unlock-btn member-btn" :class="{ 'has-single': !!priceText }" @click="handleMember">
         <span class="btn-main">{{ t('collection.unlockMember', { price: memberPriceText }) }}</span>
         <span class="btn-sub" v-if="memberDiscountText">{{ memberDiscountText }}</span>
@@ -132,7 +133,9 @@ async function loadMemberPlan() {
     memberPlan.value = null;
   }
 }
-onMounted(loadMemberPlan);
+// 漫剧会员功能本站不启用：不拉套餐、不显示会员按钮；要启用改成 true
+const DRAMA_MEMBER_ENABLED = false;
+onMounted(() => { if (DRAMA_MEMBER_ENABLED) loadMemberPlan(); });
 /**
  * 首月折扣：套餐里有首期折扣价（TODO 字段名等后端定，先按 first_price / discount_price / first_month_price 读）
  * 且低于正常价时，显示「首月 X 折，次月起 xx/月」；没有就不显示第二行。

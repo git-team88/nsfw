@@ -118,14 +118,12 @@
               :class="{ active: topTab === 'favorites' && viewMode === 'posts' }"
               @click="showFavorites()"
             >{{ t('userHome.contentType.myFavorites') }}</div>
-            <!-- 观看历史先隐藏（接口还没出），要放出来把这段注释去掉
             <div
               v-if="isSelf"
               class="main-tab"
               :class="{ active: topTab === 'history' && viewMode === 'posts' }"
               @click="showFavorites('history')"
             >{{ t('userHome.contentType.watchHistory') }}</div>
-            -->
           </div>
           <div class="stats-nums">
             <div
@@ -170,7 +168,8 @@
             :class="{ active: favoriteContentType === type.id }"
             @click="setFavoriteContentType(type.id)"
           >
-            {{ type.label }} ({{ type.count }})
+            <!-- 观看历史接口不返回分类型数量，子 tab 不显示括号里的数字 -->
+            {{ type.label }}<template v-if="type.count !== undefined"> ({{ type.count }})</template>
           </div>
         </div>
       </div>
@@ -213,12 +212,39 @@
               <div class="loading-text">{{ t("userHome.loading") }}</div>
             </div>
 
+            <!-- 观看历史：接口按天分组返回，这里每天一堆（日期标题 + 作品网格，不吸顶） -->
+            <div class="history-groups" v-else-if="activeContentType === 'history' && historyGroups.length > 0">
+              <section class="history-group" v-for="g in historyGroups" :key="g.date">
+                <div class="history-date">{{ g.label }}</div>
+                <div class="history-grid">
+                  <a
+                    class="history-card"
+                    v-for="(h, idx) in g.list"
+                    :key="h.id"
+                    :href="`/detail/${h.post_id}`"
+                    :style="{ animationDelay: `${Math.min(idx * 35, 300)}ms` }"
+                    @click.prevent="goHistoryItem(h)"
+                  >
+                    <div class="history-cover">
+                      <img :src="processImageUrl(h.cover) || defaultCover" :alt="h.book_name || h.post_name || ''" />
+                    </div>
+                    <div class="history-info">
+                      <div class="history-title">{{ h.book_name || h.post_name }}</div>
+                      <!-- 作者昵称：点了去作者主页（接口的 user_id / nickname 是作品作者） -->
+                      <a v-if="h.nickname && historyAuthorId(h)" class="history-author link" :href="`/user-home/${historyAuthorId(h)}`" @click.prevent.stop="router.push(`/user-home/${historyAuthorId(h)}`)">{{ h.nickname }}</a>
+                      <div v-else-if="h.nickname" class="history-author">{{ h.nickname }}</div>
+                    </div>
+                  </a>
+                </div>
+              </section>
+            </div>
+
             <!-- Collection grid -->
             <div
               class="collections-grid"
               :class="{ masonry: isMasonryList }"
               ref="collectionsGridRef"
-              v-else-if="collections && collections.length > 0 && userInfo.is_blacked != 1"
+              v-else-if="activeContentType !== 'history' && collections && collections.length > 0 && userInfo.is_blacked != 1"
             >
               <div
                 class="collection-card"
@@ -310,10 +336,10 @@
               </div>
             </div>
 
-            <EmptyState v-else-if="collectionsInitialized && collections.length == 0 && userInfo.is_blacked != 1" />
+            <EmptyState v-else-if="collectionsInitialized && (activeContentType === 'history' ? historyGroups.length == 0 : collections.length == 0) && userInfo.is_blacked != 1" />
 
             <!-- Load more indicator -->
-            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && collections.length > 0 && (isListKind(activeContentType) ? hasMoreLikedBooks : hasMoreCollections)">
+            <div class="load-more" ref="loadMoreRef" v-if="collectionsInitialized && (activeContentType === 'history' ? historyGroups.length > 0 : collections.length > 0) && (isListKind(activeContentType) ? hasMoreLikedBooks : hasMoreCollections)">
               <div v-if="collectionsLoading" class="loading-spinner small"></div>
               <span v-else>{{ t("userHome.loadMore") }}</span>
             </div>
@@ -731,7 +757,15 @@ const isListKind = (v: unknown): v is ListKind => v === 'favorites' || v === 'hi
 function listKindFromQuery(): ListKind | null {
   if (String(route.query.fav ?? '') === '1') return 'favorites';
   if (String(route.query.his ?? '') === '1') return 'history';
+  // 看自己的主页且地址栏没指定 type / tab：默认落到「观看历史」；看别人的主页默认「作品」
+  if (isSelfRouteId() && !route.query.type && !route.query.tab) return 'history';
   return null;
+}
+/** 地址栏里的 id 是不是登录用户自己（同步判断，不用等用户信息接口） */
+function isSelfRouteId(): boolean {
+  const localUid = localStorage.getItem('uid');
+  const routeId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+  return !!localUid && !!routeId && String(localUid) === String(routeId);
 }
 function isFavoritesQuery(): boolean {
   return listKindFromQuery() !== null;
@@ -805,26 +839,18 @@ function subTypeLabels(): Record<number, string> {
     2: t('userHome.contentType.novel'),
   };
 }
-// 观看历史的列表接口（getHistoryBookList / getHistoryPostList）和数量分组后端还没出，
-// 先用收藏的接口和收藏的数量顶着；接口出了把这个改成 false 即可，页面逻辑不用再动
-const HISTORY_USE_FAVORITES_API = true;
+// 观看历史走埋点服务的 track/getReadHistory（按天分组，见 fetchReadHistory）；这个开关只在接口不可用时临时切回收藏接口
+const HISTORY_USE_FAVORITES_API = false;
 
 /**
  * 观看历史的类型子 tab。数量优先取博主信息里的 history_book_group / history_post_group（结构同 fav_*_group），
  * 没有就用列表接口返回的 total；临时用收藏接口期间直接显示收藏的数量
  */
-const historyContentTypes = computed(() => {
+/** 观看历史的类型子 tab：接口不返回各类型数量，只给名称（count 留空就不显示括号数字） */
+const historyContentTypes = computed<{ id: number; label: string; count?: number }[]>(() => {
   if (HISTORY_USE_FAVORITES_API) return favoriteContentTypes.value;
-  const getCountByType = (type: number) => {
-    const group = type === 4 || type === 5
-      ? ((userInfo.value as any).history_post_group || [])
-      : ((userInfo.value as any).history_book_group || []);
-    const item = group.find((item: BooksGroupItem) => item.type === String(type));
-    const fromGroup = item ? parseInt(item.num) || 0 : 0;
-    return fromGroup || historyListTotals.value[type] || 0;
-  };
   const labels = subTypeLabels();
-  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id], count: getCountByType(id) }));
+  return FAVORITE_TYPES.map((id) => ({ id, label: labels[id] }));
 });
 
 const favoriteContentTypes = computed(() => {
@@ -1095,6 +1121,87 @@ async function fetchCollections(reset = false) {
 
 const likedBooksPage = ref(1);
 const hasMoreLikedBooks = ref(true);
+
+// —— 观看历史（track/getReadHistory，按天分组）——
+interface HistoryItem {
+  id: string;
+  type: string;
+  cover: string;
+  book_id: string;
+  book_name: string;
+  post_id: string;
+  post_name: string;
+  chapter_index: string;
+  read_timestamp: string;
+  /** 作者昵称 */
+  nickname?: string;
+  /** 作者 id（接口的 user_id 就是作品作者；兼容以后可能单独给的 author_id） */
+  user_id?: string | number;
+  author_id?: string | number;
+}
+/** 历史记录里的作者 id */
+function historyAuthorId(h: HistoryItem): string {
+  const id = h.author_id ?? h.user_id;
+  return id === undefined || id === null ? '' : String(id);
+}
+interface HistoryGroup { date: string; label: string; list: HistoryItem[] }
+const HISTORY_PAGE_SIZE = 20;
+const historyGroups = ref<HistoryGroup[]>([]);
+/** 日期标题：今天 / 昨天 / 其它按接口给的 YYYY-MM-DD 显示成 YYYY/MM/DD */
+function historyDateLabel(date: string): string {
+  const d = new Date(String(date).replace(/-/g, '/'));
+  if (!Number.isFinite(d.getTime())) return date;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((today.getTime() - new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86400000);
+  if (diffDays === 0) return t('userHome.history.today');
+  if (diffDays === 1) return t('userHome.history.yesterday');
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+}
+/** 点历史记录：回到看过的那一集 */
+function goHistoryItem(h: HistoryItem) {
+  if (!h.post_id) return;
+  router.push({ path: `/detail/${h.post_id}`, query: h.book_id ? { book_id: h.book_id } : {} });
+}
+/**
+ * 拉一页观看历史，按日期并进 historyGroups（跨页同一天的记录并到同一组，再按日期倒序）。
+ * 总数 allnums 记到 historyListTotals 给子 tab 显示数字。
+ */
+async function fetchReadHistory(reset: boolean, requestId: number) {
+  const requestType = favoriteContentType.value;
+  const response = (await api.getReadHistory(likedBooksPage.value, HISTORY_PAGE_SIZE, requestType)) as any;
+  if (requestId !== likedBooksRequestId) return;
+  if (response.code == 0 || response.code == 200) {
+    const groups = Array.isArray(response.data?.data) ? response.data.data : [];
+    const total = parseInt(response.data?.allnums ?? response.data?.count);
+    if (!isNaN(total)) historyListTotals.value[requestType] = total;
+    else if (likedBooksPage.value === 1 && groups.length === 0) historyListTotals.value[requestType] = 0;
+
+    const merged: HistoryGroup[] = reset ? [] : historyGroups.value.map(g => ({ ...g, list: [...g.list] }));
+    let count = 0;
+    for (const g of groups) {
+      const date = String(g.date || '');
+      const list: HistoryItem[] = Array.isArray(g.list) ? g.list : [];
+      count += list.length;
+      const exist = merged.find(x => x.date === date);
+      if (exist) {
+        const seen = new Set(exist.list.map(x => x.id));
+        exist.list.push(...list.filter(x => !seen.has(x.id)));
+      } else {
+        merged.push({ date, label: historyDateLabel(date), list });
+      }
+    }
+    merged.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    historyGroups.value = merged;
+    // 接口的 count 是这一页的条数；不足一页就没有下一页
+    const pageCount = parseInt(response.data?.count);
+    if ((isNaN(pageCount) ? count : pageCount) < HISTORY_PAGE_SIZE) hasMoreLikedBooks.value = false;
+    else likedBooksPage.value++;
+  }
+  collectionsInitialized.value = true;
+  collectionsLoading.value = false;
+  loading.value = false;
+}
+
 // 快速切换收藏类型时，丢弃前一个类型还没回来的请求结果
 async function fetchLikedBooks(reset = false) {
   if (collectionsLoading.value && !reset) return;
@@ -1113,6 +1220,13 @@ async function fetchLikedBooks(reset = false) {
       currentCollectionPage.value = 1;
     }
     collectionsLoading.value = true;
+
+    // 观看历史：按天分组的独立接口和独立渲染（historyGroups），不进 collections
+    if (activeContentType.value === 'history' && !HISTORY_USE_FAVORITES_API) {
+      if (reset) historyGroups.value = [];
+      await fetchReadHistory(reset, requestId);
+      return;
+    }
 
     const requestType = favoriteContentType.value;
     // 收藏 / 观看历史各一套接口，结构一样（历史接口没出之前先用收藏的）
@@ -4831,5 +4945,95 @@ async function unpinCollection(collection: any) {
   width: 100%;
   height: 100%;
   line-height: 0;
+}
+
+// ================= 观看历史（按天分堆：日期标题 + 作品网格） =================
+.collections-container .history-groups {
+  .history-group + .history-group {
+    margin-top: 28px;
+  }
+  .history-date {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f5f5f5;
+  }
+  // PC 一行四张；窄屏三张
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .history-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: #1a1a1a;
+    border: 1px solid #2c2c2c;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: none;
+    transition: border-color 0.15s;
+
+    &:hover {
+      border-color: #ff4f9a;
+      .history-cover img { transform: scale(1.06); }
+    }
+  }
+  .history-cover {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #111111;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+    }
+  }
+  .history-info {
+    padding: 10px 12px 12px;
+  }
+  .history-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f5f5f5;
+    line-height: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+  // 作者昵称：一行，超出省略
+  .history-author {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #bbb;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    &.link {
+      display: block;
+      text-decoration: none;
+      cursor: pointer;
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+@media (max-width: 768px) {
+  .collections-container .history-groups {
+    .history-group + .history-group { margin-top: 20px; }
+    .history-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .history-info { padding: 8px; }
+    .history-title { font-size: 13px; }
+  }
 }
 </style>

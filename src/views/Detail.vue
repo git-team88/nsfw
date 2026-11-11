@@ -3934,9 +3934,11 @@ const hasDramaMember = ref(false);
 /** 会员接口回来了（没登录直接算回来了）；角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
 const dramaMemberReady = ref(false);
 let dramaMemberLoaded = false;
+// 漫剧会员功能本站不启用：不请求会员状态，hasDramaMember 恒为 false；要启用改成 true
+const DRAMA_MEMBER_ENABLED = false;
 async function loadDramaMember() {
   if (dramaMemberLoaded) return;
-  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
+  if (!DRAMA_MEMBER_ENABLED || !localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
   dramaMemberLoaded = true;
   try {
     hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());

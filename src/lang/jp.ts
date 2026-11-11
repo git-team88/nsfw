@@ -2597,6 +2597,10 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     }
   },
   userHome: {
+    history: {
+      today: "今日",
+      yesterday: "昨日",
+    },
     verified: "本人確認済み",
     posts: "作品",
     following: "フォロー中",

@@ -2357,6 +2357,10 @@ export default {
     }
   },
   userHome: {
+    history: {
+      today: "วันนี้",
+      yesterday: "เมื่อวาน",
+    },
     verified: "ยืนยันตัวตนแล้ว",
     posts: "ผลงาน",
     following: "ติดตาม",

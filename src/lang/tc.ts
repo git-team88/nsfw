@@ -2876,6 +2876,10 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     }
   },
   userHome: {
+    history: {
+      today: "今天",
+      yesterday: "昨天",
+    },
     verified: "已實名",
     posts: "作品",
     following: "關注",

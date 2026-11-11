@@ -22,7 +22,7 @@
               <img :src="selectedId === planKey(plan) ? selectActive : select" alt="" />
               <span>{{ planPriceText(plan, t('aiRecharge.unit')) }}/{{ t('submit.perSeries') }}</span>
             </div>
-            <div class="perm-option" :class="{ selected: selectedId === MEMBER_ONLY }" @click="selectedId = MEMBER_ONLY">
+            <div v-if="MEMBER_ONLY_OPTION_ENABLED" class="perm-option" :class="{ selected: selectedId === MEMBER_ONLY }" @click="selectedId = MEMBER_ONLY">
               <img :src="selectedId === MEMBER_ONLY ? selectActive : select" alt="" />
               <span>{{ t('submit.memberOnlyNoBuy') }}</span>
             </div>
@@ -68,6 +68,8 @@ const emit = defineEmits<{
 const OFF = 'off';
 /** 仅会员可见（不可整部购买）：不设单部价格，合集标成漫剧会员可看 */
 const MEMBER_ONLY = MEMBER_ONLY_PLAN_ID;
+// 「仅会员可见」选项：本站没有漫剧会员功能，先不给选（已设成 -1 的合集回显时退回第一档）；要启用改成 true
+const MEMBER_ONLY_OPTION_ENABLED = false;
 const plans = ref<BookRechargePlan[]>([]);
 const selectedId = ref<string>(OFF);
 const saving = ref(false);
@@ -87,7 +89,7 @@ function syncSelected() {
       ? plans.value.find(pl => String(pl.price) === String(cur))
       : undefined);
   // plan_id = -1 就是「仅会员可见」
-  selectedId.value = hit ? planKey(hit) : isMemberOnlyPlanId(props.currentPlanId) ? MEMBER_ONLY : OFF;
+  selectedId.value = hit ? planKey(hit) : isMemberOnlyPlanId(props.currentPlanId) && MEMBER_ONLY_OPTION_ENABLED ? MEMBER_ONLY : OFF;
 }
 
 async function loadPlans() {

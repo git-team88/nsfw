@@ -1027,10 +1027,12 @@ function getPermClass(accessRights?: string): string {
 const hasDramaMember = ref(false);
 /** 会员接口回来了（没登录直接算回来了）；漫剧章节的角标等它回来再渲染，免得先闪「待解锁」再变「已购买」 */
 const dramaMemberReady = ref(false);
+// 漫剧会员功能本站不启用：不请求会员状态，hasDramaMember 恒为 false；要启用改成 true
+const DRAMA_MEMBER_ENABLED = false;
 async function loadDramaMember() {
   hasDramaMember.value = false;
   dramaMemberReady.value = false;
-  if (!localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
+  if (!DRAMA_MEMBER_ENABLED || !localStorage.getItem('token')) { dramaMemberReady.value = true; return; }
   try {
     hasDramaMember.value = !!pickActiveDramaMemberSub(await fetchMyDramaMemberSubs());
   } catch (e) {

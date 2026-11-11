@@ -2357,6 +2357,10 @@ export default {
     }
   },
   userHome: {
+    history: {
+      today: "오늘",
+      yesterday: "어제",
+    },
     verified: "실명 인증 완료",
     posts: "작품",
     following: "팔로우",

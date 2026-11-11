@@ -44,7 +44,8 @@ const items = [
   { key: "account", label: "user.sidebar.account", path: "/user-account" },
   { key: "profile", label: "user.sidebar.profile", path: "/user-profile" },
   { key: "subscription", label: "user.sidebar.subscription", path: "/user-subscription" },
-  { key: "drama-member", label: "user.sidebar.dramaMember", path: "/user-drama-member" },
+  // 漫剧会员功能本站不启用（2026-11-11 下线）：菜单入口去掉，页面 / 路由保留
+  // { key: "drama-member", label: "user.sidebar.dramaMember", path: "/user-drama-member" },
   { key: "inviteRevenue", label: "user.sidebar.inviteRevenue", path: "/user-invite" },
   { key: "revenue", label: "user.sidebar.revenue", path: "/user-revenue" },
   { key: "interactive", label: "user.sidebar.interactive", path: "/user-interactive" },

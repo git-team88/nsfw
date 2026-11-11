@@ -1006,6 +1006,12 @@ export default {
       data: data,
       method: "POST",
     }),
+  // 观看历史（埋点服务按天分组返回）：data.data = [{ date, list: [{ id, type, cover, book_id, book_name, post_id, post_name, chapter_index, read_timestamp }] }]，总数 allnums
+  getReadHistory: (page: number, limit: number, type?: number | string) =>
+    axios.request({
+      url: "track/getReadHistory?page=" + page + "&limit=" + limit + (type !== undefined && type !== null && String(type) !== '' && String(type) !== '0' ? "&type=" + type : ''),
+      method: "GET",
+    }),
   recordHistory: (data: any) =>
     axios.request({
       url: "post/writeHistory",

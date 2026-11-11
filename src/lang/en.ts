@@ -2907,6 +2907,10 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   userHome: {
+    history: {
+      today: "Today",
+      yesterday: "Yesterday",
+    },
     verified: "Verified",
     posts: "Posts",
     following: "Following",

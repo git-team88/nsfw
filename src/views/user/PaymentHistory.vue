@@ -19,6 +19,7 @@
               >
                 {{ t("collection.tabUnlocked") }}
               </div>
+              <!-- 漫剧会员功能本站不启用：漫剧订阅 tab 去掉（列表代码保留）
               <div
                 class="tab-item"
                 :class="{ active: activeSubTab == 'drama-member' }"
@@ -26,6 +27,7 @@
               >
                 {{ t("user.sidebar.dramaMember") }}
               </div>
+              -->
               <div
                 class="tab-item"
                 :class="{ active: activeSubTab == 'subscribe' }"
@@ -981,11 +983,6 @@ onMounted(() => {
     fetchProcessingData();
   } else if (type == '3') {
     activeSubTab.value = 'topup';
-    page.value = 1;
-    fetchProcessingData();
-  } else if (route.query.tab === 'drama-member') {
-    // 漫剧订阅页点「管理」跳过来，直接锚到漫剧订阅 tab
-    activeSubTab.value = 'drama-member';
     page.value = 1;
     fetchProcessingData();
   } else if (showDramaUnlockTab && (type == '4' || route.query.tab === 'unlocked')) {
