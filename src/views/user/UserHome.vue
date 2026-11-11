@@ -1512,11 +1512,14 @@ function setSeoMeta() {
   const site = siteName();
   const community = t('seo.parts.community');
   const hasWorks = !!author && seoWorksCount.value > 0;
-  const pageTitle = hasWorks
-    ? safeJoin([author, t('seo.userHome.creatorRole'), fillSeo(t('seo.userHome.worksCount'))], '｜')
-    : community
-      ? safeJoin([author, community, site], TITLE_SEP)
-      : author ? fillSeo(t('seo.userHome.titleFallback')) : site;
+  // 用户信息还没回来（没有昵称）时只显示站点名，不先拼「用户社区 | 站点」再换成作者标题，免得标签页闪一下
+  const pageTitle = !author
+    ? site
+    : hasWorks
+      ? safeJoin([author, t('seo.userHome.creatorRole'), fillSeo(t('seo.userHome.worksCount'))], '｜')
+      : community
+        ? safeJoin([author, community, site], TITLE_SEP)
+        : fillSeo(t('seo.userHome.titleFallback'));
   setMetaKeywords(author ? [author, t('seo.userHome.creatorRole'), community, site] : '');
   // description：接口的简介（截 160 字）；没有就用固定文案，不自己拼
   const pageDescription = clamp(userInfo.value?.description, 160)
