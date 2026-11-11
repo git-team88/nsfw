@@ -97,8 +97,6 @@
               <img src="@/assets/images/detail/hide.png" v-else />
               <span>{{ isDescExpanded ? t("userHome.showLess") : t("userHome.showMore") }}</span>
             </div>
-            <!-- 简介不足 80 字时补一段作者 / 作品数 / 粉丝的说明（SEO：创作者页要有足够正文），对所有访客可见 -->
-            <p class="seo-bio" v-if="seoBioText">{{ seoBioText }}</p>
           </div>
         </div>
       </div>
@@ -1501,15 +1499,6 @@ function fillSeo(tpl: string, extra: Record<string, string | number> = {}): stri
   return Object.entries(vars).reduce((acc, [k, v]) => acc.replace(new RegExp(`\\[\\[${k}\\]\\]`, 'g'), String(v)), tpl);
 }
 
-/**
- * 简介补充描述：原简介不足 80 字时，按模板补一段「作者 / 作品数 / 粉丝」说明；够长就不补。
- * 用户信息没回来、或是空壳页（没作品）不补。
- */
-const seoBioText = computed(() => {
-  if (!userInfo.value?.nickname || seoWorksCount.value <= 0) return '';
-  if (clamp(userInfo.value?.description, 1000).length >= 80) return '';
-  return fillSeo(t('seo.userHome.bioSupplement'));
-});
 
 /**
  * 标题：有作品 →「作者｜BL短剧作者｜N部作品」；没作品 / 昵称没回来 → 旧的「作者 | 用户社区 | 品牌」兜底。
@@ -1528,8 +1517,8 @@ function setSeoMeta() {
       ? safeJoin([author, community, site], TITLE_SEP)
       : author ? fillSeo(t('seo.userHome.titleFallback')) : site;
   setMetaKeywords(author ? [author, t('seo.userHome.creatorRole'), community, site] : '');
-  // description：简介 + 补充描述拼在一起截 160 字（简介太短时只靠它没信息量）；都没有用固定文案
-  const pageDescription = clamp([clamp(userInfo.value?.description, 110), seoBioText.value].filter(Boolean).join(' '), 160)
+  // description：接口的简介（截 160 字）；没有就用固定文案，不自己拼
+  const pageDescription = clamp(userInfo.value?.description, 160)
     || (author ? fillSeo(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));
   const image = userInfo.value?.avatar || undefined;
   // 走 applySeoMeta 记录原值，离开页面时 restoreSeoMeta() 还原，不把博主简介带到下一个页面
@@ -3076,13 +3065,6 @@ async function unpinCollection(collection: any) {
       position: relative;
       margin-top: 20px;
 
-      // SEO 补充描述（简介不足 80 字时）
-      .seo-bio {
-        margin: 8px 0 0;
-        font-size: 13px;
-        line-height: 20px;
-        color: #7A8699;
-      }
 
       .desc-text {
         font-size: 14px;

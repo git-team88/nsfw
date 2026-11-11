@@ -2869,7 +2869,6 @@ export default {
       title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리 {'|'} FansFans",
       creatorRole: "애니 드라마 작가",
       worksCount: "작품 [[n]]편",
-      bioSupplement: "[[author]]은(는) [[site]]에서 활동하는 애니 드라마 크리에이터로, [[n]]편의 작품을 공개했고 팔로워는 [[fans]]명입니다. 이곳에서 애니 드라마·소설·만화 전 작품을 둘러볼 수 있으며, 팔로우하면 새 작품 알림을 받고 구독으로 유료 회차를 열람할 수 있습니다.",
       keywords: "내 작품, AI 소설, 만화, 애니 드라마, 작품 관리, 창작 관리, FansFans",
       description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요.",
       descriptionFallback: "[[author]]님의 프로필에 오신 것을 환영합니다. [[site]]에서 게시한 작품과 컬렉션을 둘러보고 관심 있는 콘텐츠를 찾아보세요.",
