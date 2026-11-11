@@ -2228,6 +2228,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
       uploading: "アップロード中...",
       uploadInProgress: "アップロード中...",
       reuploadBtn: "再アップロード",
+      transcodingLocked: "動画を処理中のため、今は変更できません",
       restoreOriginalBtn: "元の動画に戻す",
       playBtn: "再生",
       format: "形式",

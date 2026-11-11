@@ -1,5 +1,14 @@
 import api from "@/api/index";
 
+/**
+ * 视频水印是否已加完：后端加完水印会把转码产物地址挂上 ?v=marked（video_url_trans）。
+ * 只看这个参数——文件名里的 _trans_transcode_ 只代表转码完成，水印可能还没加；空值 / 没有标记都算没加完。
+ */
+export function isVideoWatermarked(url?: string | null): boolean {
+  if (!url) return false;
+  return /[?&]v=marked(&|#|$)/.test(String(url));
+}
+
 /** 从 post/addPost* 的返回里取新作品 id（返回可能是数字 / 字符串 / {post_id} / {id}） */
 export function pickNewPostId(res: any): string | number | undefined {
   const data = res?.data;

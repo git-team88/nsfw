@@ -2406,6 +2406,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
       uploading: "Uploading...",
       uploadInProgress: "Uploading in progress...",
       reuploadBtn: "Re-upload",
+      transcodingLocked: "The video is still being processed, please try again later",
       restoreOriginalBtn: "Keep original video",
       playBtn: "Play",
       format: "Format",

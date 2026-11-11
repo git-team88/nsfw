@@ -886,6 +886,12 @@
     .reupload-video-box {
       position: relative;
 
+      // 转码 / 水印未完成：只是置灰，仍然可点（点了弹「转码处理中」提示，文件选择框不渲染）
+      &.disabled .action-link {
+        color: #B5BCC9;
+        cursor: pointer;
+      }
+
       .reupload-file {
         position: absolute;
         top: 0;

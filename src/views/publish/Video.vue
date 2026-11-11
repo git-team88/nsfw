@@ -236,12 +236,14 @@
                     t("submit.video.playBtn")
                   }}</span>
 
-                  <div class="reupload-video-box" @click="reuploadVideo">
+                  <!-- 编辑作品：转码 / 水印还没处理完（video_url_trans 没有 v=marked）时「重新上传」置灰，点了只提示 -->
+                  <div class="reupload-video-box" :class="{ disabled: reuploadLocked }" @click="reuploadVideo">
                     <span class="action-link reupload">{{
                       t("submit.video.reuploadBtn")
                     }}</span>
 
                     <input
+                      v-if="!reuploadLocked"
                       ref="reuploadInputRef"
                       type="file"
               accept="video/mp4,video/quicktime"
@@ -907,6 +909,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { warmSeo } from '@/utils/seoMeta';
 import { toast } from "@/util/toast";
+import { isVideoWatermarked } from "@/util/watermark";
 import {
   fetchBookRechargePlans,
   planPriceText,
@@ -3155,7 +3158,17 @@ function pickVideo() {
   videoInputRef.value?.click();
 }
 
+/**
+ * 编辑已发布的视频时，服务端的转码 + 加水印没完成前不允许换视频：
+ * 作品详情的 video_url_trans 为空、或没有加完水印的标记（?v=marked）都算没完成。新发布不受限。
+ */
+const videoUrlTrans = ref('');
+const reuploadLocked = computed(() => isEditing.value && !!videoUrl.value && !isVideoWatermarked(videoUrlTrans.value));
 function reuploadVideo() {
+  if (reuploadLocked.value) {
+    toast(t('submit.video.transcodingLocked'));
+    return;
+  }
   reuploadInputRef.value?.click();
 }
 
@@ -3407,6 +3420,8 @@ async function getPostDetails() {
       form.value.content = postData.is_nsfw == '1' ? "yes" : "no";
       coverPreview.value = postData.cover || "";
 
+      // 转码 + 加水印后的地址（带 ?v=marked 表示水印已加完），「重新上传」按它判断能不能换视频
+      videoUrlTrans.value = postData.video_url_trans || '';
       if (postData.video_url) {
         videoUrl.value = postData.video_url;
         fillVideoDuration(videoUrl.value, postData.duration);

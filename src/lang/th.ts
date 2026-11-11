@@ -1991,6 +1991,7 @@ export default {
       uploading: "กำลังอัปโหลด...",
       uploadInProgress: "กำลังอัปโหลด...",
       reuploadBtn: "อัปโหลดใหม่",
+      transcodingLocked: "ระบบกำลังประมวลผลวิดีโอ ยังไม่สามารถแก้ไขได้",
       restoreOriginalBtn: "ใช้วิดีโอเดิม",
       playBtn: "เล่น",
       format: "รูปแบบ",

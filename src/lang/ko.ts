@@ -1991,6 +1991,7 @@ export default {
       uploading: "업로드 중...",
       uploadInProgress: "업로드 중...",
       reuploadBtn: "다시 업로드",
+      transcodingLocked: "영상 처리 중입니다. 잠시 후 다시 시도해 주세요",
       restoreOriginalBtn: "원래 영상으로 되돌리기",
       playBtn: "재생",
       format: "형식",
