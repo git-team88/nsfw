@@ -2884,6 +2884,7 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   userHome: {
+    defaultBio: "欢迎来到我的个人主页~",
     history: {
       today: "今天",
       yesterday: "昨天",

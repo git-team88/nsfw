@@ -85,7 +85,8 @@
 
           <div class="desc-box">
             <div class="desc-text" :class="{ collapsed: !isDescExpanded }">
-              {{ userInfo.description }}
+              <!-- 简介没填时显示默认的一句「欢迎来到我的个人主页~」；用户信息还没回来（昵称为空）时不显示，免得闪 -->
+              {{ userInfo.description || (userInfo.nickname ? t('userHome.defaultBio') : '') }}
             </div>
             <div
               class="expand-btn"

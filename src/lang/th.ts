@@ -2358,6 +2358,7 @@ export default {
     }
   },
   userHome: {
+    defaultBio: "ยินดีต้อนรับสู่หน้าโปรไฟล์ของฉัน~",
     history: {
       today: "วันนี้",
       yesterday: "เมื่อวาน",

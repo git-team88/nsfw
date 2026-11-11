@@ -2358,6 +2358,7 @@ export default {
     }
   },
   userHome: {
+    defaultBio: "내 프로필에 오신 것을 환영합니다~",
     history: {
       today: "오늘",
       yesterday: "어제",

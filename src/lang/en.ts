@@ -2908,6 +2908,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   userHome: {
+    defaultBio: "Welcome to my profile~",
     history: {
       today: "Today",
       yesterday: "Yesterday",

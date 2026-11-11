@@ -2877,6 +2877,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     }
   },
   userHome: {
+    defaultBio: "歡迎來到我的個人主頁~",
     history: {
       today: "今天",
       yesterday: "昨天",

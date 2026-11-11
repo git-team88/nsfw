@@ -2598,6 +2598,7 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     }
   },
   userHome: {
+    defaultBio: "マイページへようこそ~",
     history: {
       today: "今日",
       yesterday: "昨日",
