@@ -3397,6 +3397,7 @@ If you have any questions, complaints, comments or suggestions regarding persona
     userHome: {
       title: "My Works — Manage Your AI Novels, Comics & Anime Drama {'|'} FansFans",
       creatorRole: "Anime Drama Creator",
+      roleByType: { "1": "Comic Creator", "2": "Novel Creator", "3": "Anime Drama Creator", "4": "Image Creator", "5": "Video Creator" },
       worksCount: "[[n]] works",
       keywords: "my works, AI novels, comics, anime drama, content management, creator dashboard",
       description: "Manage your AI-generated novels, comics, and anime dramas on FansFans. Track fans, subscriptions, and engagement data.",

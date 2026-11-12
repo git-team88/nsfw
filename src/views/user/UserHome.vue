@@ -1493,6 +1493,21 @@ function showToast(msg: string, icon = successIcon) {
 /** 公开作品数（接口 total_posts）；0 = 空壳页 */
 /** 公开作品数：接口的 total_posts（全部作品数；books_group 是按合集统计的，口径不同，不拿来兜底） */
 const seoWorksCount = computed(() => Number(userInfo.value?.posts || userInfo.value?.total_posts || 0) || 0);
+/**
+ * 标题里的创作者类型：按各类型「作品数」total_posts_N 取最多的那类（1 漫画 / 2 小说 / 3 漫剧 / 4 图片 / 5 视频；
+ * books_group 是合集数，一个合集下有多部作品，口径不同，不用它），文案走 seo.userHome.roleByType.N；
+ * 并列按 漫剧 → 视频 → 图片 → 漫画 → 小说 的顺序取前者；一类都没有退回通用的 creatorRole
+ */
+const seoCreatorRole = computed(() => {
+  const countOf = (type: number) => Number((userInfo.value as any)?.[`total_posts_${type}`]) || 0;
+  let best = 0;
+  let bestCount = 0;
+  for (const type of [3, 5, 4, 1, 2]) {
+    const n = countOf(type);
+    if (n > bestCount) { best = type; bestCount = n; }
+  }
+  return best ? t(`seo.userHome.roleByType.${best}`) : t('seo.userHome.creatorRole');
+});
 
 /** 把文案模板里的 [[author]] / [[site]] / [[n]] / [[fans]] 填进去（seo.* 文案用 [[ ]] 占位，避开 i18n 的 {} 转义） */
 function fillSeo(tpl: string, extra: Record<string, string | number> = {}): string {
@@ -1516,11 +1531,12 @@ function setSeoMeta() {
   const pageTitle = !author
     ? site
     : hasWorks
-      ? safeJoin([author, t('seo.userHome.creatorRole'), fillSeo(t('seo.userHome.worksCount'))], '｜')
+      // 「作者｜BL漫画｜N部作品｜站点」：类型按作品最多的那类；总数 ≤ 2 不显示「N部作品」
+      ? safeJoin([author, seoCreatorRole.value, seoWorksCount.value > 2 ? fillSeo(t('seo.userHome.worksCount')) : '', site], '｜')
       : community
         ? safeJoin([author, community, site], TITLE_SEP)
         : fillSeo(t('seo.userHome.titleFallback'));
-  setMetaKeywords(author ? [author, t('seo.userHome.creatorRole'), community, site] : '');
+  setMetaKeywords(author ? [author, seoCreatorRole.value, community, site] : '');
   // description：接口的简介（截 160 字）；没有就用固定文案，不自己拼
   const pageDescription = clamp(userInfo.value?.description, 160)
     || (author ? fillSeo(t('seo.userHome.descriptionFallback')) : t('seo.userHome.description'));

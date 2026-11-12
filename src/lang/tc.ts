@@ -3490,6 +3490,7 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     userHome: {
       title: "我的作品 - 管理我的 AI 小說、漫畫、漫劇 {'|'} FansFans",
       creatorRole: "漫劇創作者",
+      roleByType: { "1": "漫畫創作者", "2": "小說創作者", "3": "漫劇創作者", "4": "圖片創作者", "5": "影片創作者" },
       worksCount: "[[n]]部作品",
       keywords: "我的作品,AI小說,漫畫,漫劇,作品管理,創作管理,FansFans",
       description: "在 FansFans中管理你的 AI 小說、漫畫、漫劇作品，追蹤粉絲、收藏與互動數據。",

@@ -2869,6 +2869,7 @@ export default {
     userHome: {
       title: "내 작품 - 내 AI 소설・만화・애니 드라마 관리 {'|'} FansFans",
       creatorRole: "애니 드라마 작가",
+      roleByType: { "1": "만화 작가", "2": "소설 작가", "3": "애니 드라마 작가", "4": "이미지 크리에이터", "5": "영상 크리에이터" },
       worksCount: "작품 [[n]]편",
       keywords: "내 작품, AI 소설, 만화, 애니 드라마, 작품 관리, 창작 관리, FansFans",
       description: "FansFans에서 AI 소설・만화・애니 드라마 작품을 관리하고, 팔로워・즐겨찾기・상호작용 데이터를 추적하세요.",
