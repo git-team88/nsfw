@@ -1472,8 +1472,6 @@ function handlePageChange(page: number) {
 // 真实用户不走这些，还是滚动自动加载。
 const isSeoPrerender = (window as any).__SEO_PRERENDER__ === true;
 const pageHref = (n: number) => (n <= 1 ? route.path : `${route.path}?page=${n}`);
-/** 预渲染时 ?page 的上限：超过直接 404，不去打接口（防爬虫沿 ?page=9999 无限抓） */
-const SEO_MAX_PAGE = 500;
 const nextPageHref = computed(() => pageHref(currentPage.value + 1));
 
 /** 目录页结构化数据（T10）：当前列表前 20 条输出 ItemList；离开页面时删掉 */
@@ -1649,9 +1647,9 @@ onMounted(async () => {
   }
 
   // 预渲染时带 ?page=N 打开（爬虫沿分页链接进来）：从第 N 页开始
-  // page 不是正整数、或超过上限 → 直接 404（seo-server 对爬虫回真实 404），不打接口
+  // page 不是正整数 → 直接 404（seo-server 对爬虫回真实 404），不打接口；是不是超过最后一页由接口数据说了算（见下面）
   const rawPage = isSeoPrerender && route.query.page !== undefined ? String(route.query.page) : '';
-  if (rawPage && (!/^[1-9]\d*$/.test(rawPage) || Number(rawPage) > SEO_MAX_PAGE)) {
+  if (rawPage && !/^[1-9]\d*$/.test(rawPage)) {
     goNotFoundIfMissing(router, route, null);
     return;
   }
@@ -1659,7 +1657,7 @@ onMounted(async () => {
   if (startPage > 1) currentPage.value = startPage;
   // 不 await：后面的 banner / 监听 / 首次注册检查不等列表接口；分页 link 等列表回来再写
   loadContent(currentPage.value).then(() => {
-    // 预渲染翻到最后一页之后（?page=N 没有数据）：按 404 处理，不给爬虫「200 + 空列表 + canonical 自指」的软 404 无限页
+    // 预渲染翻到最后一页之后（接口按 ?page=N 取回来没有数据，即 N 超过真实总页数）：按 404 处理，不给爬虫「200 + 空列表」的软 404 无限页
     if (isSeoPrerender && currentPage.value > 1 && allContent.value.length === 0) {
       goNotFoundIfMissing(router, route, null);
       return;
