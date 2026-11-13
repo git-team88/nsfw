@@ -3504,6 +3504,8 @@ c. 安全審慎原則：我們將審慎評估合作方使用數據的目的，�
     }
   },
   collectionDetail: {
+    editLockedVideo: "影片轉碼處理中，請稍後再修改",
+    editLockedImage: "圖片系統處理中，請稍後再修改",
     breadcrumb: {
       home: "首頁"
     },

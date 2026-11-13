@@ -3472,6 +3472,8 @@ support{'@'}fansfans{'.'}aiまでメールを送信するかDiscordコミュニ�
     }
   },
   collectionDetail: {
+    editLockedVideo: "動画を変換処理中です。しばらくしてから編集してください",
+    editLockedImage: "画像を処理中です。しばらくしてから編集してください",
     breadcrumb: {
       home: "ホーム"
     },

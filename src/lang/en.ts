@@ -3411,6 +3411,8 @@ If you have any questions, complaints, comments or suggestions regarding persona
     }
   },
   collectionDetail: {
+    editLockedVideo: "Video is still transcoding, please edit later",
+    editLockedImage: "Images are still processing, please edit later",
     breadcrumb: {
       home: "Home"
     },

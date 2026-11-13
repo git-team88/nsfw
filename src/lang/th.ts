@@ -2883,6 +2883,8 @@ export default {
     }
   },
   collectionDetail: {
+    editLockedVideo: "กำลังแปลงไฟล์วิดีโอ โปรดแก้ไขภายหลัง",
+    editLockedImage: "กำลังประมวลผลรูปภาพ โปรดแก้ไขภายหลัง",
     breadcrumb: {
       home: "หน้าแรก"
     },

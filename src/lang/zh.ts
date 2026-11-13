@@ -3520,6 +3520,8 @@ c. 安全审慎原则：我们将审慎评估合作方使用数据的目的，�
     }
   },
   collectionDetail: {
+    editLockedVideo: "视频转码处理中，请稍后再修改",
+    editLockedImage: "图片系统处理中，请稍后再修改",
     breadcrumb: {
       home: "首页"
     },

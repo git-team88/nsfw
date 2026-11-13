@@ -153,7 +153,8 @@
                   <a class="chapter-title seo-link" :href="chapterHref(chapter)" @click.prevent>{{ chapter.title }}</a>
                 </div>
                 <div class="chapter-right" v-if="isOwn && collection.status != '2'">
-                  <div class="chapter-action" @click.stop="editChapter(chapter)">
+                  <!-- 水印 / 转码没处理完（is_marked = 0）：「修改」置灰但能点，点了只提示 -->
+                  <div class="chapter-action" :class="{ disabled: chapterEditLocked(chapter) }" @click.stop="editChapter(chapter)">
                     <img class="action-icon" src="@/assets/images/user/edit.png" alt="" />
                     <span class="action-text">{{ t('collectionDetail.edit') }}</span>
                   </div>
@@ -250,6 +251,8 @@ interface Chapter {
   accessRights?: '1' | '2' | '3';
   /** 第几集（后端 chapters[].chapter_index），目录点击埋点用 */
   chapter_index?: string;
+  /** 自己的合集才有：水印 / 转码处理完没（后端 is_marked，1 完成 / 0 处理中）；没返回这个字段时不限制 */
+  isMarked?: boolean;
 }
 
 interface CollectionHistory {
@@ -473,7 +476,8 @@ async function fetchCollectionDetail() {
             subtitle: chapter.subtitle,
             status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
             accessRights: (chapter.access_rights != null ? String(chapter.access_rights) : '1') as '1' | '2' | '3',
-            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
+            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined,
+            isMarked: chapter.is_marked === undefined || chapter.is_marked === null ? undefined : String(chapter.is_marked) === '1'
           })),
           history: finalData.history && !Array.isArray(finalData.history) && finalData.history.post_id ? {
             post_id: String(finalData.history.post_id || ''),
@@ -900,7 +904,16 @@ function toggleSubscribe() {
   }
 }
 
+/** 「修改」要不要锁：后端返回了 is_marked 且为 0（处理中）才锁；字段没返回按不锁 */
+function chapterEditLocked(chapter: Chapter | null): boolean {
+  return !!chapter && chapter.isMarked === false;
+}
 function editChapter(chapter: Chapter | null) {
+  if (chapterEditLocked(chapter)) {
+    // 漫剧（视频）提示转码处理中，漫画 / 小说（图片）提示图片处理中
+    toast(t(String(collection.value?.type) === '3' ? 'collectionDetail.editLockedVideo' : 'collectionDetail.editLockedImage'));
+    return;
+  }
   if (chapter && collection.value) {
     const type = collection.value.type;
     let path = '/publish/comic';
@@ -949,7 +962,8 @@ async function refreshChapters(bookIdParam?: typeof route.query.book_id | typeof
             status: chapter.status as 'published' | 'draft' | 'subscribed' | 'private' || 'published',
             // 刷新时也要带上权限，不然作者页面上每章的「订阅 / 付费 / 仅自己可见」标签都没了
             accessRights: (chapter.access_rights != null ? String(chapter.access_rights) : '1') as '1' | '2' | '3',
-            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined
+            chapter_index: chapter.chapter_index != null ? String(chapter.chapter_index) : undefined,
+            isMarked: chapter.is_marked === undefined || chapter.is_marked === null ? undefined : String(chapter.is_marked) === '1'
           }));
           collection.value.latestChapterIndex = finalBookInfo.chapter_count || '';
           collection.value.lastUpdate = finalBookInfo.updated_at || finalBookInfo.latest_post_updated || '';
@@ -1786,6 +1800,11 @@ onBeforeUnmount(() => {
       &:first-child{
         background: #ff4f9a;
         color: #FFFFFF;
+      }
+      // 处理中：原样式降透明度（和原型一致），仍可点（点了提示）
+      &.disabled {
+        opacity: 0.45;
+        &:hover { transform: none; }
       }
 
       &:nth-child(2){

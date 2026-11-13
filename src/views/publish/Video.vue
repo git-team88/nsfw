@@ -1126,8 +1126,22 @@ async function syncCollectionTag() {
   if (!id) return;
   try {
     const res = await api.getSelfCollectionDetail(id) as any;
+    if (res?.code !== 0 && res?.code !== 200) return;
     const info = res?.data?.book_info || res?.data || {};
-    if ((res?.code === 0 || res?.code === 200) && info.tag_id !== undefined && info.tag_id !== null && String(info.tag_id) !== '') collectionTagId.value = info.tag_id;
+    if (!bookTags.value.length) { try { bookTags.value = await loadBookTags(); } catch { /* 拉不到分类就不动 */ } }
+    const raw = info.tag_id;
+    const valid = raw !== undefined && raw !== null && String(raw) !== '' && String(raw) !== '0' && bookTags.value.some(tg => String(tg.tag_id) === String(raw));
+    if (valid) {
+      collectionTagId.value = raw;
+      return;
+    }
+    const first = bookTags.value[0];
+    if (!first) return;
+    collectionTagId.value = first.tag_id;
+    // 合集还没有分类：默认第一个并写回，和创建时「默认第一个」的规则一致
+    if (selectedCollection.value?.id === id) {
+      api.modifyCollection({ is_bl: 1, book_id: id, tag_id: first.tag_id }).catch(() => {});
+    }
   } catch (e) {
     console.error('sync collection tag failed', e);
   }

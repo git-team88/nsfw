@@ -2883,6 +2883,8 @@ export default {
     }
   },
   collectionDetail: {
+    editLockedVideo: "영상 변환 처리 중입니다. 잠시 후 수정해 주세요",
+    editLockedImage: "이미지 처리 중입니다. 잠시 후 수정해 주세요",
     breadcrumb: {
       home: "홈"
     },
