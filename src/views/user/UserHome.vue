@@ -291,7 +291,8 @@
                           </div>
                           <Teleport to="body">
                             <div class="card-dropdown-menu" v-if="activeCardDropdownId === collection.id" :style="cardDropdownStyle">
-                              <div class="card-dropdown-item" @click.stop="goEditPost(collection)">{{ t('userHome.card.edit') }}</div>
+                              <!-- 水印 / 转码没处理完（列表的 is_marked = 0）：「修改」置灰但能点，点了只提示 -->
+                            <div class="card-dropdown-item" :class="{ disabled: postEditLocked(collection) }" @click.stop="goEditPost(collection)">{{ t('userHome.card.edit') }}</div>
                               <div class="card-dropdown-item card-dropdown-item-danger" @click.stop="deletePost(collection)">{{ t('userHome.card.delete') }}</div>
                             </div>
                           </Teleport>
@@ -2664,9 +2665,19 @@ function toggleCardDropdown(id: string | number, event: Event) {
   });
 }
 
+/** 图片 / 视频作品的「修改」要不要锁：列表返回了 is_marked 且不为 1（处理中）才锁；字段没返回按不锁 */
+function postEditLocked(collection: any): boolean {
+  const v = collection?.is_marked;
+  return v !== undefined && v !== null && String(v) !== '' && String(v) !== '1';
+}
 function goEditPost(collection: any) {
   activeCardDropdownId.value = null;
   const type = itemType(collection);
+  if (postEditLocked(collection)) {
+    // 视频提示转码处理中，图片提示图片处理中（文案和合集详情章节列表共用）
+    toast(t(type === 5 ? 'collectionDetail.editLockedVideo' : 'collectionDetail.editLockedImage'));
+    return;
+  }
   if (type === 4) {
     router.push(`/publish/image?post_id=${collection.id}`);
   } else if (type === 5) {
@@ -4925,6 +4936,8 @@ async function unpinCollection(collection: any) {
   .card-dropdown-item {
     padding: 6px 14px;
     font-size: 13px;
+    // 处理中：降透明度，仍可点（点了提示）
+    &.disabled { opacity: 0.45; &:hover { font-weight: inherit; color: inherit; } }
     color: #ddd;
     cursor: pointer;
     text-align: center;
