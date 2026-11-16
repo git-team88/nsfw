@@ -225,10 +225,11 @@
                     @click.prevent="goHistoryItem(h)"
                   >
                     <div class="history-cover">
-                      <img :src="processImageUrl(h.cover) || defaultCover" :alt="h.book_name || h.post_name || ''" />
+                      <img :src="processImageUrl(h.cover) || defaultCover" :alt="h.post_name || h.book_name || ''" />
                     </div>
                     <div class="history-info">
-                      <div class="history-title">{{ h.book_name || h.post_name }}</div>
+                      <!-- 标题显示作品（这一集 / 这篇）的名字，不是合集名；单篇没有合集时两个字段都是作品名 -->
+                      <div class="history-title">{{ h.post_name || h.book_name }}</div>
                       <!-- 作者昵称：点了去作者主页（接口的 user_id / nickname 是作品作者） -->
                       <a v-if="h.nickname && historyAuthorId(h)" class="history-author link" :href="`/user-home/${historyAuthorId(h)}`" @click.prevent.stop="router.push(`/user-home/${historyAuthorId(h)}`)">{{ h.nickname }}</a>
                       <div v-else-if="h.nickname" class="history-author">{{ h.nickname }}</div>
