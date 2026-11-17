@@ -1026,7 +1026,8 @@ import defaultAvatar from "@/assets/images/base/avatar.png";
 import makeIcon from "@/assets/images/base/make.png";
 import videoIcon from "@/assets/images/home/video_icon.png";
 import { trackShare, trackSubscribeToContent } from "@/utils/analytics";
-import { trackChapterView, trackWorkView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow } from "@/utils/maidian";
+import { trackChapterView, trackWorkView, trackHistoryView, trackCatalogChapterClick, contentTypeOf, markEntrySource, workTarget, trackLike, trackUnlike, trackCommentPublish, trackShareEvent, trackFollow, attachVideoPlayTracker } from "@/utils/maidian";
+import type { VideoPlayEndReason } from "@/utils/maidian";
 
 const { t, locale } = useI18n();
 
@@ -1049,6 +1050,24 @@ const isPlaying = ref(false);
 const isVideoEnded = ref(false);
 const isVideoLoading = ref(true);
 const videoRef = ref<HTMLVideoElement | null>(null);
+
+// —— 视频播放埋点（video_play_start / progress / end，接口文档 4.5–4.7）——
+// 挂在 <video> 上；元素因为换作品 / 加载态重建时先按 seek_away 结算旧会话再挂新的，离开页面按 exit / pause_exit 结算
+let detachVideoPlayTracker: ((reason?: VideoPlayEndReason) => void) | null = null;
+/** 这次起播是用户点的还是自动播（tryAutoPlay / 连播）：起播埋点的 play_type */
+let videoPlayTrigger: 'auto' | 'manual' = 'auto';
+watch(videoRef, (el) => {
+  if (detachVideoPlayTracker) { detachVideoPlayTracker('seek_away'); detachVideoPlayTracker = null; }
+  if (!el) return;
+  detachVideoPlayTracker = attachVideoPlayTracker(el, () => ({
+    post_id: detail.value?.id ?? '',
+    // 漫剧（type 3）才有合集；视频（type 5）没有，不传
+    book_id: detail.value?.type == '3' && Number(detail.value?.book_id) > 0 ? detail.value.book_id : undefined,
+    content_type: detail.value?.type == '3' ? 'manju' : 'video',
+    play_scene: isCollectionMode.value && detail.value?.type == '3' ? 'collection' : 'detail',
+    play_type: videoPlayTrigger,
+  }));
+});
 const isLoading = ref(false);
 const loadText = ref(t('userHome.loading'));
 const isVideoBuffering = ref(false);
@@ -4154,6 +4173,7 @@ function tryAutoPlay() {
   const wantSound = volume.value > 0;
   videoRef.value.volume = volume.value;
   videoRef.value.muted = !wantSound;
+  videoPlayTrigger = 'auto';
   const playPromise = videoRef.value.play();
   if (playPromise !== undefined) {
     playPromise.then(() => {
@@ -4870,6 +4890,7 @@ function togglePlay() {
 
   if (videoRef.value.paused) {
     isVideoBuffering.value = true;
+    videoPlayTrigger = 'manual';
 
     videoRef.value.play().then(() => {
       isPlaying.value = true;
@@ -6445,6 +6466,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  // 离开页面：未结算的播放会话按 exit / pause_exit 报 video_play_end
+  if (detachVideoPlayTracker) { detachVideoPlayTracker(); detachVideoPlayTracker = null; }
   document.removeEventListener("click", handleClickOutside);
   document.removeEventListener("keydown", handleKeyDown);
   document.removeEventListener("contextmenu", handleContextMenu);

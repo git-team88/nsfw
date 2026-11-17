@@ -467,3 +467,197 @@ export function trackShareEvent(t: InteractTarget, channel: "copy_link" | "whats
 export function trackFollow(bloggerId: string | number) {
   // track("follow", { target_type: "blogger", target_id: bloggerId });
 }
+
+// ============================================================
+// 视频播放埋点（接口文档 4.5 / 4.6 / 4.7）：video_play_start / video_play_progress / video_play_end
+// 一次播放一个 play_session_id：起播（playing）时开会话并报 start；播放中按时长分档心跳报 progress
+// （≤3 分钟每 1s、3–30 分钟每 5s、>30 分钟每 10s，暂停 / 缓冲不报；暂停、继续、拖动完成各补一条快照）；
+// 结算 end 在：播到结尾（ended，is_complete=true，会话结束）、切后台 / 关页（background，报完立刻 flush）、
+// 换视频 / 换集（seek_away）、离开页面（exit / 暂停中离开 pause_exit）、播放报错（error）。一个会话只有一条 end。
+// 循环播放按文档"重新出画 = 新会话"：视频播完自己从头再放时开新的 play_session_id（play_type=auto），每一轮都有 start / progress / end，
+// 后端按"同一 distinct_id + post_id 紧接着的会话"识别循环。background 之后再播也是新会话（play_type=resume）。
+// played_duration 只算真实播放的秒（拖过去的记进 skipped_duration，暂停 / 缓冲不计）。
+// 字段严格按文档，不多带。
+// ============================================================
+export interface VideoPlayMeta {
+  post_id: string | number;
+  /** 漫剧（type 3）才有合集；视频（type 5）不传 */
+  book_id?: string | number;
+  /** 文档口径：manju（漫剧集）/ video（单个视频） */
+  content_type: "manju" | "video";
+  /** detail 作品详情页 / collection 合集连播 */
+  play_scene: "detail" | "collection" | "feed" | "other";
+  /** 这次起播是用户点的（manual）还是自动播 / 连播（auto） */
+  play_type: "auto" | "manual" | "resume";
+}
+export type VideoPlayEndReason = "ended" | "pause_exit" | "exit" | "seek_away" | "background" | "error";
+
+function playSessionId(): string {
+  const c = typeof crypto !== "undefined" ? (crypto as any) : null;
+  if (c?.randomUUID) return c.randomUUID();
+  return "ps_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 10);
+}
+function round2(n: number): number { return Math.round(n * 100) / 100; }
+/** 心跳间隔：按视频时长分档（文档 4.6） */
+function progressIntervalMs(duration: number): number {
+  if (duration <= 180) return 1000;
+  if (duration <= 1800) return 5000;
+  return 10000;
+}
+
+/** 给 <video> 挂上播放埋点，返回卸载函数（组件卸载时调用，会把未结算的会话报成 exit） */
+export function attachVideoPlayTracker(video: HTMLVideoElement, meta: () => VideoPlayMeta) {
+  let sessionId = "";
+  let sessionPostId = "";
+  let open = false;            // 会话开着（报过 start，还没报终止性的 end）
+  let loopNext = false;        // 刚报过 ended、同一个视频又从头播：这是循环，新会话 play_type 记 auto
+  let played = 0;              // 真实播放秒数（累计）
+  let skipped = 0;             // 拖动跳过的秒数
+  let maxPos = 0;
+  let lastTime: number | null = null;
+  let seekFrom: number | null = null;
+  let timer: ReturnType<typeof setInterval> | null = null;
+  let resumeNext = false;      // background 结算后再播，play_type 记 resume
+
+  const dur = () => (isFinite(video.duration) && video.duration > 0 ? round2(video.duration) : 0);
+  const pct = (pos: number) => { const d = dur(); return d > 0 ? round2(Math.min(100, (pos / d) * 100)) : 0; };
+  const base = () => {
+    const m = meta();
+    return { play_session_id: sessionId, post_id: m.post_id, book_id: m.book_id };
+  };
+
+  const stopTimer = () => { if (timer) { clearInterval(timer); timer = null; } };
+  const startTimer = () => {
+    stopTimer();
+    timer = setInterval(() => { if (!video.paused && !video.seeking && open) sendProgress(); }, progressIntervalMs(dur()));
+  };
+
+  const sendProgress = () => {
+    if (!open) return;
+    const pos = round2(video.currentTime || 0);
+    track("video_play_progress", { ...base(), played_duration: round2(played), progress_percent: pct(pos), current_position: pos }, { lowPriority: true });
+  };
+
+  const sendEnd = (reason: VideoPlayEndReason, closeSession: boolean, beacon = false) => {
+    if (!open) return;
+    const pos = round2(video.currentTime || 0);
+    const complete = reason === "ended";
+    track("video_play_end", {
+      ...base(),
+      video_duration: dur(),
+      played_duration: round2(played),
+      skipped_duration: round2(skipped),
+      progress_percent: complete ? 100 : pct(pos),
+      max_progress_percent: pct(Math.max(maxPos, pos, complete ? dur() : 0)),
+      end_reason: reason,
+      is_complete: complete,
+    });
+    if (closeSession) { open = false; stopTimer(); }
+    if (beacon) { const s = sdk(); if (s) s("flush"); }
+  };
+
+  const openSession = () => {
+    const m = meta();
+    const isLoop = loopNext && String(m.post_id ?? "") === sessionPostId;
+    sessionId = playSessionId();
+    sessionPostId = String(m.post_id ?? "");
+    open = true;
+    played = 0; skipped = 0; maxPos = round2(video.currentTime || 0);
+    lastTime = video.currentTime;
+    track("video_play_start", {
+      ...base(),
+      content_type: m.content_type,
+      video_duration: dur(),
+      start_position: round2(video.currentTime || 0),
+      play_type: resumeNext ? "resume" : isLoop ? "auto" : m.play_type,
+      play_scene: m.play_scene,
+    });
+    resumeNext = false;
+    loopNext = false;
+    startTimer();
+  };
+
+  const onPlaying = () => {
+    const id = String(meta().post_id ?? "");
+    // 换了视频（切集 / 切作品）：先把上一个会话按 seek_away 结算
+    if (open && id !== sessionPostId) sendEnd("seek_away", true);
+    if (!open) { openSession(); return; }
+    lastTime = video.currentTime;
+    startTimer();
+    sendProgress(); // 继续播放补一条快照
+  };
+  const onTime = () => {
+    if (!open || video.paused || video.seeking) return;
+    const cur = video.currentTime;
+    if (lastTime != null) {
+      const delta = cur - lastTime;
+      // 正常一帧到下一帧；跳变就是拖动 / 循环回 0，不算
+      if (delta > 0 && delta < 2) played += delta;
+    }
+    lastTime = cur;
+    if (cur > maxPos) maxPos = cur;
+  };
+  const onPause = () => {
+    if (!open) return;
+    stopTimer();
+    if (!video.ended) sendProgress(); // 暂停补一条快照
+  };
+  const onSeeking = () => { if (seekFrom == null) seekFrom = lastTime ?? video.currentTime; lastTime = null; };
+  const onSeeked = () => {
+    if (open && seekFrom != null) {
+      const jump = video.currentTime - seekFrom;
+      if (jump > 0) skipped += jump;
+      sendProgress(); // 拖动完成补一条快照
+    }
+    seekFrom = null;
+    lastTime = video.currentTime;
+  };
+  const onEnded = () => {
+    if (!open) return;
+    if (dur() > maxPos) maxPos = dur();
+    stopTimer();
+    // 播到结尾报完播并结束会话；视频自己循环（ended 后 currentTime=0 再 play）时下一次 playing 开新会话（play_type=auto）
+    sendEnd("ended", true);
+    loopNext = true;
+    lastTime = null;
+  };
+  const onError = () => sendEnd("error", true);
+  const onHide = () => {
+    if (document.visibilityState === "hidden") {
+      if (open) { sendEnd("background", true, true); resumeNext = true; }
+    } else if (!open && !video.paused && !video.ended) {
+      // 切回来时视频一直在播（桌面端后台不会暂停，不会再触发 playing）：直接开新会话，play_type=resume
+      resumeNext = true;
+      openSession();
+    }
+  };
+  const onPageHide = () => { if (open) sendEnd("background", true, true); };
+
+  // 用捕获阶段挂：页面自己的 @ended 会切下一集并触发路由跳转，组件卸载的微任务会插在两个监听之间执行，
+  // 冒泡阶段挂的话 ended 还没轮到我们就被卸载了；捕获阶段在目标上先于冒泡监听执行
+  const CAP = { capture: true } as const;
+  video.addEventListener("playing", onPlaying, CAP);
+  video.addEventListener("timeupdate", onTime, CAP);
+  video.addEventListener("pause", onPause, CAP);
+  video.addEventListener("seeking", onSeeking, CAP);
+  video.addEventListener("seeked", onSeeked, CAP);
+  video.addEventListener("ended", onEnded, CAP);
+  video.addEventListener("error", onError, CAP);
+  document.addEventListener("visibilitychange", onHide);
+  window.addEventListener("pagehide", onPageHide);
+
+  /** 卸载：reason 默认按暂停中 / 播放中给 pause_exit / exit；换集时传 seek_away */
+  return (reason?: VideoPlayEndReason) => {
+    if (open) sendEnd(reason || (video.paused ? "pause_exit" : "exit"), true);
+    stopTimer();
+    video.removeEventListener("playing", onPlaying, CAP);
+    video.removeEventListener("timeupdate", onTime, CAP);
+    video.removeEventListener("pause", onPause, CAP);
+    video.removeEventListener("seeking", onSeeking, CAP);
+    video.removeEventListener("seeked", onSeeked, CAP);
+    video.removeEventListener("ended", onEnded, CAP);
+    video.removeEventListener("error", onError, CAP);
+    document.removeEventListener("visibilitychange", onHide);
+    window.removeEventListener("pagehide", onPageHide);
+  };
+}
