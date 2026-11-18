@@ -3014,11 +3014,12 @@ async function fetchDetail(newId: number) {
 
       // Load chapters if it's part of a collection
       if (detail.value.book_id != '' && Number(detail.value.book_id) > 0 && !isStandaloneType.value) {
+        // 合集作品一律进合集模式，在拉章节之前就切：拉章节期间 isCollectionMode 还是 false 的话，
+        // 下方的「看至第 N 集 / 更新至第 N 集」合集条会先闪一下再被合集模式替掉
+        isCollectionMode.value = true;
         await loadChapters();
         if (isStale()) return;
 
-        // Auto enter collection mode when book has chapters
-        isCollectionMode.value = true;
         // 从消息列表点评论进来（带 cid / rid）要看的是评论，评论在「详情」tab 里，不切到合集 tab
         activeTab.value = (cid || route.query.rid) ? 'detail' : 'collection';
         isRightPanelHidden.value = false;
